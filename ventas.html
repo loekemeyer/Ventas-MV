@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<title>Ventas MV</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f2f2f7;
+    color: #1c1c1e;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  header {
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  h1 {
+    margin: 0 0 12px;
+    font-size: 20px;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    background: #e9e9ee;
+    padding: 4px;
+    border-radius: 10px;
+  }
+  .tab {
+    flex: 1;
+    padding: 9px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #1c1c1e;
+    transition: all 0.2s;
+    min-height: 36px;
+  }
+  .tab.active {
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 3px 8px rgba(0,0,0,0.04);
+  }
+  main { padding: 14px; max-width: 1200px; margin: 0 auto; }
+  .module { display: none; }
+  .module.active { display: block; animation: fadeIn 0.2s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    margin-bottom: 14px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  label {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    font-weight: 600;
+    color: #3c3c43;
+  }
+  label span { margin-bottom: 4px; }
+  .full { grid-column: 1 / -1; }
+
+  input, select {
+    padding: 12px 12px;
+    font-size: 16px; /* evita auto-zoom en iOS */
+    border: 1px solid #d1d1d6;
+    border-radius: 10px;
+    width: 100%;
+    background: #fff;
+    font-family: inherit;
+    color: #1c1c1e;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+  }
+  input[type="date"] { min-height: 44px; }
+  input[type="number"] { -moz-appearance: textfield; }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none; margin: 0;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 8px 0 2px;
+    grid-column: 1 / -1;
+  }
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  button {
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.05s, opacity 0.15s;
+    font-family: inherit;
+    min-height: 44px;
+  }
+  button:active { transform: scale(0.97); opacity: 0.85; }
+  .btn-primary { background: #007aff; color: #fff; flex: 1; }
+  .btn-secondary { background: #e9e9ee; color: #1c1c1e; flex: 1; }
+  .btn-danger { background: #ff3b30; color: #fff; }
+  .btn-small { padding: 10px 14px; font-size: 14px; min-height: 38px; }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat {
+    background: #fff;
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    text-align: center;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #007aff;
+    margin-top: 2px;
+    letter-spacing: -0.5px;
+  }
+
+  .filters {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .filters-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* Card list view (mobile por defecto) */
+  .venta-list { display: flex; flex-direction: column; gap: 10px; }
+  .venta-card {
+    background: #fff;
+    border: 1px solid #e5e5ea;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+  }
+  .venta-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f2f2f7;
+  }
+  .venta-cliente {
+    font-weight: 700;
+    font-size: 16px;
+    color: #1c1c1e;
+  }
+  .venta-fecha {
+    font-size: 12px;
+    color: #8e8e93;
+    font-weight: 600;
+  }
+  .venta-importe {
+    font-size: 13px;
+    color: #34c759;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .venta-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+    margin-bottom: 8px;
+  }
+  .venta-info div {
+    font-size: 13px;
+    color: #3c3c43;
+  }
+  .venta-info b {
+    color: #8e8e93;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: block;
+  }
+  .venta-medidas {
+    background: #f2f2f7;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    color: #3c3c43;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-bottom: 8px;
+  }
+  .venta-medidas span b { color: #1c1c1e; font-weight: 700; }
+  .venta-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .btn-call {
+    background: #34c759;
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-wa {
+    background: #25d366;
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .del-btn {
+    background: #ff3b30;
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+    min-height: 36px;
+  }
+
+  .empty {
+    text-align: center;
+    color: #8e8e93;
+    padding: 32px 16px;
+    font-style: italic;
+    background: #fff;
+    border-radius: 12px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1c1c1e;
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 22px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    opacity: 0;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    z-index: 1000;
+    font-weight: 600;
+    font-size: 14px;
+    max-width: calc(100vw - 40px);
+    text-align: center;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Tablet y desktop */
+  @media (min-width: 640px) {
+    main { padding: 20px; }
+    h1 { font-size: 24px; }
+    .grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .stats { grid-template-columns: repeat(4, 1fr); }
+    .filters { grid-template-columns: 2fr 1fr 1fr auto; align-items: end; }
+    .filters-row { display: contents; }
+    .venta-info { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (min-width: 960px) {
+    .grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  /* Ocultar barra de scroll horizontal en iOS */
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Ventas MV</h1>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="cargar">Cargar</button>
+    <button class="tab" data-tab="registro">Registro</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ CARGAR ============ -->
+  <section id="cargar" class="module active">
+    <div class="card">
+      <form id="ventaForm" autocomplete="off">
+        <div class="grid">
+          <div class="section-title">Datos Generales</div>
+          <label class="full"><span>Fecha</span>
+            <input type="date" name="fecha" required>
+          </label>
+          <label class="full"><span>Cliente</span>
+            <input type="text" name="cliente" required placeholder="Nombre y apellido" autocapitalize="words">
+          </label>
+          <label class="full"><span>Teléfono</span>
+            <input type="tel" name="telefono" placeholder="11 1234-5678" inputmode="tel">
+          </label>
+
+          <div class="section-title">Prenda</div>
+          <label class="full"><span>Prenda</span>
+            <input type="text" name="prenda" required placeholder="Ej: vestido, pantalón" autocapitalize="words">
+          </label>
+          <label><span>Material</span>
+            <select name="material">
+              <option value="">— Seleccionar —</option>
+              <option value="Oveja">Oveja</option>
+              <option value="Vaca">Vaca</option>
+              <option value="Gamuza">Gamuza</option>
+            </select>
+          </label>
+          <label><span>Color</span><input type="text" name="color" autocapitalize="words"></label>
+          <label class="full"><span>Talle</span>
+            <select name="talle" id="talleSel">
+              <option value="">— Seleccionar —</option>
+              <option value="XS">XS</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="A medida">A medida</option>
+            </select>
+          </label>
+
+          <div class="section-title" id="medidasTitle" style="display:none;">Medidas (cm)</div>
+          <label class="medida-field" style="display:none;"><span>Hombro a Hombro</span><input type="number" step="0.1" name="hombroHombro" inputmode="decimal"></label>
+          <label class="medida-field" style="display:none;"><span>Largo Brazo</span><input type="number" step="0.1" name="largoBrazo" inputmode="decimal"></label>
+          <label class="medida-field" style="display:none;"><span>Busto</span><input type="number" step="0.1" name="busto" inputmode="decimal"></label>
+          <label class="medida-field" style="display:none;"><span>Cintura</span><input type="number" step="0.1" name="cintura" inputmode="decimal"></label>
+          <label class="medida-field" style="display:none;"><span>Cadera</span><input type="number" step="0.1" name="cadera" inputmode="decimal"></label>
+          <label class="medida-field" style="display:none;"><span>Largo Total</span><input type="number" step="0.1" name="largoTotal" inputmode="decimal"></label>
+
+          <div class="section-title">Pago</div>
+          <label class="full"><span>Importe ($)</span>
+            <input type="number" step="0.01" name="importe" inputmode="decimal" placeholder="0.00">
+          </label>
+          <label class="full"><span>Forma de Pago</span>
+            <select name="formaPago" id="formaPago">
+              <option value="">— Seleccionar —</option>
+              <option value="Efectivo">Efectivo</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </label>
+          <label class="full" id="otroPagoLabel" style="display:none;">
+            <span>Especificar forma de pago</span>
+            <input type="text" name="formaPagoOtro" placeholder="Ej: Mercado Pago, cheque..." autocapitalize="sentences">
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn-primary">Guardar Venta</button>
+          <button type="reset" class="btn-secondary">Limpiar</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ REGISTRO ============ -->
+  <section id="registro" class="module">
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Total</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Clientes</div>
+        <div class="stat-value" id="statClientes">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Este Mes</div>
+        <div class="stat-value" id="statMes">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">$ Mostrando</div>
+        <div class="stat-value" id="statImporte">$0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="filters">
+        <label><span>Buscar</span>
+          <input type="text" id="filtroBusqueda" placeholder="Cliente, prenda, color..." autocapitalize="off">
+        </label>
+        <div class="filters-row">
+          <label><span>Desde</span><input type="date" id="filtroDesde"></label>
+          <label><span>Hasta</span><input type="date" id="filtroHasta"></label>
+        </div>
+        <button type="button" class="btn-secondary btn-small" onclick="limpiarFiltros()">Limpiar filtros</button>
+      </div>
+
+      <div class="actions" style="margin-top: 0; margin-bottom: 14px;">
+        <button type="button" class="btn-secondary btn-small" onclick="exportCSV()">Exportar CSV</button>
+        <button type="button" class="btn-danger btn-small" onclick="clearAll()">Borrar Todo</button>
+      </div>
+
+      <div id="ventaList" class="venta-list"></div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'ventas_v1';
+const form = document.getElementById('ventaForm');
+const listEl = document.getElementById('ventaList');
+const toast = document.getElementById('toast');
+
+form.fecha.value = new Date().toISOString().slice(0, 10);
+
+// Mostrar/ocultar campo "Otro" según forma de pago
+const formaPagoSel = document.getElementById('formaPago');
+const otroPagoLabel = document.getElementById('otroPagoLabel');
+const otroPagoInput = otroPagoLabel.querySelector('input');
+formaPagoSel.addEventListener('change', () => {
+  const mostrar = formaPagoSel.value === 'Otro';
+  otroPagoLabel.style.display = mostrar ? 'flex' : 'none';
+  if (!mostrar) otroPagoInput.value = '';
+});
+
+// Mostrar/ocultar medidas según Talle
+const talleSel = document.getElementById('talleSel');
+const medidasTitle = document.getElementById('medidasTitle');
+const medidaFields = document.querySelectorAll('.medida-field');
+function toggleMedidas() {
+  const mostrar = talleSel.value === 'A medida';
+  medidasTitle.style.display = mostrar ? 'block' : 'none';
+  medidaFields.forEach(f => {
+    f.style.display = mostrar ? 'flex' : 'none';
+    if (!mostrar) f.querySelector('input').value = '';
+  });
+}
+talleSel.addEventListener('change', toggleMedidas);
+
+form.addEventListener('reset', () => {
+  setTimeout(() => {
+    otroPagoLabel.style.display = 'none';
+    toggleMedidas();
+  }, 0);
+});
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'registro') render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+function save(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+function showToast(msg, color = '#1c1c1e') {
+  toast.textContent = msg;
+  toast.style.background = color;
+  toast.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+function getFiltered() {
+  const q = document.getElementById('filtroBusqueda').value.trim().toLowerCase();
+  const desde = document.getElementById('filtroDesde').value;
+  const hasta = document.getElementById('filtroHasta').value;
+  let data = load();
+  if (q) data = data.filter(v => Object.values(v).some(val => (val || '').toString().toLowerCase().includes(q)));
+  if (desde) data = data.filter(v => v.fecha >= desde);
+  if (hasta) data = data.filter(v => v.fecha <= hasta);
+  data.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+  return data;
+}
+
+function fmtFecha(f) {
+  if (!f) return '';
+  const [y, m, d] = f.split('-');
+  return `${d}/${m}/${y}`;
+}
+function fmtMoney(n) {
+  const num = parseFloat(n);
+  if (isNaN(num)) return '';
+  return '$' + num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtMoneyShort(n) {
+  const num = parseFloat(n);
+  if (isNaN(num)) return '$0';
+  return '$' + num.toLocaleString('es-AR', { maximumFractionDigits: 0 });
+}
+function formaPagoTexto(v) {
+  if (v.formaPago === 'Otro') return v.formaPagoOtro ? `Otro (${v.formaPagoOtro})` : 'Otro';
+  return v.formaPago || '';
+}
+function escapeHtml(s) {
+  return (s ?? '').toString()
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function telHref(t) { return (t || '').replace(/[^\d+]/g, ''); }
+
+function medidasHtml(v) {
+  const m = [
+    ['Hom', v.hombroHombro], ['Brazo', v.largoBrazo], ['Busto', v.busto],
+    ['Cint', v.cintura], ['Cad', v.cadera], ['Largo', v.largoTotal]
+  ].filter(([, val]) => val);
+  if (m.length === 0) return '';
+  return `<div class="venta-medidas">${m.map(([k, v]) => `<span><b>${k}:</b> ${escapeHtml(v)}</span>`).join('')}</div>`;
+}
+
+function render() {
+  const all = load();
+  const filtered = getFiltered();
+
+  document.getElementById('statTotal').textContent = all.length;
+  document.getElementById('statClientes').textContent =
+    new Set(all.map(v => (v.cliente || '').toLowerCase().trim()).filter(Boolean)).size;
+  const mesPrefix = new Date().toISOString().slice(0, 7);
+  document.getElementById('statMes').textContent =
+    all.filter(v => (v.fecha || '').startsWith(mesPrefix)).length;
+  const totalImporte = filtered.reduce((acc, v) => acc + (parseFloat(v.importe) || 0), 0);
+  document.getElementById('statImporte').textContent = fmtMoneyShort(totalImporte);
+
+  listEl.innerHTML = '';
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div class="empty">${all.length === 0 ? 'Sin ventas cargadas todavía.' : 'Ninguna venta coincide con los filtros.'}</div>`;
+    return;
+  }
+
+  filtered.forEach(v => {
+    const tel = telHref(v.telefono);
+    const importe = fmtMoney(v.importe);
+    const pago = formaPagoTexto(v);
+    const card = document.createElement('div');
+    card.className = 'venta-card';
+    card.innerHTML = `
+      <div class="venta-head">
+        <div>
+          <div class="venta-cliente">${escapeHtml(v.cliente) || '—'}</div>
+          ${importe ? `<div class="venta-importe">${importe}${pago ? ` · ${escapeHtml(pago)}` : ''}</div>` : (pago ? `<div class="venta-importe">${escapeHtml(pago)}</div>` : '')}
+        </div>
+        <div class="venta-fecha">${fmtFecha(v.fecha)}</div>
+      </div>
+      <div class="venta-info">
+        <div><b>Prenda</b>${escapeHtml(v.prenda) || '—'}</div>
+        <div><b>Material</b>${escapeHtml(v.material) || '—'}</div>
+        <div><b>Color</b>${escapeHtml(v.color) || '—'}</div>
+        <div><b>Talle</b>${escapeHtml(v.talle) || '—'}</div>
+      </div>
+      ${medidasHtml(v)}
+      <div class="venta-actions">
+        ${tel ? `<a class="btn-wa" href="https://wa.me/${tel}" target="_blank">WhatsApp</a>` : ''}
+        ${tel ? `<a class="btn-call" href="tel:${tel}">Llamar</a>` : ''}
+        <button class="del-btn" data-id="${v.id}">Borrar</button>
+      </div>
+    `;
+    listEl.appendChild(card);
+  });
+}
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const fd = new FormData(form);
+  const venta = { id: Date.now() + '-' + Math.random().toString(36).slice(2, 7) };
+  fd.forEach((val, key) => venta[key] = (val || '').toString().trim());
+  const data = load();
+  data.unshift(venta);
+  save(data);
+  form.reset();
+  form.fecha.value = new Date().toISOString().slice(0, 10);
+  showToast('Venta guardada', '#34c759');
+  form.cliente.focus();
+});
+
+listEl.addEventListener('click', (e) => {
+  if (e.target.classList.contains('del-btn')) {
+    const id = e.target.dataset.id;
+    if (!confirm('¿Borrar esta venta?')) return;
+    save(load().filter(v => v.id !== id));
+    render();
+    showToast('Venta eliminada', '#ff3b30');
+  }
+});
+
+['filtroBusqueda', 'filtroDesde', 'filtroHasta'].forEach(id => {
+  document.getElementById(id).addEventListener('input', render);
+});
+
+function limpiarFiltros() {
+  document.getElementById('filtroBusqueda').value = '';
+  document.getElementById('filtroDesde').value = '';
+  document.getElementById('filtroHasta').value = '';
+  render();
+}
+
+function clearAll() {
+  const data = load();
+  if (data.length === 0) return;
+  if (!confirm(`¿Borrar TODAS las ${data.length} ventas? No se puede deshacer.`)) return;
+  save([]);
+  render();
+  showToast('Todas las ventas fueron borradas', '#ff3b30');
+}
+
+function exportCSV() {
+  let data = getFiltered();
+  if (data.length === 0) { showToast('No hay ventas para exportar', '#ff9500'); return; }
+  const headers = ['Fecha','Cliente','Telefono','Prenda','Material','Color','Talle',
+    'Hombro a Hombro (cm)','Largo Brazo (cm)','Busto (cm)','Cintura (cm)','Cadera (cm)','Largo Total (cm)',
+    'Importe','Forma de Pago'];
+  const keys = ['fecha','cliente','telefono','prenda','material','color','talle',
+    'hombroHombro','largoBrazo','busto','cintura','cadera','largoTotal',
+    'importe','__pago'];
+  data = data.map(v => ({ ...v, __pago: formaPagoTexto(v) }));
+  const esc = (v) => {
+    const s = (v ?? '').toString();
+    return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const rows = [headers.join(';')];
+  data.forEach(v => rows.push(keys.map(k => esc(v[k])).join(';')));
+  const csv = '\uFEFF' + rows.join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ventas_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSV exportado', '#34c759');
+}
+
+render();
+</script>
+
+</body>
+</html>
