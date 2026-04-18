@@ -24,75 +24,75 @@
     background: rgba(255,255,255,0.92);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
-    padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+    padding: calc(6px + env(safe-area-inset-top)) 12px 8px;
     box-shadow: 0 1px 0 rgba(0,0,0,0.06);
     position: sticky;
     top: 0;
     z-index: 10;
   }
   h1 {
-    margin: 0 0 12px;
-    font-size: 20px;
+    margin: 0 0 6px;
+    font-size: 17px;
     text-align: center;
     font-weight: 700;
     letter-spacing: -0.3px;
   }
   .tabs {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     background: #e9e9ee;
-    padding: 4px;
-    border-radius: 10px;
+    padding: 3px;
+    border-radius: 8px;
   }
   .tab {
     flex: 1;
-    padding: 9px 8px;
+    padding: 7px 6px;
     background: transparent;
     border: none;
-    border-radius: 7px;
-    font-size: 14px;
+    border-radius: 6px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     color: #1c1c1e;
     transition: all 0.2s;
-    min-height: 36px;
+    min-height: 32px;
   }
   .tab.active {
     background: #fff;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 3px 8px rgba(0,0,0,0.04);
   }
-  main { padding: 14px; max-width: 1200px; margin: 0 auto; }
+  main { padding: 10px 12px; max-width: 1200px; margin: 0 auto; }
   .module { display: none; }
   .module.active { display: block; animation: fadeIn 0.2s; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   .card {
     background: #fff;
-    border-radius: 14px;
-    padding: 14px;
+    border-radius: 12px;
+    padding: 10px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    margin-bottom: 14px;
+    margin-bottom: 10px;
   }
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 6px 8px;
   }
   label {
     display: flex;
     flex-direction: column;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #3c3c43;
   }
-  label span { margin-bottom: 4px; }
+  label span { margin-bottom: 2px; }
   .full { grid-column: 1 / -1; }
 
   input, select {
-    padding: 12px 12px;
+    padding: 9px 10px;
     font-size: 16px; /* evita auto-zoom en iOS */
     border: 1px solid #d1d1d6;
-    border-radius: 10px;
+    border-radius: 8px;
     width: 100%;
     background: #fff;
     font-family: inherit;
@@ -105,7 +105,7 @@
     border-color: #007aff;
     box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
   }
-  input[type="date"] { min-height: 44px; }
+  input[type="date"] { min-height: 38px; }
   input[type="number"] { -moz-appearance: textfield; }
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
@@ -113,30 +113,30 @@
   }
 
   .section-title {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     color: #8e8e93;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin: 8px 0 2px;
+    letter-spacing: 0.5px;
+    margin: 4px 0 0;
     grid-column: 1 / -1;
   }
   .actions {
     display: flex;
     gap: 8px;
-    margin-top: 14px;
+    margin-top: 10px;
     flex-wrap: wrap;
   }
   button {
-    padding: 14px 16px;
-    font-size: 16px;
+    padding: 11px 16px;
+    font-size: 15px;
     font-weight: 600;
     border: none;
-    border-radius: 10px;
+    border-radius: 9px;
     cursor: pointer;
     transition: transform 0.05s, opacity 0.15s;
     font-family: inherit;
-    min-height: 44px;
+    min-height: 40px;
   }
   button:active { transform: scale(0.97); opacity: 0.85; }
   .btn-primary { background: #007aff; color: #fff; flex: 1; }
@@ -407,10 +407,10 @@
 </div>
 
 <header>
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-    <span style="width:60px;"></span>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+    <span style="width:50px;"></span>
     <h1 style="margin:0; flex:1;">Ventas MV</h1>
-    <button class="logout-btn" onclick="logout()" style="width:60px;">Salir</button>
+    <button class="logout-btn" onclick="logout()" style="width:50px; font-size:12px;">Salir</button>
   </div>
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="cargar">Cargar</button>
@@ -425,33 +425,30 @@
     <div class="card">
       <form id="ventaForm" autocomplete="off">
         <div class="grid">
-          <div class="section-title">Datos Generales</div>
-          <label class="full"><span>Fecha</span>
+          <label><span>Fecha</span>
             <input type="date" name="fecha" required>
+          </label>
+          <label><span>Teléfono</span>
+            <input type="tel" name="telefono" placeholder="11 1234-5678" inputmode="tel">
           </label>
           <label class="full"><span>Cliente</span>
             <input type="text" name="cliente" required placeholder="Nombre y apellido" autocapitalize="words">
           </label>
-          <label class="full"><span>Teléfono</span>
-            <input type="tel" name="telefono" placeholder="11 1234-5678" inputmode="tel">
-          </label>
-
-          <div class="section-title">Prenda</div>
           <label class="full"><span>Prenda</span>
             <input type="text" name="prenda" required placeholder="Ej: vestido, pantalón" autocapitalize="words">
           </label>
           <label><span>Material</span>
             <select name="material">
-              <option value="">— Seleccionar —</option>
+              <option value="">—</option>
               <option value="Oveja">Oveja</option>
               <option value="Vaca">Vaca</option>
               <option value="Gamuza">Gamuza</option>
             </select>
           </label>
           <label><span>Color</span><input type="text" name="color" autocapitalize="words"></label>
-          <label class="full"><span>Talle</span>
+          <label><span>Talle</span>
             <select name="talle" id="talleSel">
-              <option value="">— Seleccionar —</option>
+              <option value="">—</option>
               <option value="XS">XS</option>
               <option value="S">S</option>
               <option value="M">M</option>
@@ -460,17 +457,7 @@
               <option value="A medida">A medida</option>
             </select>
           </label>
-
-          <div class="section-title" id="medidasTitle" style="display:none;">Medidas (cm)</div>
-          <label class="medida-field" style="display:none;"><span>Hombro a Hombro</span><input type="number" step="0.1" name="hombroHombro" inputmode="decimal"></label>
-          <label class="medida-field" style="display:none;"><span>Largo Brazo</span><input type="number" step="0.1" name="largoBrazo" inputmode="decimal"></label>
-          <label class="medida-field" style="display:none;"><span>Busto</span><input type="number" step="0.1" name="busto" inputmode="decimal"></label>
-          <label class="medida-field" style="display:none;"><span>Cintura</span><input type="number" step="0.1" name="cintura" inputmode="decimal"></label>
-          <label class="medida-field" style="display:none;"><span>Cadera</span><input type="number" step="0.1" name="cadera" inputmode="decimal"></label>
-          <label class="medida-field" style="display:none;"><span>Largo Total</span><input type="number" step="0.1" name="largoTotal" inputmode="decimal"></label>
-
-          <div class="section-title">Pago</div>
-          <label class="full"><span>Importe ($)</span>
+          <label><span>Importe ($)</span>
             <input type="number" step="0.01" name="importe" inputmode="decimal" placeholder="0.00">
           </label>
           <label class="full"><span>Forma de Pago</span>
@@ -482,9 +469,17 @@
             </select>
           </label>
           <label class="full" id="otroPagoLabel" style="display:none;">
-            <span>Especificar forma de pago</span>
+            <span>Especificar</span>
             <input type="text" name="formaPagoOtro" placeholder="Ej: Mercado Pago, cheque..." autocapitalize="sentences">
           </label>
+
+          <div class="section-title" id="medidasTitle" style="display:none;">Medidas (cm)</div>
+          <label class="medida-field" style="display:none;"><span>Hombro a Hombro</span><input type="number" step="0.1" name="hombroHombro" inputmode="decimal"></label>
+          <label class="medida-field" style="display:none;"><span>Largo Brazo</span><input type="number" step="0.1" name="largoBrazo" inputmode="decimal"></label>
+          <label class="medida-field" style="display:none;"><span>Busto</span><input type="number" step="0.1" name="busto" inputmode="decimal"></label>
+          <label class="medida-field" style="display:none;"><span>Cintura</span><input type="number" step="0.1" name="cintura" inputmode="decimal"></label>
+          <label class="medida-field" style="display:none;"><span>Cadera</span><input type="number" step="0.1" name="cadera" inputmode="decimal"></label>
+          <label class="medida-field" style="display:none;"><span>Largo Total</span><input type="number" step="0.1" name="largoTotal" inputmode="decimal"></label>
         </div>
 
         <div class="actions">
