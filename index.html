@@ -4,8 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ventas MV">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <title>Ventas MV</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -315,6 +322,75 @@
     transform: translateX(-50%) translateY(0);
   }
 
+  /* Overlay de confirmación */
+  #confirmOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  #confirmOverlay.show { opacity: 1; pointer-events: auto; }
+  .confirm-box {
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px 26px;
+    text-align: center;
+    transform: scale(0.8);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-width: 300px;
+    width: calc(100% - 60px);
+  }
+  #confirmOverlay.show .confirm-box { transform: scale(1); }
+  .check-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #34c759;
+    margin: 0 auto 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes popIn {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  #confirmOverlay.show .check-svg {
+    stroke-dashoffset: 0;
+  }
+  .check-svg {
+    width: 44px;
+    height: 44px;
+    stroke: #fff;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    transition: stroke-dashoffset 0.4s 0.2s ease-out;
+  }
+  .confirm-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    color: #1c1c1e;
+    letter-spacing: -0.3px;
+  }
+  .confirm-sub {
+    font-size: 14px;
+    color: #8e8e93;
+    margin: 0;
+  }
+
   /* Tablet y desktop */
   @media (min-width: 640px) {
     main { padding: 20px; }
@@ -536,6 +612,18 @@
 
 <div class="toast" id="toast"></div>
 
+<div id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="check-circle">
+      <svg class="check-svg" viewBox="0 0 52 52">
+        <path d="M14 27 L22 35 L38 18" />
+      </svg>
+    </div>
+    <p class="confirm-title">¡Venta registrada!</p>
+    <p class="confirm-sub">Se guardó correctamente</p>
+  </div>
+</div>
+
 <script>
 // ====== LOGIN ======
 const APP_PWD = 'MV123';
@@ -572,6 +660,13 @@ function logout() {
   checkAuth();
 }
 checkAuth();
+
+// ====== PWA: registrar service worker ======
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
 
 // ====== APP ======
 const STORAGE_KEY = 'ventas_v1';
@@ -744,9 +839,17 @@ form.addEventListener('submit', (e) => {
   save(data);
   form.reset();
   form.fecha.value = new Date().toISOString().slice(0, 10);
-  showToast('Venta guardada', '#34c759');
-  form.cliente.focus();
+  showConfirm();
 });
+
+function showConfirm() {
+  const ov = document.getElementById('confirmOverlay');
+  ov.classList.add('show');
+  if (navigator.vibrate) navigator.vibrate(80);
+  setTimeout(() => {
+    ov.classList.remove('show');
+  }, 1600);
+}
 
 listEl.addEventListener('click', (e) => {
   if (e.target.classList.contains('del-btn')) {
