@@ -331,12 +331,87 @@
 
   /* Ocultar barra de scroll horizontal en iOS */
   ::-webkit-scrollbar { display: none; }
+
+  /* Pantalla de login */
+  #loginScreen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(160deg, #007aff 0%, #5856d6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  #loginScreen.hidden { display: none; }
+  .login-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 28px 22px;
+    width: 100%;
+    max-width: 340px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    text-align: center;
+  }
+  .login-card h2 {
+    margin: 0 0 4px;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+  }
+  .login-card p {
+    margin: 0 0 20px;
+    color: #8e8e93;
+    font-size: 14px;
+  }
+  .login-card input {
+    text-align: center;
+    font-size: 22px;
+    letter-spacing: 4px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .login-error {
+    color: #ff3b30;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    min-height: 18px;
+  }
+  .logout-btn {
+    background: transparent;
+    color: #ff3b30;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 8px;
+    cursor: pointer;
+    min-height: auto;
+  }
 </style>
 </head>
 <body>
 
+<div id="loginScreen">
+  <div class="login-card">
+    <h2>Ventas MV</h2>
+    <p>Ingresá la contraseña para continuar</p>
+    <form id="loginForm" autocomplete="off">
+      <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
+      <div class="login-error" id="loginError"></div>
+      <button type="submit" class="btn-primary" style="width:100%;">Ingresar</button>
+    </form>
+  </div>
+</div>
+
 <header>
-  <h1>Ventas MV</h1>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+    <span style="width:60px;"></span>
+    <h1 style="margin:0; flex:1;">Ventas MV</h1>
+    <button class="logout-btn" onclick="logout()" style="width:60px;">Salir</button>
+  </div>
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="cargar">Cargar</button>
     <button class="tab" data-tab="registro">Registro</button>
@@ -467,6 +542,43 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ====== LOGIN ======
+const APP_PWD = 'MV123';
+const AUTH_KEY = 'ventas_mv_auth';
+const loginScreen = document.getElementById('loginScreen');
+const loginForm = document.getElementById('loginForm');
+const pwdInput = document.getElementById('pwdInput');
+const loginError = document.getElementById('loginError');
+
+function checkAuth() {
+  if (sessionStorage.getItem(AUTH_KEY) === '1') {
+    loginScreen.classList.add('hidden');
+  } else {
+    loginScreen.classList.remove('hidden');
+    setTimeout(() => pwdInput.focus(), 100);
+  }
+}
+loginForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (pwdInput.value === APP_PWD) {
+    sessionStorage.setItem(AUTH_KEY, '1');
+    loginError.textContent = '';
+    pwdInput.value = '';
+    loginScreen.classList.add('hidden');
+  } else {
+    loginError.textContent = 'Contraseña incorrecta';
+    pwdInput.value = '';
+    pwdInput.focus();
+  }
+});
+function logout() {
+  if (!confirm('¿Cerrar sesión?')) return;
+  sessionStorage.removeItem(AUTH_KEY);
+  checkAuth();
+}
+checkAuth();
+
+// ====== APP ======
 const STORAGE_KEY = 'ventas_v1';
 const form = document.getElementById('ventaForm');
 const listEl = document.getElementById('ventaList');
