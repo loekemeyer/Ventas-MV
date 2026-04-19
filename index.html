@@ -59,16 +59,17 @@
   }
   .tab {
     flex: 1;
-    padding: 7px 6px;
+    padding: 6px 4px;
     background: transparent;
     border: none;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     color: #1c1c1e;
     transition: all 0.2s;
-    min-height: 32px;
+    min-height: 38px;
+    line-height: 1.15;
   }
   .tab.active {
     background: #fff;
@@ -980,7 +981,7 @@
   </div>
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="cargar">Cargar</button>
-    <button class="tab" data-tab="registro">Registro</button>
+    <button class="tab" data-tab="registro">Seguimiento<br>Pedidos</button>
     <button class="tab" data-tab="facturacion">Mes</button>
     <button class="tab" data-tab="stats">Stats</button>
   </div>
@@ -1064,45 +1065,12 @@
     </div>
   </section>
 
-  <!-- ============ REGISTRO ============ -->
+  <!-- ============ SEGUIMIENTO DE PEDIDOS ============ -->
   <section id="registro" class="module">
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-label">Total</div>
-        <div class="stat-value" id="statTotal">0</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Clientes</div>
-        <div class="stat-value" id="statClientes">0</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Este Mes</div>
-        <div class="stat-value" id="statMes">0</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">$ Mostrando</div>
-        <div class="stat-value" id="statImporte">$0</div>
-      </div>
-    </div>
-
     <div class="card">
-      <div class="filters">
-        <label><span>Buscar</span>
-          <input type="text" id="filtroBusqueda" placeholder="Cliente, prenda, color..." autocapitalize="off">
-        </label>
-        <div class="filters-row">
-          <label><span>Desde</span><input type="date" id="filtroDesde"></label>
-          <label><span>Hasta</span><input type="date" id="filtroHasta"></label>
-        </div>
-        <button type="button" class="btn-secondary btn-small" onclick="limpiarFiltros()">Limpiar filtros</button>
-      </div>
-
-      <div class="actions" style="margin-top: 0; margin-bottom: 14px;">
+      <div class="actions" style="margin-top: 0; margin-bottom: 12px;">
         <button type="button" id="toggleEntregados" class="btn-secondary btn-small" onclick="toggleVerTodos()">Ver todos</button>
-        <button type="button" class="btn-secondary btn-small" onclick="exportCSV()">Exportar CSV</button>
-        <button type="button" class="btn-danger btn-small" onclick="clearAll()">Borrar Todo</button>
       </div>
-
       <div id="ventaList" class="venta-list"></div>
     </div>
   </section>
@@ -1902,9 +1870,12 @@ function toggleVerTodos() {
 }
 
 function getFiltered() {
-  const q = document.getElementById('filtroBusqueda').value.trim().toLowerCase();
-  const desde = document.getElementById('filtroDesde').value;
-  const hasta = document.getElementById('filtroHasta').value;
+  const qEl = document.getElementById('filtroBusqueda');
+  const desdeEl = document.getElementById('filtroDesde');
+  const hastaEl = document.getElementById('filtroHasta');
+  const q = qEl ? qEl.value.trim().toLowerCase() : '';
+  const desde = desdeEl ? desdeEl.value : '';
+  const hasta = hastaEl ? hastaEl.value : '';
   let data = load();
   // Por defecto ocultar los entregados
   if (!mostrarEntregados) data = data.filter(v => v.estado !== 'Entregado');
@@ -1954,14 +1925,14 @@ function render() {
   const all = load();
   const filtered = getFiltered();
 
-  document.getElementById('statTotal').textContent = all.length;
-  document.getElementById('statClientes').textContent =
-    new Set(all.map(v => (v.cliente || '').toLowerCase().trim()).filter(Boolean)).size;
+  const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setText('statTotal', all.length);
+  setText('statClientes',
+    new Set(all.map(v => (v.cliente || '').toLowerCase().trim()).filter(Boolean)).size);
   const mesPrefix = new Date().toISOString().slice(0, 7);
-  document.getElementById('statMes').textContent =
-    all.filter(v => (v.fecha || '').startsWith(mesPrefix)).length;
+  setText('statMes', all.filter(v => (v.fecha || '').startsWith(mesPrefix)).length);
   const totalImporte = filtered.reduce((acc, v) => acc + (parseFloat(v.importe) || 0), 0);
-  document.getElementById('statImporte').textContent = fmtMoneyShort(totalImporte);
+  setText('statImporte', fmtMoneyShort(totalImporte));
 
   listEl.innerHTML = '';
   if (filtered.length === 0) {
@@ -2275,13 +2246,14 @@ async function resetFlujo(ventaId) {
 }
 
 ['filtroBusqueda', 'filtroDesde', 'filtroHasta'].forEach(id => {
-  document.getElementById(id).addEventListener('input', render);
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', render);
 });
 
 function limpiarFiltros() {
-  document.getElementById('filtroBusqueda').value = '';
-  document.getElementById('filtroDesde').value = '';
-  document.getElementById('filtroHasta').value = '';
+  ['filtroBusqueda','filtroDesde','filtroHasta'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
   render();
 }
 
