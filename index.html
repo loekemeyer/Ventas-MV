@@ -565,6 +565,82 @@
   }
   .medida-highlight b { font-size: 17px; color: #ff9500; }
 
+  /* ===== Facturación ===== */
+  .year-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #fff; padding: 10px 14px; border-radius: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .year-bar .year-label {
+    font-size: 12px; color: #8e8e93; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .year-bar select {
+    border: 1px solid #d1d1d6; padding: 6px 10px;
+    border-radius: 8px; font-size: 15px; font-weight: 600;
+    background: #f2f2f7; width: auto; min-width: 90px;
+  }
+  .month-row {
+    background: #fff; border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .month-row:active { background: #f8f8fc; }
+  .month-row.empty { opacity: 0.5; cursor: default; }
+  .month-row.current { border: 2px solid #007aff; }
+  .month-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .month-name {
+    font-weight: 700; font-size: 15px; text-transform: capitalize;
+  }
+  .month-total {
+    font-weight: 700; font-size: 16px; color: #34c759;
+    letter-spacing: -0.3px;
+  }
+  .month-meta {
+    color: #8e8e93; font-size: 12px; margin-bottom: 6px;
+  }
+  .month-bar { height: 6px; background: #f2f2f7; border-radius: 4px; overflow: hidden; }
+  .month-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #34c759, #007aff);
+    border-radius: 4px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .month-detail {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid #f2f2f7;
+    display: none;
+  }
+  .month-row.open .month-detail { display: block; }
+  .socia-line {
+    display: flex; justify-content: space-between;
+    font-size: 13px; padding: 4px 0;
+  }
+  .socia-line .name { font-weight: 600; color: #5856d6; }
+  .socia-line .count { color: #8e8e93; font-size: 11px; }
+  .socia-line .val { font-weight: 600; }
+  .year-summary {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px; margin-bottom: 10px;
+  }
+  .year-summary .stats-card { text-align: center; padding: 10px; }
+  .year-summary .stats-big { font-size: 18px; }
+  .cost-hint {
+    background: #eff6ff;
+    border: 1px dashed #93c5fd;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    font-size: 12px; color: #1e40af;
+    text-align: center;
+  }
+
   /* Tablet y desktop */
   @media (min-width: 640px) {
     main { padding: 20px; }
@@ -675,6 +751,7 @@
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="cargar">Cargar</button>
     <button class="tab" data-tab="registro">Registro</button>
+    <button class="tab" data-tab="facturacion">Mes</button>
     <button class="tab" data-tab="stats">Stats</button>
   </div>
 </header>
@@ -795,6 +872,35 @@
       </div>
 
       <div id="ventaList" class="venta-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ FACTURACIÓN ============ -->
+  <section id="facturacion" class="module">
+    <div class="year-bar">
+      <span class="year-label">Año</span>
+      <select id="facturacionYear"></select>
+    </div>
+
+    <div class="year-summary">
+      <div class="stats-card">
+        <div class="stats-label">Total año</div>
+        <div class="stats-big" id="facTotal">$0</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-label">Ventas</div>
+        <div class="stats-big" id="facCount">0</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-label">Prom/mes</div>
+        <div class="stats-big" id="facAvgMonth">$0</div>
+      </div>
+    </div>
+
+    <div id="facturacionMonths"></div>
+
+    <div class="cost-hint" id="costHint">
+      💡 Cuando carguemos los costos en Supabase acá vas a ver ganancia y margen por mes.
     </div>
   </section>
 
@@ -1086,9 +1192,104 @@ document.querySelectorAll('.tab').forEach(btn => {
     document.getElementById(btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'registro') render();
     if (btn.dataset.tab === 'stats') renderStats();
+    if (btn.dataset.tab === 'facturacion') renderFacturacion();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
+
+// ====== FACTURACIÓN (por mes) ======
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let facturacionYear = new Date().getFullYear();
+
+function populateYearSelect() {
+  const sel = document.getElementById('facturacionYear');
+  const years = new Set();
+  state.ventas.forEach(v => {
+    if (v.fecha && v.fecha.length >= 4) years.add(v.fecha.slice(0,4));
+  });
+  years.add(String(new Date().getFullYear()));
+  const sorted = Array.from(years).sort().reverse();
+  const current = sel.value || String(facturacionYear);
+  sel.innerHTML = sorted.map(y => `<option value="${y}">${y}</option>`).join('');
+  if (sorted.includes(current)) sel.value = current;
+  facturacionYear = parseInt(sel.value, 10);
+  sel.onchange = () => {
+    facturacionYear = parseInt(sel.value, 10);
+    renderFacturacion();
+  };
+}
+
+function renderFacturacion() {
+  populateYearSelect();
+  const year = facturacionYear;
+  const yearStr = String(year);
+  const data = state.ventas.filter(v => (v.fecha || '').startsWith(yearStr));
+
+  // Agregar por mes (0-11)
+  const byMonth = Array.from({ length: 12 }, () => ({ count: 0, total: 0, socias: new Map() }));
+  data.forEach(v => {
+    const m = parseInt((v.fecha || '').slice(5,7), 10) - 1;
+    if (isNaN(m) || m < 0 || m > 11) return;
+    const bucket = byMonth[m];
+    bucket.count += 1;
+    const importe = parseFloat(v.importe) || 0;
+    bucket.total += importe;
+    const socia = sociaNombre(v.socia_id) || 'Sin socia';
+    const s = bucket.socias.get(socia) || { count: 0, total: 0 };
+    s.count += 1;
+    s.total += importe;
+    bucket.socias.set(socia, s);
+  });
+
+  const totalYear = byMonth.reduce((a, m) => a + m.total, 0);
+  const countYear = byMonth.reduce((a, m) => a + m.count, 0);
+  const monthsWith = byMonth.filter(m => m.count > 0).length || 1;
+  const avgMonth = totalYear / monthsWith;
+
+  document.getElementById('facTotal').textContent = fmtMoneyShort(totalYear);
+  document.getElementById('facCount').textContent = countYear;
+  document.getElementById('facAvgMonth').textContent = fmtMoneyShort(avgMonth);
+
+  const maxMonth = Math.max(...byMonth.map(m => m.total), 1);
+  const now = new Date();
+  const currentMonth = now.getFullYear() === year ? now.getMonth() : -1;
+
+  const html = byMonth.map((m, idx) => {
+    const empty = m.count === 0;
+    const current = idx === currentMonth;
+    const pct = (m.total / maxMonth) * 100;
+    let detail = '';
+    if (!empty) {
+      const sociasArr = Array.from(m.socias.entries())
+        .sort((a, b) => b[1].total - a[1].total);
+      detail = `<div class="month-detail">
+        ${sociasArr.map(([nombre, s]) => `
+          <div class="socia-line">
+            <span><span class="name">${escapeHtml(nombre)}</span> <span class="count">${s.count} venta${s.count===1?'':'s'}</span></span>
+            <span class="val">${fmtMoneyShort(s.total)}</span>
+          </div>`).join('')}
+      </div>`;
+    }
+    return `
+      <div class="month-row ${empty?'empty':''} ${current?'current':''}" data-month="${idx}">
+        <div class="month-head">
+          <span class="month-name">${MESES[idx]}${current ? ' (actual)' : ''}</span>
+          <span class="month-total">${empty ? '—' : fmtMoneyShort(m.total)}</span>
+        </div>
+        <div class="month-meta">${m.count} venta${m.count===1?'':'s'}${m.count > 0 ? ' · prom ' + fmtMoneyShort(m.total / m.count) : ''}</div>
+        <div class="month-bar"><div class="month-bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
+        ${detail}
+      </div>`;
+  }).join('');
+
+  const wrap = document.getElementById('facturacionMonths');
+  wrap.innerHTML = html;
+  // Toggle para expandir cada mes
+  wrap.querySelectorAll('.month-row:not(.empty)').forEach(row => {
+    row.addEventListener('click', () => row.classList.toggle('open'));
+  });
+}
 
 // ====== STATS ======
 let statsPeriod = 'all';
