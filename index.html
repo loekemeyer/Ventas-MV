@@ -585,6 +585,38 @@
   }
   .medida-highlight b { font-size: 17px; color: #ff9500; }
 
+  /* ===== Bloques demora ===== */
+  .demora-block {
+    background: #fafafa;
+    border-left: 3px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .demora-block:last-child { margin-bottom: 0; }
+  .demora-title {
+    font-size: 13px; font-weight: 700; color: #1c1c1e;
+    margin-bottom: 4px;
+  }
+  .demora-count {
+    font-size: 11px; color: #8e8e93; font-weight: 500;
+    margin-left: 6px;
+  }
+  .demora-big {
+    font-size: 22px; font-weight: 700; color: #007aff;
+    letter-spacing: -0.5px;
+  }
+  .demora-big small {
+    font-size: 12px; font-weight: 500; color: #8e8e93;
+    margin-left: 3px;
+  }
+  .demora-meta {
+    font-size: 11px; color: #8e8e93;
+  }
+  .demora-empty {
+    font-size: 12px; color: #8e8e93; font-style: italic;
+  }
+
   /* ===== Facturación ===== */
   .year-bar {
     display: flex; align-items: center; justify-content: space-between;
@@ -1066,6 +1098,7 @@
       </div>
 
       <div class="actions" style="margin-top: 0; margin-bottom: 14px;">
+        <button type="button" id="toggleEntregados" class="btn-secondary btn-small" onclick="toggleVerTodos()">Ver todos</button>
         <button type="button" class="btn-secondary btn-small" onclick="exportCSV()">Exportar CSV</button>
         <button type="button" class="btn-danger btn-small" onclick="clearAll()">Borrar Todo</button>
       </div>
@@ -1157,6 +1190,11 @@
     <div class="stats-section">
       <h3>Forma de pago</h3>
       <div id="statsPagos"></div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Demora de entrega <small>(recepcionado → entregado)</small></h3>
+      <div id="statsDemora"></div>
     </div>
 
     <div class="stats-section">
@@ -1341,6 +1379,8 @@ function rowToVenta(r) {
   v.hechoPorFabian = (r.hecho_por_fabian === null || r.hecho_por_fabian === undefined) ? null : !!r.hecho_por_fabian;
   v.fechaPromesaFabian = r.fecha_promesa_fabian || '';
   v.quienRetira = r.quien_retira || '';
+  v.createdAt = r.created_at || '';
+  v.entregadoAt = r.entregado_at || '';
   return v;
 }
 function formToRow(fd, sociaId) {
@@ -1556,6 +1596,49 @@ function barRows(data, total) {
   `).join('');
 }
 
+function renderDemora(data) {
+  const el = document.getElementById('statsDemora');
+  // Solo entregados con timestamps
+  const entregados = data.filter(v =>
+    v.estado === 'Entregado' && v.entregadoAt && v.createdAt
+  );
+  const calcDias = (v) => {
+    const ini = new Date(v.createdAt).getTime();
+    const fin = new Date(v.entregadoAt).getTime();
+    return (fin - ini) / 86400000;
+  };
+  const fabian = entregados.filter(v => v.hechoPorFabian === true);
+  const socias = entregados.filter(v => v.hechoPorFabian === false);
+  const sinFlujo = entregados.filter(v => v.hechoPorFabian === null);
+
+  function block(title, arr, color) {
+    if (!arr.length) {
+      return `<div class="demora-block">
+        <div class="demora-title">${title}</div>
+        <div class="demora-empty">Sin entregados todavía</div>
+      </div>`;
+    }
+    const dias = arr.map(calcDias);
+    const avg = dias.reduce((a,b) => a+b, 0) / dias.length;
+    const min = Math.min(...dias);
+    const max = Math.max(...dias);
+    return `<div class="demora-block" style="border-left-color:${color};">
+      <div class="demora-title">${title} <span class="demora-count">${arr.length} entregado${arr.length===1?'':'s'}</span></div>
+      <div class="demora-big">${avg.toFixed(1)} <small>días promedio</small></div>
+      <div class="demora-meta">Mín ${min.toFixed(1)}d · Máx ${max.toFixed(1)}d</div>
+    </div>`;
+  }
+
+  let html = block('🧵 Fabián', fabian, '#fbbf24') + block('✂️ Nosotras', socias, '#a78bfa');
+  if (sinFlujo.length) {
+    html += block('Sin flujo asignado', sinFlujo, '#9ca3af');
+  }
+  if (!entregados.length) {
+    html = '<div class="stats-empty">Todavía no hay pedidos entregados. Cuando marques alguno como "Entregado" va a aparecer acá.</div>';
+  }
+  el.innerHTML = html;
+}
+
 function renderStats() {
   const data = statsFiltered();
   const totalVentas = data.length;
@@ -1624,6 +1707,9 @@ function renderStats() {
     return (v.formaPago || '').trim();
   });
   document.getElementById('statsPagos').innerHTML = barRows(pagoData, totalVentas);
+
+  // Demora promedio entre Recepcionado y Entregado (por flujo)
+  renderDemora(data);
 
   // Top clientas por monto (guardo también el teléfono más reciente)
   const clMap = new Map();
@@ -1807,11 +1893,21 @@ function showToast(msg, color = '#1c1c1e') {
   toast._t = setTimeout(() => toast.classList.remove('show'), 2000);
 }
 
+let mostrarEntregados = false;
+function toggleVerTodos() {
+  mostrarEntregados = !mostrarEntregados;
+  const btn = document.getElementById('toggleEntregados');
+  btn.textContent = mostrarEntregados ? 'Solo en curso' : 'Ver todos';
+  render();
+}
+
 function getFiltered() {
   const q = document.getElementById('filtroBusqueda').value.trim().toLowerCase();
   const desde = document.getElementById('filtroDesde').value;
   const hasta = document.getElementById('filtroHasta').value;
   let data = load();
+  // Por defecto ocultar los entregados
+  if (!mostrarEntregados) data = data.filter(v => v.estado !== 'Entregado');
   if (q) data = data.filter(v => Object.values(v).some(val => (val || '').toString().toLowerCase().includes(q)));
   if (desde) data = data.filter(v => v.fecha >= desde);
   if (hasta) data = data.filter(v => v.fecha <= hasta);
@@ -2107,6 +2203,9 @@ async function avanzarEstado(ventaId) {
     if (!sel) return;
     patch.quien_retira = sel.value;
   }
+  if (next === 'Entregado') {
+    patch.entregado_at = new Date().toISOString();
+  }
   try {
     const { error } = await sb.from('ventas').update(patch).eq('id', ventaId);
     if (error) throw error;
@@ -2114,6 +2213,7 @@ async function avanzarEstado(ventaId) {
       estado: patch.estado,
       fechaPromesaFabian: patch.fecha_promesa_fabian ?? v.fechaPromesaFabian,
       quienRetira: patch.quien_retira ?? v.quienRetira,
+      entregadoAt: patch.entregado_at ?? v.entregadoAt,
     });
     saveCache();
     render();
@@ -2132,10 +2232,14 @@ async function retrocederEstado(ventaId) {
   const idx = flujo.indexOf(v.estado);
   if (idx <= 0) return;
   const prev = flujo[idx - 1];
+  const patch = { estado: prev };
+  // Si salimos de "Entregado", limpiar el timestamp
+  if (v.estado === 'Entregado') patch.entregado_at = null;
   try {
-    const { error } = await sb.from('ventas').update({ estado: prev }).eq('id', ventaId);
+    const { error } = await sb.from('ventas').update(patch).eq('id', ventaId);
     if (error) throw error;
     v.estado = prev;
+    if (patch.entregado_at === null) v.entregadoAt = '';
     saveCache();
     render();
     renderEstadoSheet(v);
@@ -2154,12 +2258,14 @@ async function resetFlujo(ventaId) {
       estado: 'Recepcionado',
       fecha_promesa_fabian: null,
       quien_retira: null,
+      entregado_at: null,
     }).eq('id', ventaId);
     if (error) throw error;
     v.hechoPorFabian = null;
     v.estado = 'Recepcionado';
     v.fechaPromesaFabian = '';
     v.quienRetira = '';
+    v.entregadoAt = '';
     saveCache();
     render();
     renderEstadoSheet(v);
