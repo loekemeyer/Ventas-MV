@@ -673,6 +673,10 @@
     border-radius: 4px;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  .month-usd {
+    font-size: 11px; color: #16a34a; font-weight: 600;
+    margin: 2px 0 6px;
+  }
   .month-detail {
     margin-top: 10px; padding-top: 10px;
     border-top: 1px solid #f2f2f7;
@@ -1471,19 +1475,39 @@ async function computeFacDolarizado(data) {
   await prefetchBlueRates(data.map(v => v.fecha));
   let totalUSD = 0;
   const monthsSet = new Set();
+  const byMonthUSD = Array.from({ length: 12 }, () => 0);
   data.forEach(v => {
     const imp = parseFloat(v.importe) || 0;
-    if (v.moneda === 'USD') totalUSD += imp;
+    let usdEq = 0;
+    if (v.moneda === 'USD') usdEq = imp;
     else {
       const rate = blueRateCached(v.fecha);
-      if (rate) totalUSD += imp / rate;
+      if (rate) usdEq = imp / rate;
     }
+    totalUSD += usdEq;
+    const m = parseInt((v.fecha || '').slice(5, 7), 10) - 1;
+    if (!isNaN(m) && m >= 0 && m <= 11) byMonthUSD[m] += usdEq;
     if (v.fecha) monthsSet.add(v.fecha.slice(0, 7));
   });
   const months = monthsSet.size || 1;
   const avg = totalUSD / months;
   const fmt = (n) => 'US$ ' + n.toLocaleString('es-AR', { maximumFractionDigits: 0 });
   valsEl.textContent = `Total ${fmt(totalUSD)} · Prom/mes ${fmt(avg)}`;
+
+  // Inyectar equivalente USD en cada fila de mes
+  document.querySelectorAll('#facturacionMonths .month-row').forEach((row) => {
+    const idx = parseInt(row.dataset.month, 10);
+    const usd = byMonthUSD[idx] || 0;
+    let sub = row.querySelector('.month-usd');
+    if (!usd) { if (sub) sub.remove(); return; }
+    if (!sub) {
+      sub = document.createElement('div');
+      sub.className = 'month-usd';
+      const meta = row.querySelector('.month-meta');
+      meta.after(sub);
+    }
+    sub.textContent = '≈ ' + fmt(usd) + ' dolarizado';
+  });
 }
 
 function populateYearSelect() {
@@ -1544,10 +1568,16 @@ function renderFacturacion() {
   // Para la barra visual, normalizamos por el total mayor entre ARS y USD (tratados por separado)
   const maxMonthARS = Math.max(...byMonth.map(m => m.totARS), 1);
   const maxMonthUSD = Math.max(...byMonth.map(m => m.totUSD), 1);
+
+  // Limitar meses a mostrar: si es el año actual, hasta currentMonth + 1 (inclusive). Si no, todos.
+  const todayDate = new Date();
+  const isCurrentYear = year === todayDate.getFullYear();
+  const monthLimit = isCurrentYear ? Math.min(11, todayDate.getMonth() + 1) : 11;
+  const monthsToRender = byMonth.map((m, idx) => ({ m, idx })).filter(x => x.idx <= monthLimit);
   const now = new Date();
   const currentMonth = now.getFullYear() === year ? now.getMonth() : -1;
 
-  const html = byMonth.map((m, idx) => {
+  const html = monthsToRender.map(({ m, idx }) => {
     const empty = m.count === 0;
     const current = idx === currentMonth;
     // Barra: sumamos el % relativo de ARS + USD (normalizados cada uno a su máx)
