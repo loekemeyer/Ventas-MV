@@ -13,6 +13,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <title>Ventas MV</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -391,6 +392,79 @@
     margin: 0;
   }
 
+  /* Selector de socia */
+  #sociaScreen {
+    position: fixed; inset: 0;
+    background: linear-gradient(160deg, #5856d6 0%, #ff2d92 100%);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 95; padding: 20px;
+    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  #sociaScreen.hidden { display: none; }
+  .socia-card {
+    background: #fff; border-radius: 18px;
+    padding: 26px 20px; width: 100%; max-width: 340px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    text-align: center;
+  }
+  .socia-card h2 { margin: 0 0 4px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+  .socia-card p { margin: 0 0 18px; color: #8e8e93; font-size: 14px; }
+  .socia-btns { display: flex; flex-direction: column; gap: 10px; }
+  .socia-btn {
+    padding: 16px; font-size: 18px; font-weight: 700;
+    background: #f2f2f7; color: #1c1c1e;
+    border-radius: 12px; border: none; cursor: pointer;
+    transition: transform 0.05s, background 0.15s;
+    min-height: 56px;
+  }
+  .socia-btn:active { transform: scale(0.97); background: #e5e5ea; }
+
+  /* Banner "Activar notificaciones" */
+  .notif-banner {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: #5d4700;
+  }
+  .notif-banner.hidden { display: none; }
+  .notif-banner button {
+    margin-left: auto; padding: 8px 14px; font-size: 13px;
+    background: #ff9500; color: #fff; border-radius: 8px; min-height: 34px;
+    flex-shrink: 0;
+  }
+  .notif-banner .close {
+    background: transparent; color: #5d4700;
+    padding: 4px 6px; min-height: auto; font-size: 16px;
+    margin-left: 0;
+  }
+
+  /* Toast in-app (realtime) */
+  .toast-realtime {
+    position: fixed;
+    top: calc(60px + env(safe-area-inset-top));
+    left: 50%; transform: translateX(-50%) translateY(-20px);
+    background: #007aff; color: #fff;
+    padding: 10px 18px; border-radius: 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    font-size: 14px; font-weight: 600;
+    opacity: 0; transition: all 0.3s;
+    pointer-events: none; z-index: 99;
+    max-width: calc(100vw - 40px); text-align: center;
+  }
+  .toast-realtime.show {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
+  .socia-chip {
+    font-size: 10px; font-weight: 700; color: #5856d6;
+    background: #ece9fd; padding: 2px 7px; border-radius: 10px;
+    margin-left: 6px; display: inline-block; vertical-align: middle;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+
   /* Tablet y desktop */
   @media (min-width: 640px) {
     main { padding: 20px; }
@@ -482,11 +556,21 @@
   </div>
 </div>
 
+<div id="sociaScreen" class="hidden">
+  <div class="socia-card">
+    <h2>¿Quién sos?</h2>
+    <p>Tocá tu nombre para continuar</p>
+    <div class="socia-btns" id="sociaBtns"></div>
+  </div>
+</div>
+
+<div class="toast-realtime" id="realtimeToast"></div>
+
 <header>
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-    <span style="width:50px;"></span>
-    <h1 style="margin:0; flex:1;">Ventas MV</h1>
-    <button class="logout-btn" onclick="logout()" style="width:50px; font-size:12px;">Salir</button>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
+    <button class="logout-btn" onclick="cambiarSocia()" style="font-size:11px; padding:4px 6px; min-height:auto; color:#5856d6; width:auto;" title="Cambiar socia">Cambiar</button>
+    <h1 style="margin:0; flex:1;">Ventas MV<span class="socia-chip" id="sociaChip" style="display:none;"></span></h1>
+    <button class="logout-btn" onclick="logout()" style="font-size:12px; width:auto; padding:4px 6px; min-height:auto;">Salir</button>
   </div>
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="cargar">Cargar</button>
@@ -498,6 +582,11 @@
 
   <!-- ============ CARGAR ============ -->
   <section id="cargar" class="module active">
+    <div class="notif-banner hidden" id="notifBanner">
+      <span>🔔 Activá las notificaciones para avisar a las otras socias</span>
+      <button type="button" id="enableNotifBtn">Activar</button>
+      <button type="button" class="close" onclick="dismissNotifBanner()" aria-label="Cerrar">✕</button>
+    </div>
     <div class="card">
       <form id="ventaForm" autocomplete="off">
         <div class="grid">
@@ -668,11 +757,130 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// ====== SUPABASE ======
+const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
+const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
+const SOCIAS = [
+  { id: 1, nombre: 'Martu' },
+  { id: 2, nombre: 'Baby' },
+  { id: 3, nombre: 'Loqui' },
+];
+const SOCIA_KEY = 'ventas_mv_socia';
+const CACHE_KEY = 'ventas_mv_cache_v2';
+const NOTIF_DISMISS_KEY = 'ventas_mv_notif_dismiss';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: { persistSession: false },
+});
+
+// ====== Estado global ======
+const state = { ventas: [], mySociaId: null };
+
+// ====== Selector de socia ======
+const sociaScreen = document.getElementById('sociaScreen');
+const sociaBtnsEl = document.getElementById('sociaBtns');
+const sociaChip   = document.getElementById('sociaChip');
+
+function renderSociaButtons() {
+  sociaBtnsEl.innerHTML = '';
+  SOCIAS.forEach(s => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'socia-btn';
+    b.textContent = s.nombre;
+    b.addEventListener('click', () => setSocia(s.id));
+    sociaBtnsEl.appendChild(b);
+  });
+}
+renderSociaButtons();
+
+function setSocia(id) {
+  state.mySociaId = id;
+  localStorage.setItem(SOCIA_KEY, String(id));
+  sociaScreen.classList.add('hidden');
+  const nombre = sociaNombre(id);
+  sociaChip.textContent = nombre;
+  sociaChip.style.display = 'inline-block';
+  onSociaReady();
+}
+
+function sociaNombre(id) {
+  const n = parseInt(id, 10);
+  return SOCIAS.find(s => s.id === n)?.nombre || '';
+}
+
+function cambiarSocia() {
+  if (!confirm('¿Cambiar de socia?')) return;
+  localStorage.removeItem(SOCIA_KEY);
+  state.mySociaId = null;
+  sociaChip.style.display = 'none';
+  sociaScreen.classList.remove('hidden');
+}
+
+function checkSocia() {
+  const saved = parseInt(localStorage.getItem(SOCIA_KEY) || '', 10);
+  if (saved && SOCIAS.find(s => s.id === saved)) {
+    setSocia(saved);
+  } else {
+    sociaScreen.classList.remove('hidden');
+  }
+}
+
+// Tras login exitoso, mostrar selector de socia (si no hay uno guardado)
+loginForm.addEventListener('submit', () => {
+  setTimeout(() => {
+    if (sessionStorage.getItem(AUTH_KEY) === '1' && !state.mySociaId) checkSocia();
+  }, 30);
+});
+// Si ya estaba autenticada al cargar la página, arrancar selector directo
+if (sessionStorage.getItem(AUTH_KEY) === '1') checkSocia();
+
+// onSociaReady se llama al terminar de elegir socia (o al cargar si ya estaba guardada)
+let _sociaReadyCalled = false;
+function onSociaReady() {
+  if (_sociaReadyCalled) return;
+  _sociaReadyCalled = true;
+  bootApp();
+}
+
+// ====== Mapeo camelCase <-> snake_case ======
+const FIELD_MAP = [
+  ['fecha','fecha'], ['cliente','cliente'], ['telefono','telefono'],
+  ['prenda','prenda'], ['material','material'], ['color','color'], ['talle','talle'],
+  ['importe','importe'], ['formaPago','forma_pago'], ['formaPagoOtro','forma_pago_otro'],
+  ['hombroHombro','hombro_hombro'], ['largoBrazo','largo_brazo'],
+  ['busto','busto'], ['cintura','cintura'], ['cadera','cadera'], ['largoTotal','largo_total'],
+];
+function rowToVenta(r) {
+  const v = { id: r.id, socia_id: r.socia_id };
+  for (const [app, col] of FIELD_MAP) {
+    let val = r[col];
+    if (val === null || val === undefined) val = '';
+    v[app] = String(val);
+  }
+  return v;
+}
+function formToRow(fd, sociaId) {
+  const row = { socia_id: sociaId };
+  const numericCols = new Set(['importe','hombro_hombro','largo_brazo','busto','cintura','cadera','largo_total']);
+  for (const [app, col] of FIELD_MAP) {
+    let val = (fd.get(app) || '').toString().trim();
+    if (numericCols.has(col)) {
+      row[col] = val === '' ? null : Number(val);
+      if (row[col] !== null && !isFinite(row[col])) row[col] = null;
+    } else {
+      row[col] = val === '' ? null : val;
+    }
+  }
+  return row;
+}
+
 // ====== APP ======
-const STORAGE_KEY = 'ventas_v1';
 const form = document.getElementById('ventaForm');
 const listEl = document.getElementById('ventaList');
 const toast = document.getElementById('toast');
+const realtimeToast = document.getElementById('realtimeToast');
 
 form.fecha.value = new Date().toISOString().slice(0, 10);
 
@@ -718,11 +926,79 @@ document.querySelectorAll('.tab').forEach(btn => {
   });
 });
 
-function load() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { return []; }
+// Data viene desde state.ventas (poblado por bootApp + realtime)
+function load() { return state.ventas.slice(); }
+
+// Cache offline (solo lectura)
+function saveCache() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(state.ventas)); } catch {}
 }
-function save(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function loadCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY)) || []; } catch { return []; }
+}
+
+async function bootApp() {
+  // 1. Hydrate desde cache si hay (UX instant)
+  const cached = loadCache();
+  if (cached.length) {
+    state.ventas = cached;
+    render();
+  }
+  // 2. Fetch fresh desde Supabase
+  try {
+    const { data, error } = await sb.from('ventas')
+      .select('*')
+      .order('fecha', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    state.ventas = data.map(rowToVenta);
+    saveCache();
+    render();
+  } catch (e) {
+    console.warn('No se pudo cargar desde Supabase:', e);
+    if (!cached.length) {
+      showToast('Sin conexión — revisá red', '#ff9500');
+    }
+  }
+  // 3. Subscribirse a realtime
+  subscribeRealtime();
+  // 4. Verificar si mostrar banner de notificaciones
+  maybeShowNotifBanner();
+}
+
+function subscribeRealtime() {
+  sb.channel('ventas-changes')
+    .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'ventas' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const v = rowToVenta(payload.new);
+            // Evitar duplicado si ya lo tenemos (el autor inserta y también recibe el evento)
+            if (!state.ventas.find(x => x.id === v.id)) {
+              state.ventas.unshift(v);
+              saveCache();
+              render();
+            }
+            // Toast in-app solo si fue de OTRA socia
+            if (payload.new.socia_id !== state.mySociaId) {
+              const autor = sociaNombre(payload.new.socia_id);
+              showRealtimeToast(`🔔 ${autor} cargó una venta`);
+            }
+          } else if (payload.eventType === 'DELETE') {
+            state.ventas = state.ventas.filter(x => x.id !== payload.old.id);
+            saveCache();
+            render();
+          }
+        })
+    .subscribe();
+}
+
+function showRealtimeToast(msg) {
+  realtimeToast.textContent = msg;
+  realtimeToast.classList.add('show');
+  clearTimeout(realtimeToast._t);
+  realtimeToast._t = setTimeout(() => realtimeToast.classList.remove('show'), 3500);
+}
 
 function showToast(msg, color = '#1c1c1e') {
   toast.textContent = msg;
@@ -829,17 +1105,34 @@ function render() {
   });
 }
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (!state.mySociaId) { showToast('Elegí tu nombre primero', '#ff9500'); return; }
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn.disabled) return;
+  submitBtn.disabled = true;
+
   const fd = new FormData(form);
-  const venta = { id: Date.now() + '-' + Math.random().toString(36).slice(2, 7) };
-  fd.forEach((val, key) => venta[key] = (val || '').toString().trim());
-  const data = load();
-  data.unshift(venta);
-  save(data);
-  form.reset();
-  form.fecha.value = new Date().toISOString().slice(0, 10);
-  showConfirm();
+  const row = formToRow(fd, state.mySociaId);
+  try {
+    const { data, error } = await sb.from('ventas').insert(row).select().single();
+    if (error) throw error;
+    // Insertamos local directo (realtime también llegará pero dedupe se encarga)
+    const venta = rowToVenta(data);
+    if (!state.ventas.find(v => v.id === venta.id)) {
+      state.ventas.unshift(venta);
+      saveCache();
+      render();
+    }
+    form.reset();
+    form.fecha.value = new Date().toISOString().slice(0, 10);
+    showConfirm();
+  } catch (err) {
+    console.error(err);
+    showToast('Error al guardar — ' + (err.message || 'sin red'), '#ff3b30');
+  } finally {
+    submitBtn.disabled = false;
+  }
 });
 
 function showConfirm() {
@@ -851,13 +1144,20 @@ function showConfirm() {
   }, 1600);
 }
 
-listEl.addEventListener('click', (e) => {
+listEl.addEventListener('click', async (e) => {
   if (e.target.classList.contains('del-btn')) {
     const id = e.target.dataset.id;
     if (!confirm('¿Borrar esta venta?')) return;
-    save(load().filter(v => v.id !== id));
-    render();
-    showToast('Venta eliminada', '#ff3b30');
+    try {
+      const { error } = await sb.from('ventas').delete().eq('id', id);
+      if (error) throw error;
+      state.ventas = state.ventas.filter(v => v.id !== id);
+      saveCache();
+      render();
+      showToast('Venta eliminada', '#ff3b30');
+    } catch (err) {
+      showToast('Error al borrar', '#ff3b30');
+    }
   }
 });
 
@@ -872,13 +1172,20 @@ function limpiarFiltros() {
   render();
 }
 
-function clearAll() {
+async function clearAll() {
   const data = load();
   if (data.length === 0) return;
   if (!confirm(`¿Borrar TODAS las ${data.length} ventas? No se puede deshacer.`)) return;
-  save([]);
-  render();
-  showToast('Todas las ventas fueron borradas', '#ff3b30');
+  try {
+    const { error } = await sb.from('ventas').delete().gte('socia_id', 0);
+    if (error) throw error;
+    state.ventas = [];
+    saveCache();
+    render();
+    showToast('Todas las ventas fueron borradas', '#ff3b30');
+  } catch (err) {
+    showToast('Error al borrar todo', '#ff3b30');
+  }
 }
 
 function exportCSV() {
@@ -911,6 +1218,78 @@ function exportCSV() {
 }
 
 render();
+
+// ====== PUSH NOTIFICATIONS ======
+const notifBanner = document.getElementById('notifBanner');
+const enableNotifBtn = document.getElementById('enableNotifBtn');
+
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+}
+
+function maybeShowNotifBanner() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (Notification.permission === 'granted') return;
+  if (localStorage.getItem(NOTIF_DISMISS_KEY) === '1') return;
+  if (!isStandalone()) {
+    notifBanner.querySelector('span').textContent = '📱 Agregá esta app a Inicio (Compartir → Agregar a inicio) para recibir notificaciones';
+    enableNotifBtn.style.display = 'none';
+  }
+  notifBanner.classList.remove('hidden');
+}
+
+function dismissNotifBanner() {
+  localStorage.setItem(NOTIF_DISMISS_KEY, '1');
+  notifBanner.classList.add('hidden');
+}
+
+function urlBase64ToUint8Array(b64) {
+  const padding = '='.repeat((4 - b64.length % 4) % 4);
+  const base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+// Handler SÍNCRONO (iOS exige que requestPermission() se invoque dentro del gesto, sin await previo)
+enableNotifBtn.addEventListener('click', () => {
+  if (!('Notification' in window)) return;
+  if (!isStandalone()) {
+    alert('Primero agregá esta app a Inicio: tocá el botón Compartir y luego "Agregar a inicio".');
+    return;
+  }
+  Notification.requestPermission().then(async (perm) => {
+    if (perm !== 'granted') {
+      showToast('Notificaciones no permitidas', '#ff9500');
+      return;
+    }
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+      }
+      const j = sub.toJSON();
+      const { error } = await sb.from('push_subscriptions').upsert({
+        socia_id: state.mySociaId,
+        endpoint: j.endpoint,
+        p256dh: j.keys.p256dh,
+        auth: j.keys.auth,
+      }, { onConflict: 'endpoint' });
+      if (error) throw error;
+      notifBanner.classList.add('hidden');
+      showToast('✓ Notificaciones activadas', '#34c759');
+    } catch (err) {
+      console.error(err);
+      showToast('Error activando notificaciones', '#ff3b30');
+    }
+  });
+});
 </script>
 
 </body>
