@@ -465,6 +465,106 @@
     text-transform: uppercase; letter-spacing: 0.3px;
   }
 
+  /* ===== Stats ===== */
+  .period-chips {
+    display: flex; gap: 6px; margin-bottom: 12px;
+    background: #e9e9ee; padding: 3px; border-radius: 8px;
+  }
+  .period-chip {
+    flex: 1; padding: 8px; font-size: 13px; font-weight: 600;
+    background: transparent; border: none; border-radius: 6px;
+    cursor: pointer; color: #1c1c1e; min-height: 34px;
+  }
+  .period-chip.active {
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .stats-summary {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 12px;
+  }
+  .stats-card {
+    background: #fff; border-radius: 12px; padding: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .stats-label {
+    font-size: 10px; color: #8e8e93; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .stats-big {
+    font-size: 24px; font-weight: 700; color: #007aff;
+    letter-spacing: -0.5px; margin-top: 2px;
+  }
+  .stats-section {
+    background: #fff; border-radius: 12px;
+    padding: 14px; margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .stats-section h3 {
+    font-size: 15px; font-weight: 700; margin: 0 0 12px;
+    color: #1c1c1e;
+  }
+  .stats-section h3 small {
+    font-size: 11px; color: #8e8e93; font-weight: 500;
+    margin-left: 6px;
+  }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 1fr 44px 52px;
+    gap: 8px; align-items: center;
+    margin-bottom: 6px; font-size: 13px;
+  }
+  .bar-label {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-weight: 600; color: #1c1c1e;
+  }
+  .bar-track {
+    grid-column: 1 / 2;
+    position: relative; height: 22px; border-radius: 6px;
+    background: #f2f2f7;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%; border-radius: 6px;
+    background: linear-gradient(90deg, #007aff, #5856d6);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .bar-fill.medida { background: linear-gradient(90deg, #ff9500, #ff2d92); }
+  .bar-row-stacked {
+    margin-bottom: 10px;
+  }
+  .bar-row-stacked .bar-head {
+    display: flex; justify-content: space-between;
+    font-size: 13px; margin-bottom: 3px;
+  }
+  .bar-row-stacked .bar-name { font-weight: 600; }
+  .bar-row-stacked .bar-meta { color: #8e8e93; font-size: 12px; }
+  .bar-row-stacked .bar-track { height: 8px; }
+  .prenda-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #f2f2f7;
+    font-size: 14px;
+  }
+  .prenda-row:last-child { border-bottom: none; }
+  .prenda-name { font-weight: 600; text-transform: capitalize; }
+  .prenda-meta { color: #8e8e93; font-size: 12px; margin-top: 2px; }
+  .prenda-value { font-weight: 700; color: #34c759; text-align: right; }
+  .prenda-count { color: #8e8e93; font-size: 11px; font-weight: 500; }
+  .stats-empty {
+    text-align: center; color: #8e8e93; padding: 24px 16px;
+    font-style: italic; font-size: 13px;
+  }
+  .medida-highlight {
+    background: #fff4e5;
+    border: 1px solid #ffd29d;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px;
+  }
+  .medida-highlight b { font-size: 17px; color: #ff9500; }
+
   /* Tablet y desktop */
   @media (min-width: 640px) {
     main { padding: 20px; }
@@ -575,6 +675,7 @@
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="cargar">Cargar</button>
     <button class="tab" data-tab="registro">Registro</button>
+    <button class="tab" data-tab="stats">Stats</button>
   </div>
 </header>
 
@@ -694,6 +795,68 @@
       </div>
 
       <div id="ventaList" class="venta-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section id="stats" class="module">
+    <div class="period-chips" role="tablist">
+      <button type="button" class="period-chip active" data-period="all">Todo</button>
+      <button type="button" class="period-chip" data-period="month">Este mes</button>
+      <button type="button" class="period-chip" data-period="30d">Últimos 30d</button>
+    </div>
+
+    <div class="stats-summary">
+      <div class="stats-card">
+        <div class="stats-label">Ventas</div>
+        <div class="stats-big" id="statsCount">0</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-label">Facturado</div>
+        <div class="stats-big" id="statsRevenue">$0</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-label">Ticket Prom.</div>
+        <div class="stats-big" id="statsAvg">$0</div>
+      </div>
+      <div class="stats-card">
+        <div class="stats-label">Clientas</div>
+        <div class="stats-big" id="statsClientes">0</div>
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Por modelo de prenda <small>(qué compran más)</small></h3>
+      <div id="statsPrendas"></div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Talle elegido</h3>
+      <div id="statsTalles"></div>
+      <div class="medida-highlight" id="statsMedidaBox">
+        <span>Prefieren <b>"A medida"</b></span>
+        <b id="statsMedidaPct">0%</b>
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Color</h3>
+      <div id="statsColores"></div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Material</h3>
+      <div id="statsMateriales"></div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Forma de pago</h3>
+      <div id="statsPagos"></div>
+    </div>
+
+    <div class="stats-section">
+      <h3>Top clientas <small>(por monto)</small></h3>
+      <div id="statsClientesTop"></div>
     </div>
   </section>
 
@@ -922,9 +1085,159 @@ document.querySelectorAll('.tab').forEach(btn => {
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'registro') render();
+    if (btn.dataset.tab === 'stats') renderStats();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
+
+// ====== STATS ======
+let statsPeriod = 'all';
+document.querySelectorAll('.period-chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('.period-chip').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    statsPeriod = c.dataset.period;
+    renderStats();
+  });
+});
+
+function statsFiltered() {
+  const all = state.ventas;
+  if (statsPeriod === 'all') return all;
+  const now = new Date();
+  if (statsPeriod === 'month') {
+    const prefix = now.toISOString().slice(0, 7);
+    return all.filter(v => (v.fecha || '').startsWith(prefix));
+  }
+  if (statsPeriod === '30d') {
+    const since = new Date(now.getTime() - 30 * 86400000).toISOString().slice(0, 10);
+    return all.filter(v => (v.fecha || '') >= since);
+  }
+  return all;
+}
+
+function tally(items, keyFn) {
+  const m = new Map();
+  for (const it of items) {
+    const k = keyFn(it);
+    if (k === null || k === undefined || k === '') continue;
+    m.set(k, (m.get(k) || 0) + 1);
+  }
+  return Array.from(m.entries())
+    .map(([k, n]) => ({ key: k, n, pct: (n / items.length) * 100 }))
+    .sort((a, b) => b.n - a.n);
+}
+
+function barRows(data, total) {
+  if (!data.length) return '<div class="stats-empty">Sin datos</div>';
+  const max = data[0].n || 1;
+  return data.map(d => `
+    <div class="bar-row-stacked">
+      <div class="bar-head">
+        <span class="bar-name">${escapeHtml(d.key)}</span>
+        <span class="bar-meta">${d.n} · ${d.pct.toFixed(0)}%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(d.n/max*100).toFixed(1)}%"></div></div>
+    </div>
+  `).join('');
+}
+
+function renderStats() {
+  const data = statsFiltered();
+  const totalVentas = data.length;
+  const totalRevenue = data.reduce((a, v) => a + (parseFloat(v.importe) || 0), 0);
+  const avgTicket = totalVentas ? totalRevenue / totalVentas : 0;
+  const clientasUnicas = new Set(data.map(v => (v.cliente || '').toLowerCase().trim()).filter(Boolean)).size;
+
+  document.getElementById('statsCount').textContent = totalVentas;
+  document.getElementById('statsRevenue').textContent = fmtMoneyShort(totalRevenue);
+  document.getElementById('statsAvg').textContent = fmtMoneyShort(avgTicket);
+  document.getElementById('statsClientes').textContent = clientasUnicas;
+
+  // Por prenda: agrupar por modelo (lowercase para dedupe), sumar ventas + importe
+  const prendasMap = new Map();
+  data.forEach(v => {
+    const key = (v.prenda || '').trim().toLowerCase();
+    if (!key) return;
+    const display = (v.prenda || '').trim();
+    const e = prendasMap.get(key) || { nombre: display, count: 0, total: 0 };
+    e.count += 1;
+    e.total += parseFloat(v.importe) || 0;
+    prendasMap.set(key, e);
+  });
+  const prendasArr = Array.from(prendasMap.values())
+    .sort((a, b) => b.total - a.total || b.count - a.count);
+  const prendasEl = document.getElementById('statsPrendas');
+  if (!prendasArr.length) {
+    prendasEl.innerHTML = '<div class="stats-empty">Sin ventas en el período</div>';
+  } else {
+    prendasEl.innerHTML = prendasArr.map(p => {
+      const pct = totalVentas ? (p.count / totalVentas * 100).toFixed(0) : 0;
+      return `
+        <div class="prenda-row">
+          <div>
+            <div class="prenda-name">${escapeHtml(p.nombre)}</div>
+            <div class="prenda-meta">${p.count} venta${p.count === 1 ? '' : 's'} · ${pct}%</div>
+          </div>
+          <div class="prenda-value">${fmtMoneyShort(p.total)}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // Talles: agrupar, separar "A medida" para el highlight
+  const tallesData = tally(data, v => (v.talle || '').trim());
+  document.getElementById('statsTalles').innerHTML = barRows(tallesData, totalVentas);
+  const medidaRow = tallesData.find(t => t.key.toLowerCase() === 'a medida');
+  document.getElementById('statsMedidaPct').textContent =
+    medidaRow ? `${medidaRow.pct.toFixed(0)}%` : '0%';
+
+  // Colores (title case la key para unir variantes "Rojo", "rojo", "ROJO")
+  const colData = tally(data, v => {
+    const c = (v.color || '').trim().toLowerCase();
+    return c ? c.charAt(0).toUpperCase() + c.slice(1) : '';
+  });
+  document.getElementById('statsColores').innerHTML = barRows(colData, totalVentas);
+
+  // Materiales
+  const matData = tally(data, v => (v.material || '').trim());
+  document.getElementById('statsMateriales').innerHTML = barRows(matData, totalVentas);
+
+  // Forma de pago (con "Otro (detalle)")
+  const pagoData = tally(data, v => {
+    if (v.formaPago === 'Otro') {
+      return v.formaPagoOtro ? `Otro (${v.formaPagoOtro})` : 'Otro';
+    }
+    return (v.formaPago || '').trim();
+  });
+  document.getElementById('statsPagos').innerHTML = barRows(pagoData, totalVentas);
+
+  // Top clientas por monto
+  const clMap = new Map();
+  data.forEach(v => {
+    const key = (v.cliente || '').trim();
+    if (!key) return;
+    const e = clMap.get(key.toLowerCase()) || { nombre: key, count: 0, total: 0 };
+    e.count += 1;
+    e.total += parseFloat(v.importe) || 0;
+    clMap.set(key.toLowerCase(), e);
+  });
+  const clArr = Array.from(clMap.values())
+    .sort((a, b) => b.total - a.total || b.count - a.count)
+    .slice(0, 8);
+  const clEl = document.getElementById('statsClientesTop');
+  if (!clArr.length) {
+    clEl.innerHTML = '<div class="stats-empty">Sin datos</div>';
+  } else {
+    clEl.innerHTML = clArr.map(c => `
+      <div class="prenda-row">
+        <div>
+          <div class="prenda-name">${escapeHtml(c.nombre)}</div>
+          <div class="prenda-meta">${c.count} compra${c.count === 1 ? '' : 's'}</div>
+        </div>
+        <div class="prenda-value">${fmtMoneyShort(c.total)}</div>
+      </div>`).join('');
+  }
+}
 
 // Data viene desde state.ventas (poblado por bootApp + realtime)
 function load() { return state.ventas.slice(); }
