@@ -1001,7 +1001,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV</h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v1.2</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1295,6 +1295,12 @@ function logout() {
 }
 checkAuth();
 
+// Sincronizar tag de versión en login con la constante APP_VERSION
+setTimeout(() => {
+  const t = document.getElementById('loginVersionTag');
+  if (t && typeof APP_VERSION !== 'undefined') t.textContent = APP_VERSION;
+}, 0);
+
 // ====== PWA: registrar service worker ======
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -1303,7 +1309,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v1.2';
+const APP_VERSION = 'v1.3';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -2535,12 +2541,15 @@ function openEditModal(ventaId) {
 function renderEditSheet(v) {
   const esc = (s) => escapeHtml(s || '');
   const sel = (a, b) => a === b ? 'selected' : '';
+  const fabianVal = v.hechoPorFabian === true ? 'true'
+                  : v.hechoPorFabian === false ? 'false' : '';
+  const entregadoDate = v.entregadoAt ? String(v.entregadoAt).slice(0, 10) : '';
   editSheet.innerHTML = `
     <h3>Editar venta</h3>
     <p class="sub">${esc(v.cliente) || '(sin cliente)'}</p>
     <form id="editForm" autocomplete="off">
       <div class="grid">
-        <label><span>Fecha</span><input type="date" name="fecha" value="${esc(v.fecha)}"></label>
+        <label><span>Fecha recepción</span><input type="date" name="fecha" value="${esc(v.fecha)}"></label>
         <label><span>Teléfono</span><input type="tel" name="telefono" value="${esc(v.telefono)}" inputmode="tel"></label>
         <label class="full"><span>Cliente</span><input type="text" name="cliente" value="${esc(v.cliente)}" autocapitalize="words"></label>
         <label class="full"><span>Prenda</span><input type="text" name="prenda" value="${esc(v.prenda)}" autocapitalize="words"></label>
@@ -2575,6 +2584,48 @@ function renderEditSheet(v) {
           </select>
         </label>
         <label class="full"><span>Detalle "Otro"</span><input type="text" name="formaPagoOtro" value="${esc(v.formaPagoOtro)}"></label>
+
+        <div class="section-title">Flujo y estado</div>
+        <label class="full"><span>¿Quién lo hace?</span>
+          <select name="_hechoPorFabian">
+            <option value=""       ${fabianVal===''?'selected':''}>Sin asignar</option>
+            <option value="true"   ${fabianVal==='true'?'selected':''}>Fabián</option>
+            <option value="false"  ${fabianVal==='false'?'selected':''}>Nosotras</option>
+          </select>
+        </label>
+        <label class="full"><span>Estado</span>
+          <select name="_estado">
+            <option value="Recepcionado"       ${sel(v.estado,'Recepcionado')}>Recepcionado</option>
+            <optgroup label="Fabián">
+              <option value="Pedido a Fabian"  ${sel(v.estado,'Pedido a Fabian')}>Pedido a Fabián</option>
+              <option value="Pagado a Fabian"  ${sel(v.estado,'Pagado a Fabian')}>Pagado a Fabián</option>
+              <option value="Entregó Fabian"   ${sel(v.estado,'Entregó Fabian')}>Entregó Fabián</option>
+            </optgroup>
+            <optgroup label="Nosotras">
+              <option value="Compra Material"  ${sel(v.estado,'Compra Material')}>Compra Material</option>
+              <option value="Corte (Oscar)"    ${sel(v.estado,'Corte (Oscar)')}>Corte (Oscar)</option>
+              <option value="Confeccion"       ${sel(v.estado,'Confeccion')}>Confección</option>
+              <option value="Retira"           ${sel(v.estado,'Retira')}>Retira</option>
+            </optgroup>
+            <option value="Entregado"          ${sel(v.estado,'Entregado')}>Entregado</option>
+          </select>
+        </label>
+        <label><span>Promesa Fabián</span>
+          <input type="date" name="_fechaPromesaFabian" value="${esc(v.fechaPromesaFabian)}">
+        </label>
+        <label><span>Fecha entrega</span>
+          <input type="date" name="_entregadoAt" value="${entregadoDate}">
+        </label>
+        <label class="full"><span>Quién retira</span>
+          <select name="_quienRetira">
+            <option value="">— ninguno —</option>
+            ${SOCIAS.map(s => `<option value="${s.nombre}" ${sel(v.quienRetira, s.nombre)}>${s.nombre}</option>`).join('')}
+            <option value="Fabián" ${sel(v.quienRetira,'Fabián')}>Fabián</option>
+            <option value="Oscar"  ${sel(v.quienRetira,'Oscar')}>Oscar</option>
+            <option value="Otro"   ${sel(v.quienRetira,'Otro')}>Otro</option>
+          </select>
+        </label>
+
         <div class="section-title">Medidas (cm)</div>
         <label><span>Hombro a Hombro</span><input type="number" step="0.1" name="hombroHombro" value="${esc(v.hombroHombro)}" inputmode="decimal"></label>
         <label><span>Largo Brazo</span><input type="number" step="0.1" name="largoBrazo" value="${esc(v.largoBrazo)}" inputmode="decimal"></label>
@@ -2594,15 +2645,40 @@ function renderEditSheet(v) {
     const fd = new FormData(e.target);
     const patch = formToRow(fd, v.socia_id);
     delete patch.socia_id; // no cambiar la socia
+
+    // Campos de flujo / estado
+    const hpfVal = fd.get('_hechoPorFabian');
+    patch.hecho_por_fabian = hpfVal === 'true' ? true : hpfVal === 'false' ? false : null;
+    patch.estado = (fd.get('_estado') || 'Recepcionado').toString();
+    const promesa = (fd.get('_fechaPromesaFabian') || '').toString();
+    patch.fecha_promesa_fabian = promesa || null;
+    const retira = (fd.get('_quienRetira') || '').toString();
+    patch.quien_retira = retira || null;
+    const entregado = (fd.get('_entregadoAt') || '').toString();
+    // Si hay fecha de entrega, se guarda como timestamp al mediodía de ese día;
+    // si borrás la fecha pero el estado sigue "Entregado", igual se conserva vacío
+    patch.entregado_at = entregado ? `${entregado}T12:00:00Z` : null;
+
     try {
       const { error } = await sb.from('ventas').update(patch).eq('id', v.id);
       if (error) throw error;
-      // Refresh local
-      Object.assign(v, rowToVenta({ ...patch, id: v.id, socia_id: v.socia_id,
-        estado: v.estado, hecho_por_fabian: v.hechoPorFabian,
-        fecha_promesa_fabian: v.fechaPromesaFabian || null,
-        quien_retira: v.quienRetira || null, entregado_at: v.entregadoAt || null,
+      // Refresh local: reconstruimos el venta merging patch
+      Object.assign(v, rowToVenta({
+        id: v.id,
+        socia_id: v.socia_id,
         created_at: v.createdAt || null,
+        estado: patch.estado,
+        hecho_por_fabian: patch.hecho_por_fabian,
+        fecha_promesa_fabian: patch.fecha_promesa_fabian,
+        quien_retira: patch.quien_retira,
+        entregado_at: patch.entregado_at,
+        fecha: patch.fecha, cliente: patch.cliente, telefono: patch.telefono,
+        prenda: patch.prenda, material: patch.material, color: patch.color, talle: patch.talle,
+        importe: patch.importe, moneda: patch.moneda,
+        forma_pago: patch.forma_pago, forma_pago_otro: patch.forma_pago_otro,
+        hombro_hombro: patch.hombro_hombro, largo_brazo: patch.largo_brazo,
+        busto: patch.busto, cintura: patch.cintura, cadera: patch.cadera,
+        largo_total: patch.largo_total,
       }));
       saveCache();
       render();
