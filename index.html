@@ -767,6 +767,54 @@
   .estado-Retira       { background: #bfdbfe; color: #1e40af; }
   .estado-Entregado    { background: #d1fae5; color: #065f46; }
 
+  /* Tracker visual de estado en la card */
+  .tracker {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 6px 0 2px;
+    max-width: 220px;
+  }
+  .tracker-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #c7c7cc;
+    background: #fff;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    transition: all 0.15s ease;
+  }
+  .tracker-dot.done {
+    background: #34c759;
+    border-color: #34c759;
+  }
+  .tracker-dot.current {
+    width: 16px;
+    height: 16px;
+    background: #5856d6;
+    border-color: #5856d6;
+    box-shadow: 0 0 0 3px rgba(88,86,214,0.22);
+  }
+  .tracker-dot.finished {
+    background: #34c759;
+    border-color: #34c759;
+    box-shadow: 0 0 0 3px rgba(52,199,89,0.22);
+  }
+  .tracker-line {
+    flex: 1;
+    height: 2px;
+    background: #d1d1d6;
+    min-width: 10px;
+  }
+  .tracker-line.done { background: #34c759; }
+  .tracker-undecided {
+    font-size: 11px;
+    color: #8e8e93;
+    font-style: italic;
+    margin: 6px 0 2px;
+  }
+
   .btn-estado {
     background: #5856d6; color: #fff;
     padding: 8px 12px; font-size: 13px;
@@ -1001,7 +1049,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v1.2</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v1.4</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1309,7 +1357,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v1.3';
+const APP_VERSION = 'v1.4';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -2123,6 +2171,32 @@ function fmtFecha(f) {
 }
 function monedaSymbol(m) { return m === 'USD' ? 'US$' : '$'; }
 
+// Tracker visual del estado del pedido (5 o 6 circulitos en línea)
+function renderTracker(v) {
+  const flujo = flujoFor(v);
+  if (!flujo) {
+    return `<div class="tracker-undecided">Falta elegir quién lo hace</div>`;
+  }
+  const idx = flujo.indexOf(v.estado);
+  const currentIdx = idx < 0 ? 0 : idx;
+  const lastIdx = flujo.length - 1;
+  const isFinished = currentIdx >= lastIdx;
+  const parts = [];
+  flujo.forEach((step, i) => {
+    if (i > 0) {
+      const lineDone = i <= currentIdx;
+      parts.push(`<span class="tracker-line ${lineDone ? 'done' : ''}"></span>`);
+    }
+    let cls = '';
+    if (isFinished && i === lastIdx) cls = 'finished';
+    else if (i < currentIdx) cls = 'done';
+    else if (i === currentIdx) cls = 'current';
+    parts.push(`<span class="tracker-dot ${cls}" title="${escapeHtml(step)}"></span>`);
+  });
+  const label = `Paso ${currentIdx + 1}/${flujo.length} — ${v.estado || 'Recepcionado'}`;
+  return `<div class="tracker" role="img" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${parts.join('')}</div>`;
+}
+
 // ====== Cotización dólar BLUE por fecha (para dolarizar ventas ARS) ======
 const BLUE_CACHE_KEY = 'mv_blue_rates_v1';
 function getBlueCache() {
@@ -2243,6 +2317,7 @@ function render() {
     const pago = formaPagoTexto(v);
     const estadoClass = 'estado-' + (v.estado || 'Recepcionado').replace(/\s|\(|\)/g, '');
     const estadoHtml = `<span class="estado-chip ${estadoClass}">${escapeHtml(v.estado || 'Recepcionado')}</span>`;
+    const trackerHtml = renderTracker(v);
     const card = document.createElement('div');
     card.className = 'venta-card';
     card.innerHTML = `
@@ -2250,6 +2325,7 @@ function render() {
         <div>
           ${estadoHtml}
           <div class="venta-cliente" style="display:inline-block; vertical-align:middle;">${escapeHtml(v.cliente) || '—'}</div>
+          ${trackerHtml}
           ${importe ? `<div class="venta-importe">${importe}${pago ? ` · ${escapeHtml(pago)}` : ''}</div>` : (pago ? `<div class="venta-importe">${escapeHtml(pago)}</div>` : '')}
         </div>
         <div class="venta-fecha">${fmtFecha(v.fecha)}</div>
