@@ -45,6 +45,11 @@
     font-weight: 700;
     letter-spacing: -0.3px;
   }
+  .header-logo {
+    height: 38px; width: auto;
+    display: block;
+    object-fit: contain;
+  }
   .tabs {
     display: flex;
     gap: 6px;
@@ -70,8 +75,26 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 3px 8px rgba(0,0,0,0.04);
   }
   main { padding: 10px 12px; max-width: 1200px; margin: 0 auto; }
-  .module { display: none; }
+  .module { display: none; position: relative; }
   .module.active { display: block; animation: fadeIn 0.2s; }
+
+  /* Marca de agua del logo detrás del form en Cargar */
+  .watermark {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(380px, 75vw);
+    height: min(380px, 75vw);
+    background-image: url('logo.jpg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: 0;
+  }
+  #cargar .card { position: relative; z-index: 1; }
+  #cargar .notif-banner { position: relative; z-index: 1; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   .card {
@@ -745,7 +768,10 @@
 <header>
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
     <button class="logout-btn" onclick="cambiarSocia()" style="font-size:11px; padding:4px 6px; min-height:auto; color:#5856d6; width:auto;" title="Cambiar socia">Cambiar</button>
-    <h1 style="margin:0; flex:1;">Ventas MV<span class="socia-chip" id="sociaChip" style="display:none;"></span></h1>
+    <div style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px;">
+      <img src="logo.jpg" alt="MV Leather Studio" class="header-logo">
+      <span class="socia-chip" id="sociaChip" style="display:none;"></span>
+    </div>
     <button class="logout-btn" onclick="logout()" style="font-size:12px; width:auto; padding:4px 6px; min-height:auto;">Salir</button>
   </div>
   <div class="tabs" role="tablist">
@@ -760,6 +786,7 @@
 
   <!-- ============ CARGAR ============ -->
   <section id="cargar" class="module active">
+    <div class="watermark" aria-hidden="true"></div>
     <div class="notif-banner hidden" id="notifBanner">
       <span>🔔 Activá las notificaciones para avisar a las otras socias</span>
       <button type="button" id="enableNotifBtn">Activar</button>
@@ -1478,6 +1505,66 @@ async function bootApp() {
   subscribeRealtime();
   // 4. Verificar si mostrar banner de notificaciones
   maybeShowNotifBanner();
+  // 5. Migración one-shot de ventas viejas en localStorage (pre-Supabase)
+  await maybeMigrateLegacy();
+}
+
+// One-shot: si hay ventas en localStorage.ventas_v1 (versión vieja), ofrece subirlas
+async function maybeMigrateLegacy() {
+  const LEGACY_KEY = 'ventas_v1';
+  const DONE_KEY   = 'ventas_v1_imported';
+  if (localStorage.getItem(DONE_KEY) === '1') return;
+  let legacy;
+  try { legacy = JSON.parse(localStorage.getItem(LEGACY_KEY)) || []; }
+  catch { legacy = []; }
+  if (!legacy.length) { localStorage.setItem(DONE_KEY, '1'); return; }
+
+  const ok = confirm(
+    `Encontré ${legacy.length} venta${legacy.length===1?'':'s'} vieja${legacy.length===1?'':'s'} guardada${legacy.length===1?'':'s'} en este iPhone (antes de la base compartida).\n\n` +
+    `¿Las subo a Supabase a nombre de "${sociaNombre(state.mySociaId)}"?\n\n` +
+    `(Si no, se mantienen en el iPhone pero no aparecerán en la app.)`
+  );
+  if (!ok) {
+    localStorage.setItem(DONE_KEY, '1');
+    return;
+  }
+
+  showToast('Importando ventas viejas...', '#007aff');
+  const numericCols = new Set(['importe','hombro_hombro','largo_brazo','busto','cintura','cadera','largo_total']);
+  const rows = legacy.map(v => {
+    const r = { socia_id: state.mySociaId };
+    for (const [app, col] of FIELD_MAP) {
+      let val = v[app];
+      if (val === undefined || val === null) val = '';
+      val = String(val).trim();
+      if (numericCols.has(col)) {
+        r[col] = val === '' ? null : Number(val);
+        if (r[col] !== null && !isFinite(r[col])) r[col] = null;
+      } else {
+        r[col] = val === '' ? null : val;
+      }
+    }
+    return r;
+  }).filter(r => r.cliente || r.prenda || r.importe); // descartar vacíos
+
+  if (!rows.length) { localStorage.setItem(DONE_KEY, '1'); return; }
+
+  try {
+    const { data, error } = await sb.from('ventas').insert(rows).select();
+    if (error) throw error;
+    // Agregar a state (sin duplicar)
+    const fresh = data.map(rowToVenta).filter(v => !state.ventas.find(x => x.id === v.id));
+    state.ventas = fresh.concat(state.ventas);
+    // Re-ordenar por fecha desc
+    state.ventas.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+    saveCache();
+    render();
+    localStorage.setItem(DONE_KEY, '1');
+    showToast(`✓ ${data.length} venta${data.length===1?'':'s'} importada${data.length===1?'':'s'}`, '#34c759');
+  } catch (err) {
+    console.error('Migración falló:', err);
+    showToast('Error al importar — probá de nuevo', '#ff3b30');
+  }
 }
 
 function subscribeRealtime() {
