@@ -1277,7 +1277,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v1.0';
+const APP_VERSION = 'v1.1';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1725,16 +1725,29 @@ function renderStats() {
   const data = statsFiltered();
   const totalVentas = data.length;
   const totalsRev = sumByMoneda(data);
-  const dataARS = data.filter(v => v.moneda !== 'USD');
-  const dataUSD = data.filter(v => v.moneda === 'USD');
-  const avgTicketARS = dataARS.length ? totalsRev.ARS / dataARS.length : 0;
-  const avgTicketUSD = dataUSD.length ? totalsRev.USD / dataUSD.length : 0;
   const clientasUnicas = new Set(data.map(v => (v.cliente || '').toLowerCase().trim()).filter(Boolean)).size;
 
   document.getElementById('statsCount').textContent = totalVentas;
   document.getElementById('statsRevenue').textContent = fmtTotales(totalsRev);
-  document.getElementById('statsAvg').textContent = fmtTotales({ ARS: avgTicketARS, USD: avgTicketUSD });
+  document.getElementById('statsAvg').textContent = 'Calculando...';
   document.getElementById('statsClientes').textContent = clientasUnicas;
+
+  // Ticket promedio dolarizado (suma todo en USD / cantidad total de ventas)
+  (async () => {
+    await prefetchBlueRates(data.map(v => v.fecha));
+    let totalUSD = 0;
+    data.forEach(v => {
+      const imp = parseFloat(v.importe) || 0;
+      if (v.moneda === 'USD') totalUSD += imp;
+      else {
+        const rate = blueRateCached(v.fecha);
+        if (rate) totalUSD += imp / rate;
+      }
+    });
+    const avgUSD = totalVentas ? totalUSD / totalVentas : 0;
+    document.getElementById('statsAvg').textContent =
+      'US$ ' + avgUSD.toLocaleString('es-AR', { maximumFractionDigits: 0 });
+  })();
 
   // Por prenda: agrupar por modelo (lowercase para dedupe), sumar ventas + importe separado por moneda
   const prendasMap = new Map();

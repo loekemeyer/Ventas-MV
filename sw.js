@@ -1,4 +1,4 @@
-const CACHE = 'ventas-mv-v5';
+const CACHE = 'ventas-mv-v6';
 const CORE = ['./manifest.json', './icon-192.png', './icon-512.png', './logo.jpg'];
 
 self.addEventListener('install', (e) => {
