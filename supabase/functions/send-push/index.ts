@@ -201,13 +201,14 @@ async function sendPushTo(sub: Subscription, jsonPayload: string): Promise<Respo
 }
 
 // ---------- formato importe ----------
-function fmtMoney(v: any): string {
+function fmtMoney(v: any, moneda?: string): string {
   const n = typeof v === "number" ? v : parseFloat(v);
   if (!isFinite(n)) return "";
+  const sym = moneda === "USD" ? "US$" : "$";
   try {
-    return "$" + n.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    return sym + n.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   } catch {
-    return "$" + Math.round(n).toString();
+    return sym + Math.round(n).toString();
   }
 }
 
@@ -247,7 +248,7 @@ Deno.serve(async (req) => {
   }
 
   const clienteTxt = (row.cliente ?? "").toString().trim() || "sin nombre";
-  const importeTxt = row.importe != null ? fmtMoney(row.importe) : "";
+  const importeTxt = row.importe != null ? fmtMoney(row.importe, row.moneda) : "";
   const title = `${autorNombre} cargó una venta`;
   const body = importeTxt
     ? `${clienteTxt} — ${importeTxt}`

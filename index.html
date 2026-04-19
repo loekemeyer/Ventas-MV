@@ -1032,8 +1032,14 @@
               <option value="A medida">A medida</option>
             </select>
           </label>
-          <label><span>Importe ($)</span>
-            <input type="number" step="0.01" name="importe" inputmode="decimal" placeholder="0.00">
+          <label><span>Importe</span>
+            <div style="display:flex; gap:6px;">
+              <select name="moneda" style="width:auto; padding:9px 6px; flex-shrink:0;">
+                <option value="ARS">$</option>
+                <option value="USD">USD</option>
+              </select>
+              <input type="number" step="0.01" name="importe" inputmode="decimal" placeholder="0.00" style="flex:1;">
+            </div>
           </label>
           <label class="full"><span>Forma de Pago</span>
             <select name="formaPago" id="formaPago">
@@ -1322,7 +1328,8 @@ function onSociaReady() {
 const FIELD_MAP = [
   ['fecha','fecha'], ['cliente','cliente'], ['telefono','telefono'],
   ['prenda','prenda'], ['material','material'], ['color','color'], ['talle','talle'],
-  ['importe','importe'], ['formaPago','forma_pago'], ['formaPagoOtro','forma_pago_otro'],
+  ['importe','importe'], ['moneda','moneda'],
+  ['formaPago','forma_pago'], ['formaPagoOtro','forma_pago_otro'],
   ['hombroHombro','hombro_hombro'], ['largoBrazo','largo_brazo'],
   ['busto','busto'], ['cintura','cintura'], ['cadera','cadera'], ['largoTotal','largo_total'],
 ];
@@ -1343,6 +1350,7 @@ function rowToVenta(r) {
     if (val === null || val === undefined) val = '';
     v[app] = String(val);
   }
+  if (!v.moneda) v.moneda = 'ARS';
   v.estado = r.estado || 'Recepcionado';
   v.hechoPorFabian = (r.hecho_por_fabian === null || r.hecho_por_fabian === undefined) ? null : !!r.hecho_por_fabian;
   v.fechaPromesaFabian = r.fecha_promesa_fabian || '';
@@ -1359,6 +1367,8 @@ function formToRow(fd, sociaId) {
     if (numericCols.has(col)) {
       row[col] = val === '' ? null : Number(val);
       if (row[col] !== null && !isFinite(row[col])) row[col] = null;
+    } else if (col === 'moneda') {
+      row[col] = (val === 'USD') ? 'USD' : 'ARS';
     } else {
       row[col] = val === '' ? null : val;
     }
@@ -1447,58 +1457,70 @@ function renderFacturacion() {
   const yearStr = String(year);
   const data = state.ventas.filter(v => (v.fecha || '').startsWith(yearStr));
 
-  // Agregar por mes (0-11)
-  const byMonth = Array.from({ length: 12 }, () => ({ count: 0, total: 0, socias: new Map() }));
+  // Agregar por mes (0-11), separando ARS y USD
+  const byMonth = Array.from({ length: 12 }, () => ({ count: 0, totARS: 0, totUSD: 0, socias: new Map() }));
   data.forEach(v => {
     const m = parseInt((v.fecha || '').slice(5,7), 10) - 1;
     if (isNaN(m) || m < 0 || m > 11) return;
     const bucket = byMonth[m];
     bucket.count += 1;
-    const importe = parseFloat(v.importe) || 0;
-    bucket.total += importe;
+    const imp = parseFloat(v.importe) || 0;
+    const mon = v.moneda === 'USD' ? 'USD' : 'ARS';
+    if (mon === 'USD') bucket.totUSD += imp; else bucket.totARS += imp;
     const socia = sociaNombre(v.socia_id) || 'Sin socia';
-    const s = bucket.socias.get(socia) || { count: 0, total: 0 };
+    const s = bucket.socias.get(socia) || { count: 0, totARS: 0, totUSD: 0 };
     s.count += 1;
-    s.total += importe;
+    if (mon === 'USD') s.totUSD += imp; else s.totARS += imp;
     bucket.socias.set(socia, s);
   });
 
-  const totalYear = byMonth.reduce((a, m) => a + m.total, 0);
+  const totalsYear = byMonth.reduce((acc, m) => ({
+    ARS: acc.ARS + m.totARS, USD: acc.USD + m.totUSD,
+  }), { ARS: 0, USD: 0 });
   const countYear = byMonth.reduce((a, m) => a + m.count, 0);
   const monthsWith = byMonth.filter(m => m.count > 0).length || 1;
-  const avgMonth = totalYear / monthsWith;
+  const avgARS = totalsYear.ARS / monthsWith;
+  const avgUSD = totalsYear.USD / monthsWith;
 
-  document.getElementById('facTotal').textContent = fmtMoneyShort(totalYear);
+  document.getElementById('facTotal').textContent = fmtTotales(totalsYear);
   document.getElementById('facCount').textContent = countYear;
-  document.getElementById('facAvgMonth').textContent = fmtMoneyShort(avgMonth);
+  document.getElementById('facAvgMonth').textContent = fmtTotales({ ARS: avgARS, USD: avgUSD });
 
-  const maxMonth = Math.max(...byMonth.map(m => m.total), 1);
+  // Para la barra visual, normalizamos por el total mayor entre ARS y USD (tratados por separado)
+  const maxMonthARS = Math.max(...byMonth.map(m => m.totARS), 1);
+  const maxMonthUSD = Math.max(...byMonth.map(m => m.totUSD), 1);
   const now = new Date();
   const currentMonth = now.getFullYear() === year ? now.getMonth() : -1;
 
   const html = byMonth.map((m, idx) => {
     const empty = m.count === 0;
     const current = idx === currentMonth;
-    const pct = (m.total / maxMonth) * 100;
+    // Barra: sumamos el % relativo de ARS + USD (normalizados cada uno a su máx)
+    const pctARS = (m.totARS / maxMonthARS) * 100;
+    const pctUSD = (m.totUSD / maxMonthUSD) * 100;
+    const pct = Math.max(pctARS, pctUSD);
+    const mTot = { ARS: m.totARS, USD: m.totUSD };
     let detail = '';
     if (!empty) {
       const sociasArr = Array.from(m.socias.entries())
-        .sort((a, b) => b[1].total - a[1].total);
+        .sort((a, b) => (b[1].totARS + b[1].totUSD * 1000) - (a[1].totARS + a[1].totUSD * 1000));
       detail = `<div class="month-detail">
         ${sociasArr.map(([nombre, s]) => `
           <div class="socia-line">
             <span><span class="name">${escapeHtml(nombre)}</span> <span class="count">${s.count} venta${s.count===1?'':'s'}</span></span>
-            <span class="val">${fmtMoneyShort(s.total)}</span>
+            <span class="val">${fmtTotales({ ARS: s.totARS, USD: s.totUSD })}</span>
           </div>`).join('')}
       </div>`;
     }
+    const avgARS = m.count ? m.totARS / m.count : 0;
+    const avgUSD = m.count ? m.totUSD / m.count : 0;
     return `
       <div class="month-row ${empty?'empty':''} ${current?'current':''}" data-month="${idx}">
         <div class="month-head">
           <span class="month-name">${MESES[idx]}${current ? ' (actual)' : ''}</span>
-          <span class="month-total">${empty ? '—' : fmtMoneyShort(m.total)}</span>
+          <span class="month-total">${empty ? '—' : fmtTotales(mTot)}</span>
         </div>
-        <div class="month-meta">${m.count} venta${m.count===1?'':'s'}${m.count > 0 ? ' · prom ' + fmtMoneyShort(m.total / m.count) : ''}</div>
+        <div class="month-meta">${m.count} venta${m.count===1?'':'s'}${m.count > 0 ? ' · prom ' + fmtTotales({ ARS: avgARS, USD: avgUSD }) : ''}</div>
         <div class="month-bar"><div class="month-bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
         ${detail}
       </div>`;
@@ -1610,28 +1632,32 @@ function renderDemora(data) {
 function renderStats() {
   const data = statsFiltered();
   const totalVentas = data.length;
-  const totalRevenue = data.reduce((a, v) => a + (parseFloat(v.importe) || 0), 0);
-  const avgTicket = totalVentas ? totalRevenue / totalVentas : 0;
+  const totalsRev = sumByMoneda(data);
+  const dataARS = data.filter(v => v.moneda !== 'USD');
+  const dataUSD = data.filter(v => v.moneda === 'USD');
+  const avgTicketARS = dataARS.length ? totalsRev.ARS / dataARS.length : 0;
+  const avgTicketUSD = dataUSD.length ? totalsRev.USD / dataUSD.length : 0;
   const clientasUnicas = new Set(data.map(v => (v.cliente || '').toLowerCase().trim()).filter(Boolean)).size;
 
   document.getElementById('statsCount').textContent = totalVentas;
-  document.getElementById('statsRevenue').textContent = fmtMoneyShort(totalRevenue);
-  document.getElementById('statsAvg').textContent = fmtMoneyShort(avgTicket);
+  document.getElementById('statsRevenue').textContent = fmtTotales(totalsRev);
+  document.getElementById('statsAvg').textContent = fmtTotales({ ARS: avgTicketARS, USD: avgTicketUSD });
   document.getElementById('statsClientes').textContent = clientasUnicas;
 
-  // Por prenda: agrupar por modelo (lowercase para dedupe), sumar ventas + importe
+  // Por prenda: agrupar por modelo (lowercase para dedupe), sumar ventas + importe separado por moneda
   const prendasMap = new Map();
   data.forEach(v => {
     const key = (v.prenda || '').trim().toLowerCase();
     if (!key) return;
     const display = (v.prenda || '').trim();
-    const e = prendasMap.get(key) || { nombre: display, count: 0, total: 0 };
+    const e = prendasMap.get(key) || { nombre: display, count: 0, totARS: 0, totUSD: 0 };
     e.count += 1;
-    e.total += parseFloat(v.importe) || 0;
+    const imp = parseFloat(v.importe) || 0;
+    if (v.moneda === 'USD') e.totUSD += imp; else e.totARS += imp;
     prendasMap.set(key, e);
   });
   const prendasArr = Array.from(prendasMap.values())
-    .sort((a, b) => b.total - a.total || b.count - a.count);
+    .sort((a, b) => (b.totARS + b.totUSD * 1000) - (a.totARS + a.totUSD * 1000) || b.count - a.count);
   const prendasEl = document.getElementById('statsPrendas');
   if (!prendasArr.length) {
     prendasEl.innerHTML = '<div class="stats-empty">Sin ventas en el período</div>';
@@ -1644,7 +1670,7 @@ function renderStats() {
             <div class="prenda-name">${escapeHtml(p.nombre)}</div>
             <div class="prenda-meta">${p.count} venta${p.count === 1 ? '' : 's'} · ${pct}%</div>
           </div>
-          <div class="prenda-value">${fmtMoneyShort(p.total)}</div>
+          <div class="prenda-value">${fmtTotales({ ARS: p.totARS, USD: p.totUSD })}</div>
         </div>`;
     }).join('');
   }
@@ -1684,15 +1710,16 @@ function renderStats() {
   data.forEach(v => {
     const key = (v.cliente || '').trim();
     if (!key) return;
-    const e = clMap.get(key.toLowerCase()) || { nombre: key, count: 0, total: 0, telefono: '' };
+    const e = clMap.get(key.toLowerCase()) || { nombre: key, count: 0, totARS: 0, totUSD: 0, telefono: '' };
     e.count += 1;
-    e.total += parseFloat(v.importe) || 0;
+    const imp = parseFloat(v.importe) || 0;
+    if (v.moneda === 'USD') e.totUSD += imp; else e.totARS += imp;
     const tel = (v.telefono || '').trim();
     if (tel && !e.telefono) e.telefono = tel;
     clMap.set(key.toLowerCase(), e);
   });
   const clArr = Array.from(clMap.values())
-    .sort((a, b) => b.total - a.total || b.count - a.count)
+    .sort((a, b) => (b.totARS + b.totUSD * 1000) - (a.totARS + a.totUSD * 1000) || b.count - a.count)
     .slice(0, 8);
   const clEl = document.getElementById('statsClientesTop');
   if (!clArr.length) {
@@ -1712,7 +1739,7 @@ function renderStats() {
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
             ${waBtn}
-            <div class="prenda-value">${fmtMoneyShort(c.total)}</div>
+            <div class="prenda-value">${fmtTotales({ ARS: c.totARS, USD: c.totUSD })}</div>
           </div>
         </div>`;
     }).join('');
@@ -1891,15 +1918,33 @@ function fmtFecha(f) {
   const [y, m, d] = f.split('-');
   return `${d}/${m}/${y}`;
 }
-function fmtMoney(n) {
+function monedaSymbol(m) { return m === 'USD' ? 'US$' : '$'; }
+// Suma importes separando por moneda → { ARS: total, USD: total }
+function sumByMoneda(arr) {
+  const out = { ARS: 0, USD: 0 };
+  for (const v of arr) {
+    const n = parseFloat(v.importe) || 0;
+    const m = v.moneda === 'USD' ? 'USD' : 'ARS';
+    out[m] += n;
+  }
+  return out;
+}
+// Formatea ambos totales en una sola línea (oculta la moneda que no tiene nada)
+function fmtTotales(totales) {
+  const parts = [];
+  if (totales.ARS > 0) parts.push(fmtMoneyShort(totales.ARS, 'ARS'));
+  if (totales.USD > 0) parts.push(fmtMoneyShort(totales.USD, 'USD'));
+  return parts.length ? parts.join(' · ') : '$0';
+}
+function fmtMoney(n, moneda) {
   const num = parseFloat(n);
   if (isNaN(num)) return '';
-  return '$' + num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return monedaSymbol(moneda) + num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-function fmtMoneyShort(n) {
+function fmtMoneyShort(n, moneda) {
   const num = parseFloat(n);
-  if (isNaN(num)) return '$0';
-  return '$' + num.toLocaleString('es-AR', { maximumFractionDigits: 0 });
+  if (isNaN(num)) return monedaSymbol(moneda) + '0';
+  return monedaSymbol(moneda) + num.toLocaleString('es-AR', { maximumFractionDigits: 0 });
 }
 function formaPagoTexto(v) {
   if (v.formaPago === 'Otro') return v.formaPagoOtro ? `Otro (${v.formaPagoOtro})` : 'Otro';
@@ -1931,8 +1976,8 @@ function render() {
     new Set(all.map(v => (v.cliente || '').toLowerCase().trim()).filter(Boolean)).size);
   const mesPrefix = new Date().toISOString().slice(0, 7);
   setText('statMes', all.filter(v => (v.fecha || '').startsWith(mesPrefix)).length);
-  const totalImporte = filtered.reduce((acc, v) => acc + (parseFloat(v.importe) || 0), 0);
-  setText('statImporte', fmtMoneyShort(totalImporte));
+  const totImp = sumByMoneda(filtered);
+  setText('statImporte', fmtTotales(totImp));
 
   listEl.innerHTML = '';
   if (filtered.length === 0) {
@@ -1942,7 +1987,7 @@ function render() {
 
   filtered.forEach(v => {
     const tel = telHref(v.telefono);
-    const importe = fmtMoney(v.importe);
+    const importe = fmtMoney(v.importe, v.moneda);
     const pago = formaPagoTexto(v);
     const estadoClass = 'estado-' + (v.estado || 'Recepcionado').replace(/\s|\(|\)/g, '');
     const estadoHtml = `<span class="estado-chip ${estadoClass}">${escapeHtml(v.estado || 'Recepcionado')}</span>`;
