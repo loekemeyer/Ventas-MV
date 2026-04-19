@@ -701,6 +701,18 @@
     font-size: 12px; color: #1e40af;
     text-align: center;
   }
+  .dolarized-line {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    font-size: 13px; color: #166534;
+    display: flex; justify-content: space-between;
+    align-items: center; gap: 10px;
+  }
+  .dolarized-line span:first-child { font-weight: 600; }
+  .dolarized-line span:last-child  { font-weight: 700; }
 
   /* ===== Estado del pedido ===== */
   .estado-chip {
@@ -1115,6 +1127,10 @@
         <div class="stats-big" id="facAvgMonth">$0</div>
       </div>
     </div>
+    <div class="dolarized-line" id="facDolarizado" style="display:none;">
+      <span>💵 Dolarizado (blue por fecha):</span>
+      <span id="facDolarizadoVals"></span>
+    </div>
 
     <div id="facturacionMonths"></div>
 
@@ -1446,6 +1462,30 @@ const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 let facturacionYear = new Date().getFullYear();
 
+async function computeFacDolarizado(data) {
+  const box = document.getElementById('facDolarizado');
+  const valsEl = document.getElementById('facDolarizadoVals');
+  if (!box || !data.length) { if (box) box.style.display = 'none'; return; }
+  box.style.display = 'flex';
+  valsEl.textContent = 'Calculando...';
+  await prefetchBlueRates(data.map(v => v.fecha));
+  let totalUSD = 0;
+  const monthsSet = new Set();
+  data.forEach(v => {
+    const imp = parseFloat(v.importe) || 0;
+    if (v.moneda === 'USD') totalUSD += imp;
+    else {
+      const rate = blueRateCached(v.fecha);
+      if (rate) totalUSD += imp / rate;
+    }
+    if (v.fecha) monthsSet.add(v.fecha.slice(0, 7));
+  });
+  const months = monthsSet.size || 1;
+  const avg = totalUSD / months;
+  const fmt = (n) => 'US$ ' + n.toLocaleString('es-AR', { maximumFractionDigits: 0 });
+  valsEl.textContent = `Total ${fmt(totalUSD)} · Prom/mes ${fmt(avg)}`;
+}
+
 function populateYearSelect() {
   const sel = document.getElementById('facturacionYear');
   const years = new Set();
@@ -1469,6 +1509,8 @@ function renderFacturacion() {
   const year = facturacionYear;
   const yearStr = String(year);
   const data = state.ventas.filter(v => (v.fecha || '').startsWith(yearStr));
+  // dolarización async (no bloquea render)
+  computeFacDolarizado(data);
 
   // Agregar por mes (0-11), separando ARS y USD
   const byMonth = Array.from({ length: 12 }, () => ({ count: 0, totARS: 0, totUSD: 0, socias: new Map() }));
