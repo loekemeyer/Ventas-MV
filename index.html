@@ -1086,8 +1086,9 @@
   <!-- ============ SEGUIMIENTO DE PEDIDOS ============ -->
   <section id="registro" class="module">
     <div class="card">
-      <div class="actions" style="margin-top: 0; margin-bottom: 12px;">
-        <button type="button" id="toggleEntregados" class="btn-secondary btn-small" onclick="toggleVerTodos()">Ver todos</button>
+      <div class="period-chips" style="margin-bottom: 12px;">
+        <button type="button" class="period-chip active" data-filter="enCurso" onclick="setVerTodos(false)">Solo en curso</button>
+        <button type="button" class="period-chip" data-filter="todos" onclick="setVerTodos(true)">Ver todos</button>
       </div>
       <div id="ventaList" class="venta-list"></div>
     </div>
@@ -1901,10 +1902,11 @@ function showToast(msg, color = '#1c1c1e') {
 }
 
 let mostrarEntregados = false;
-function toggleVerTodos() {
-  mostrarEntregados = !mostrarEntregados;
-  const btn = document.getElementById('toggleEntregados');
-  btn.textContent = mostrarEntregados ? 'Solo en curso' : 'Ver todos';
+function setVerTodos(todos) {
+  mostrarEntregados = todos;
+  document.querySelectorAll('#registro .period-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.filter === (todos ? 'todos' : 'enCurso'));
+  });
   render();
 }
 
