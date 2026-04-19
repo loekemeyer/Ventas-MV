@@ -2024,7 +2024,7 @@ function render() {
       ${medidasHtml(v)}
       <div class="venta-actions">
         <button class="btn-edit" data-edit-id="${v.id}" title="Editar">✏️</button>
-        <button class="btn-estado" data-estado-id="${v.id}">Avanzar estado</button>
+        ${v.estado !== 'Entregado' ? `<button class="btn-estado" data-estado-id="${v.id}">Avanzar estado</button>` : ''}
         ${tel ? `<a class="btn-wa" href="https://wa.me/${tel}" target="_blank">WhatsApp</a>` : ''}
         <button class="del-btn" data-id="${v.id}">Borrar</button>
       </div>
