@@ -661,6 +661,147 @@
     text-align: center;
   }
 
+  /* ===== Estado del pedido ===== */
+  .estado-chip {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-right: 6px;
+  }
+  .estado-Recepcionado  { background: #e5e7eb; color: #4b5563; }
+  .estado-PedidoaFabian, .estado-CompraMaterial { background: #fef3c7; color: #92400e; }
+  .estado-PagadoaFabian, .estado-CorteOscar     { background: #fed7aa; color: #9a3412; }
+  .estado-EntregóFabian, .estado-Confeccion     { background: #ddd6fe; color: #5b21b6; }
+  .estado-Retira       { background: #bfdbfe; color: #1e40af; }
+  .estado-Entregado    { background: #d1fae5; color: #065f46; }
+
+  .btn-estado {
+    background: #5856d6; color: #fff;
+    padding: 8px 12px; font-size: 13px;
+    border-radius: 8px; font-weight: 600;
+    min-height: 36px; border: none;
+  }
+
+  /* Modal flujo */
+  .estado-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 150;
+    padding: 0;
+  }
+  .estado-modal.show { display: flex; }
+  .estado-sheet {
+    background: #fff;
+    width: 100%;
+    max-width: 520px;
+    border-radius: 18px 18px 0 0;
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+  .estado-sheet h3 {
+    margin: 0 0 4px; font-size: 18px; font-weight: 700;
+  }
+  .estado-sheet .sub {
+    font-size: 13px; color: #8e8e93; margin: 0 0 14px;
+  }
+  .decision-buttons {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin: 14px 0;
+  }
+  .decision-buttons button {
+    padding: 16px; font-size: 16px; font-weight: 700;
+    border-radius: 12px; min-height: 60px; border: 2px solid transparent;
+  }
+  .decision-buttons .dec-fabian {
+    background: #fef3c7; color: #92400e; border-color: #fbbf24;
+  }
+  .decision-buttons .dec-socias {
+    background: #ddd6fe; color: #5b21b6; border-color: #a78bfa;
+  }
+  .steps-list {
+    margin: 14px 0;
+  }
+  .step-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f2f2f7;
+  }
+  .step-row:last-child { border-bottom: none; }
+  .step-circle {
+    width: 26px; height: 26px; border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    background: #e5e7eb; color: #9ca3af;
+  }
+  .step-row.done .step-circle {
+    background: #34c759; color: #fff;
+  }
+  .step-row.current .step-circle {
+    background: #007aff; color: #fff;
+    box-shadow: 0 0 0 4px rgba(0,122,255,0.2);
+  }
+  .step-label {
+    font-size: 15px; color: #9ca3af;
+    font-weight: 500;
+  }
+  .step-row.done .step-label {
+    color: #1c1c1e; font-weight: 600;
+  }
+  .step-row.current .step-label {
+    color: #007aff; font-weight: 700;
+  }
+  .step-meta {
+    font-size: 11px; color: #8e8e93;
+    margin-left: auto;
+  }
+  .advance-box {
+    background: #f2f2f7;
+    border-radius: 12px;
+    padding: 14px;
+    margin: 14px 0;
+  }
+  .advance-box label {
+    font-size: 12px; font-weight: 700; color: #666;
+    text-transform: uppercase; letter-spacing: 0.3px;
+    margin-bottom: 6px; display: block;
+  }
+  .advance-box input, .advance-box select {
+    margin-bottom: 10px;
+  }
+  .modal-actions {
+    display: flex; gap: 8px; margin-top: 8px;
+  }
+  .modal-actions button {
+    flex: 1; padding: 14px; font-size: 15px; font-weight: 700;
+    min-height: 48px;
+  }
+  .btn-close-modal {
+    background: #e5e7eb; color: #1c1c1e;
+  }
+  .btn-advance {
+    background: #34c759; color: #fff;
+  }
+  .btn-undo {
+    background: transparent; color: #ff3b30;
+    text-align: center; width: 100%; padding: 10px;
+    margin-top: 6px; font-weight: 600; font-size: 13px;
+    border: none;
+  }
+
   /* Tablet y desktop */
   @media (min-width: 640px) {
     main { padding: 20px; }
@@ -791,6 +932,10 @@
 </div>
 
 <div class="toast-realtime" id="realtimeToast"></div>
+
+<div class="estado-modal" id="estadoModal">
+  <div class="estado-sheet" id="estadoSheet"></div>
+</div>
 
 <header>
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
@@ -1175,6 +1320,16 @@ const FIELD_MAP = [
   ['hombroHombro','hombro_hombro'], ['largoBrazo','largo_brazo'],
   ['busto','busto'], ['cintura','cintura'], ['cadera','cadera'], ['largoTotal','largo_total'],
 ];
+const EXTRA_COLS = ['estado','hecho_por_fabian','fecha_promesa_fabian','quien_retira'];
+
+// Flujos de estado
+const FLUJO_FABIAN = ['Recepcionado','Pedido a Fabian','Pagado a Fabian','Entregó Fabian','Entregado'];
+const FLUJO_SOCIAS = ['Recepcionado','Compra Material','Corte (Oscar)','Confeccion','Retira','Entregado'];
+function flujoFor(v) {
+  if (v.hechoPorFabian === true) return FLUJO_FABIAN;
+  if (v.hechoPorFabian === false) return FLUJO_SOCIAS;
+  return null; // todavía no decidieron
+}
 function rowToVenta(r) {
   const v = { id: r.id, socia_id: r.socia_id };
   for (const [app, col] of FIELD_MAP) {
@@ -1182,6 +1337,10 @@ function rowToVenta(r) {
     if (val === null || val === undefined) val = '';
     v[app] = String(val);
   }
+  v.estado = r.estado || 'Recepcionado';
+  v.hechoPorFabian = (r.hecho_por_fabian === null || r.hecho_por_fabian === undefined) ? null : !!r.hecho_por_fabian;
+  v.fechaPromesaFabian = r.fecha_promesa_fabian || '';
+  v.quienRetira = r.quien_retira || '';
   return v;
 }
 function formToRow(fd, sociaId) {
@@ -1718,12 +1877,15 @@ function render() {
     const tel = telHref(v.telefono);
     const importe = fmtMoney(v.importe);
     const pago = formaPagoTexto(v);
+    const estadoClass = 'estado-' + (v.estado || 'Recepcionado').replace(/\s|\(|\)/g, '');
+    const estadoHtml = `<span class="estado-chip ${estadoClass}">${escapeHtml(v.estado || 'Recepcionado')}</span>`;
     const card = document.createElement('div');
     card.className = 'venta-card';
     card.innerHTML = `
       <div class="venta-head">
         <div>
-          <div class="venta-cliente">${escapeHtml(v.cliente) || '—'}</div>
+          ${estadoHtml}
+          <div class="venta-cliente" style="display:inline-block; vertical-align:middle;">${escapeHtml(v.cliente) || '—'}</div>
           ${importe ? `<div class="venta-importe">${importe}${pago ? ` · ${escapeHtml(pago)}` : ''}</div>` : (pago ? `<div class="venta-importe">${escapeHtml(pago)}</div>` : '')}
         </div>
         <div class="venta-fecha">${fmtFecha(v.fecha)}</div>
@@ -1734,8 +1896,10 @@ function render() {
         <div><b>Color</b>${escapeHtml(v.color) || '—'}</div>
         <div><b>Talle</b>${escapeHtml(v.talle) || '—'}</div>
       </div>
+      ${v.fechaPromesaFabian ? `<div class="venta-medidas"><span><b>Fabián promete:</b> ${fmtFecha(v.fechaPromesaFabian)}</span></div>` : ''}
       ${medidasHtml(v)}
       <div class="venta-actions">
+        <button class="btn-estado" data-estado-id="${v.id}">Avanzar estado</button>
         ${tel ? `<a class="btn-wa" href="https://wa.me/${tel}" target="_blank">WhatsApp</a>` : ''}
         ${tel ? `<a class="btn-call" href="tel:${tel}">Llamar</a>` : ''}
         <button class="del-btn" data-id="${v.id}">Borrar</button>
@@ -1799,7 +1963,210 @@ listEl.addEventListener('click', async (e) => {
       showToast('Error al borrar', '#ff3b30');
     }
   }
+  if (e.target.classList.contains('btn-estado')) {
+    const id = e.target.dataset.estadoId;
+    openEstadoModal(id);
+  }
 });
+
+// ====== Modal de avance de estado ======
+const estadoModal = document.getElementById('estadoModal');
+const estadoSheet = document.getElementById('estadoSheet');
+
+estadoModal.addEventListener('click', (e) => {
+  if (e.target === estadoModal) closeEstadoModal();
+});
+function closeEstadoModal() { estadoModal.classList.remove('show'); }
+
+function openEstadoModal(ventaId) {
+  const v = state.ventas.find(x => x.id === ventaId);
+  if (!v) return;
+  renderEstadoSheet(v);
+  estadoModal.classList.add('show');
+}
+
+function renderEstadoSheet(v) {
+  const flujo = flujoFor(v);
+  const head = `
+    <h3>${escapeHtml(v.cliente || 'Venta sin nombre')}</h3>
+    <p class="sub">${escapeHtml(v.prenda || '')} ${fmtFecha(v.fecha) ? '· ' + fmtFecha(v.fecha) : ''}</p>
+  `;
+
+  // Sin flujo decidido: pedir decisión
+  if (!flujo) {
+    estadoSheet.innerHTML = head + `
+      <p style="text-align:center; margin:8px 0 4px; font-size:14px;">¿Quién lo va a hacer?</p>
+      <div class="decision-buttons">
+        <button type="button" class="dec-fabian" onclick="setFabian('${v.id}', true)">Fabián</button>
+        <button type="button" class="dec-socias" onclick="setFabian('${v.id}', false)">Nosotras</button>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-close-modal" onclick="closeEstadoModal()">Cerrar</button>
+      </div>
+    `;
+    return;
+  }
+
+  const idx = flujo.indexOf(v.estado);
+  const currentIdx = idx < 0 ? 0 : idx;
+  const next = currentIdx < flujo.length - 1 ? flujo[currentIdx + 1] : null;
+  const isDone = !next;
+
+  // Step list
+  const stepsHtml = flujo.map((step, i) => {
+    const done = i < currentIdx;
+    const current = i === currentIdx;
+    let meta = '';
+    if (step === 'Pedido a Fabian' && v.fechaPromesaFabian && (done || current)) {
+      meta = `<span class="step-meta">Promete ${fmtFecha(v.fechaPromesaFabian)}</span>`;
+    }
+    if (step === 'Retira' && v.quienRetira && (done || current)) {
+      meta = `<span class="step-meta">${escapeHtml(v.quienRetira)}</span>`;
+    }
+    return `<div class="step-row ${done?'done':''} ${current?'current':''}">
+      <div class="step-circle">${done ? '✓' : (i + 1)}</div>
+      <div class="step-label">${step}</div>
+      ${meta}
+    </div>`;
+  }).join('');
+
+  // Advance box (extra inputs cuando hacen falta)
+  let advanceBox = '';
+  if (!isDone) {
+    if (next === 'Pedido a Fabian') {
+      advanceBox = `
+        <div class="advance-box">
+          <label>Fecha que prometió Fabián</label>
+          <input type="date" id="inputPromesa" value="${v.fechaPromesaFabian || ''}">
+        </div>`;
+    } else if (next === 'Retira') {
+      advanceBox = `
+        <div class="advance-box">
+          <label>¿Quién retira?</label>
+          <select id="inputRetira">
+            ${SOCIAS.map(s => `<option value="${s.nombre}">${s.nombre}</option>`).join('')}
+            <option value="Fabián">Fabián</option>
+            <option value="Oscar">Oscar</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>`;
+    }
+  }
+
+  const flujoLabel = flujo === FLUJO_FABIAN ? 'Flujo Fabián' : 'Flujo Socias';
+
+  estadoSheet.innerHTML = head + `
+    <p class="sub" style="margin-top:-8px; margin-bottom:14px;">${flujoLabel}</p>
+    <div class="steps-list">${stepsHtml}</div>
+    ${advanceBox}
+    <div class="modal-actions">
+      <button type="button" class="btn-close-modal" onclick="closeEstadoModal()">Cerrar</button>
+      ${!isDone ? `<button type="button" class="btn-advance" onclick="avanzarEstado('${v.id}')">Marcar "${escapeHtml(next)}"</button>` : ''}
+    </div>
+    ${currentIdx > 0 && !isDone ? `<button type="button" class="btn-undo" onclick="retrocederEstado('${v.id}')">← Retroceder un paso</button>` : ''}
+    <button type="button" class="btn-undo" onclick="resetFlujo('${v.id}')">Cambiar quién lo hace</button>
+  `;
+}
+
+async function setFabian(ventaId, yes) {
+  const v = state.ventas.find(x => x.id === ventaId);
+  if (!v) return;
+  try {
+    const { error } = await sb.from('ventas').update({
+      hecho_por_fabian: yes,
+      estado: 'Recepcionado',
+    }).eq('id', ventaId);
+    if (error) throw error;
+    v.hechoPorFabian = yes;
+    v.estado = 'Recepcionado';
+    saveCache();
+    render();
+    renderEstadoSheet(v); // re-pintar con el flujo ya elegido
+  } catch (e) {
+    showToast('Error al guardar', '#ff3b30');
+  }
+}
+
+async function avanzarEstado(ventaId) {
+  const v = state.ventas.find(x => x.id === ventaId);
+  if (!v) return;
+  const flujo = flujoFor(v);
+  if (!flujo) return;
+  const idx = flujo.indexOf(v.estado);
+  const next = flujo[idx + 1];
+  if (!next) return;
+
+  const patch = { estado: next };
+  if (next === 'Pedido a Fabian') {
+    const input = document.getElementById('inputPromesa');
+    if (!input || !input.value) { showToast('Poné la fecha que prometió Fabián', '#ff9500'); return; }
+    patch.fecha_promesa_fabian = input.value;
+  }
+  if (next === 'Retira') {
+    const sel = document.getElementById('inputRetira');
+    if (!sel) return;
+    patch.quien_retira = sel.value;
+  }
+  try {
+    const { error } = await sb.from('ventas').update(patch).eq('id', ventaId);
+    if (error) throw error;
+    Object.assign(v, {
+      estado: patch.estado,
+      fechaPromesaFabian: patch.fecha_promesa_fabian ?? v.fechaPromesaFabian,
+      quienRetira: patch.quien_retira ?? v.quienRetira,
+    });
+    saveCache();
+    render();
+    renderEstadoSheet(v);
+    showToast('✓ Estado actualizado', '#34c759');
+  } catch (e) {
+    showToast('Error al actualizar', '#ff3b30');
+  }
+}
+
+async function retrocederEstado(ventaId) {
+  const v = state.ventas.find(x => x.id === ventaId);
+  if (!v) return;
+  const flujo = flujoFor(v);
+  if (!flujo) return;
+  const idx = flujo.indexOf(v.estado);
+  if (idx <= 0) return;
+  const prev = flujo[idx - 1];
+  try {
+    const { error } = await sb.from('ventas').update({ estado: prev }).eq('id', ventaId);
+    if (error) throw error;
+    v.estado = prev;
+    saveCache();
+    render();
+    renderEstadoSheet(v);
+  } catch (e) {
+    showToast('Error', '#ff3b30');
+  }
+}
+
+async function resetFlujo(ventaId) {
+  if (!confirm('¿Reiniciar? Esto vuelve al paso "Recepcionado" y pide elegir quién lo hace.')) return;
+  const v = state.ventas.find(x => x.id === ventaId);
+  if (!v) return;
+  try {
+    const { error } = await sb.from('ventas').update({
+      hecho_por_fabian: null,
+      estado: 'Recepcionado',
+      fecha_promesa_fabian: null,
+      quien_retira: null,
+    }).eq('id', ventaId);
+    if (error) throw error;
+    v.hechoPorFabian = null;
+    v.estado = 'Recepcionado';
+    v.fechaPromesaFabian = '';
+    v.quienRetira = '';
+    saveCache();
+    render();
+    renderEstadoSheet(v);
+  } catch (e) {
+    showToast('Error', '#ff3b30');
+  }
+}
 
 ['filtroBusqueda', 'filtroDesde', 'filtroHasta'].forEach(id => {
   document.getElementById(id).addEventListener('input', render);
