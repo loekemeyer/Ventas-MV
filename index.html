@@ -310,6 +310,14 @@
     border-radius: 8px;
     min-height: 36px;
   }
+  .btn-edit {
+    background: #f2f2f7; color: #1c1c1e;
+    padding: 6px 10px;
+    font-size: 15px;
+    border-radius: 8px;
+    min-height: 36px;
+    border: 1px solid #d1d1d6;
+  }
 
   .empty {
     text-align: center;
@@ -968,6 +976,10 @@
 
 <div class="estado-modal" id="estadoModal">
   <div class="estado-sheet" id="estadoSheet"></div>
+</div>
+
+<div class="estado-modal" id="editModal">
+  <div class="estado-sheet" id="editSheet"></div>
 </div>
 
 <header>
@@ -2011,6 +2023,7 @@ function render() {
       ${v.fechaPromesaFabian ? `<div class="venta-medidas"><span><b>Fabián promete:</b> ${fmtFecha(v.fechaPromesaFabian)}</span></div>` : ''}
       ${medidasHtml(v)}
       <div class="venta-actions">
+        <button class="btn-edit" data-edit-id="${v.id}" title="Editar">✏️</button>
         <button class="btn-estado" data-estado-id="${v.id}">Avanzar estado</button>
         ${tel ? `<a class="btn-wa" href="https://wa.me/${tel}" target="_blank">WhatsApp</a>` : ''}
         <button class="del-btn" data-id="${v.id}">Borrar</button>
@@ -2077,6 +2090,10 @@ listEl.addEventListener('click', async (e) => {
   if (e.target.classList.contains('btn-estado')) {
     const id = e.target.dataset.estadoId;
     openEstadoModal(id);
+  }
+  if (e.target.classList.contains('btn-edit')) {
+    const id = e.target.dataset.editId;
+    openEditModal(id);
   }
 });
 
@@ -2261,6 +2278,104 @@ async function retrocederEstado(ventaId) {
   } catch (e) {
     showToast('Error', '#ff3b30');
   }
+}
+
+// ====== Modal de EDICIÓN de venta ======
+const editModal = document.getElementById('editModal');
+const editSheet = document.getElementById('editSheet');
+editModal.addEventListener('click', (e) => {
+  if (e.target === editModal) closeEditModal();
+});
+function closeEditModal() { editModal.classList.remove('show'); }
+
+function openEditModal(ventaId) {
+  const v = state.ventas.find(x => x.id === ventaId);
+  if (!v) return;
+  renderEditSheet(v);
+  editModal.classList.add('show');
+}
+
+function renderEditSheet(v) {
+  const esc = (s) => escapeHtml(s || '');
+  const sel = (a, b) => a === b ? 'selected' : '';
+  editSheet.innerHTML = `
+    <h3>Editar venta</h3>
+    <p class="sub">${esc(v.cliente) || '(sin cliente)'}</p>
+    <form id="editForm" autocomplete="off">
+      <div class="grid">
+        <label><span>Fecha</span><input type="date" name="fecha" value="${esc(v.fecha)}"></label>
+        <label><span>Teléfono</span><input type="tel" name="telefono" value="${esc(v.telefono)}" inputmode="tel"></label>
+        <label class="full"><span>Cliente</span><input type="text" name="cliente" value="${esc(v.cliente)}" autocapitalize="words"></label>
+        <label class="full"><span>Prenda</span><input type="text" name="prenda" value="${esc(v.prenda)}" autocapitalize="words"></label>
+        <label><span>Material</span>
+          <select name="material">
+            <option value="">Elegir</option>
+            <option value="Oveja" ${sel(v.material,'Oveja')}>Oveja</option>
+            <option value="Vaca" ${sel(v.material,'Vaca')}>Vaca</option>
+            <option value="Gamuza" ${sel(v.material,'Gamuza')}>Gamuza</option>
+          </select>
+        </label>
+        <label><span>Color</span><input type="text" name="color" value="${esc(v.color)}" autocapitalize="words"></label>
+        <label><span>Talle</span>
+          <select name="talle">
+            <option value="">Elegir</option>
+            ${['XS','S','M','L','XL','A medida'].map(t => `<option value="${t}" ${sel(v.talle,t)}>${t}</option>`).join('')}
+          </select>
+        </label>
+        <label><span>Importe</span>
+          <div style="display:flex; gap:6px;">
+            <select name="moneda" style="width:auto; padding:9px 6px; flex-shrink:0;">
+              <option value="ARS" ${sel(v.moneda,'ARS')}>$</option>
+              <option value="USD" ${sel(v.moneda,'USD')}>USD</option>
+            </select>
+            <input type="number" step="0.01" name="importe" value="${esc(v.importe)}" inputmode="decimal" style="flex:1;">
+          </div>
+        </label>
+        <label class="full"><span>Forma de Pago</span>
+          <select name="formaPago">
+            <option value="">Elegir</option>
+            ${['Efectivo','Transferencia','Otro'].map(x => `<option value="${x}" ${sel(v.formaPago,x)}>${x}</option>`).join('')}
+          </select>
+        </label>
+        <label class="full"><span>Detalle "Otro"</span><input type="text" name="formaPagoOtro" value="${esc(v.formaPagoOtro)}"></label>
+        <div class="section-title">Medidas (cm)</div>
+        <label><span>Hombro a Hombro</span><input type="number" step="0.1" name="hombroHombro" value="${esc(v.hombroHombro)}" inputmode="decimal"></label>
+        <label><span>Largo Brazo</span><input type="number" step="0.1" name="largoBrazo" value="${esc(v.largoBrazo)}" inputmode="decimal"></label>
+        <label><span>Busto</span><input type="number" step="0.1" name="busto" value="${esc(v.busto)}" inputmode="decimal"></label>
+        <label><span>Cintura</span><input type="number" step="0.1" name="cintura" value="${esc(v.cintura)}" inputmode="decimal"></label>
+        <label><span>Cadera</span><input type="number" step="0.1" name="cadera" value="${esc(v.cadera)}" inputmode="decimal"></label>
+        <label><span>Largo Total</span><input type="number" step="0.1" name="largoTotal" value="${esc(v.largoTotal)}" inputmode="decimal"></label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-close-modal" onclick="closeEditModal()">Cancelar</button>
+        <button type="submit" class="btn-advance">Guardar</button>
+      </div>
+    </form>
+  `;
+  document.getElementById('editForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const patch = formToRow(fd, v.socia_id);
+    delete patch.socia_id; // no cambiar la socia
+    try {
+      const { error } = await sb.from('ventas').update(patch).eq('id', v.id);
+      if (error) throw error;
+      // Refresh local
+      Object.assign(v, rowToVenta({ ...patch, id: v.id, socia_id: v.socia_id,
+        estado: v.estado, hecho_por_fabian: v.hechoPorFabian,
+        fecha_promesa_fabian: v.fechaPromesaFabian || null,
+        quien_retira: v.quienRetira || null, entregado_at: v.entregadoAt || null,
+        created_at: v.createdAt || null,
+      }));
+      saveCache();
+      render();
+      closeEditModal();
+      showToast('✓ Venta actualizada', '#34c759');
+    } catch (err) {
+      console.error(err);
+      showToast('Error al guardar — ' + (err.message || ''), '#ff3b30');
+    }
+  });
 }
 
 async function resetFlujo(ventaId) {
