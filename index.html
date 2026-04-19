@@ -500,6 +500,31 @@
     margin-left: 3px; letter-spacing: 0.2px;
   }
 
+  /* Autocomplete de cliente */
+  .suggest-box {
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: #fff;
+    border: 1px solid #d1d1d6;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 5;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+  }
+  .suggest-box.hidden { display: none; }
+  .suggest-item {
+    padding: 10px 12px;
+    font-size: 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f2f2f7;
+  }
+  .suggest-item:last-child { border-bottom: none; }
+  .suggest-item:active, .suggest-item:hover { background: #f2f2f7; }
+  .suggest-item .match { color: #8e8e93; }
+  .suggest-item .rest  { color: #007aff; font-weight: 600; }
+
   /* ===== Stats ===== */
   .period-chips {
     display: flex; gap: 6px; margin-bottom: 12px;
@@ -1040,8 +1065,9 @@
           <label><span>Teléfono</span>
             <input type="tel" name="telefono" placeholder="11 1234-5678" inputmode="tel">
           </label>
-          <label class="full"><span>Cliente</span>
-            <input type="text" name="cliente" required placeholder="Nombre y apellido" autocapitalize="words">
+          <label class="full" style="position:relative;"><span>Cliente</span>
+            <input type="text" name="cliente" id="clienteInput" required placeholder="Nombre y apellido" autocapitalize="words" autocomplete="off">
+            <div id="clienteSuggest" class="suggest-box hidden"></div>
           </label>
           <label class="full"><span>Prenda</span>
             <input type="text" name="prenda" required placeholder="Ej: vestido, pantalón" autocapitalize="words">
@@ -1277,7 +1303,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v1.1';
+const APP_VERSION = 'v1.2';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1453,6 +1479,48 @@ form.addEventListener('reset', () => {
     otroPagoLabel.style.display = 'none';
     toggleMedidas();
   }, 0);
+});
+
+// Autocomplete de cliente (prefix match, case-insensitive)
+const clienteInput = document.getElementById('clienteInput');
+const clienteSuggest = document.getElementById('clienteSuggest');
+function uniqueClientes() {
+  const set = new Map(); // lowercase → display name (más reciente)
+  for (const v of state.ventas) {
+    const c = (v.cliente || '').trim();
+    if (!c) continue;
+    set.set(c.toLowerCase(), c);
+  }
+  return Array.from(set.values());
+}
+function renderSugerencias() {
+  const raw = clienteInput.value || '';
+  const q = raw.trim().toLowerCase();
+  if (q.length < 1) { clienteSuggest.classList.add('hidden'); return; }
+  const all = uniqueClientes();
+  const matches = all
+    .filter(n => n.toLowerCase().startsWith(q) && n.toLowerCase() !== q)
+    .slice(0, 6);
+  if (!matches.length) { clienteSuggest.classList.add('hidden'); return; }
+  clienteSuggest.innerHTML = matches.map(n => {
+    const typed = n.slice(0, raw.length);
+    const rest = n.slice(raw.length);
+    return `<div class="suggest-item" data-name="${n.replace(/"/g,'&quot;')}">
+      <span class="match">${typed.replace(/</g,'&lt;')}</span><span class="rest">${rest.replace(/</g,'&lt;')}</span>
+    </div>`;
+  }).join('');
+  clienteSuggest.classList.remove('hidden');
+}
+clienteInput.addEventListener('input', renderSugerencias);
+clienteInput.addEventListener('focus', renderSugerencias);
+clienteInput.addEventListener('blur', () => {
+  setTimeout(() => clienteSuggest.classList.add('hidden'), 150);
+});
+clienteSuggest.addEventListener('mousedown', (e) => { // mousedown para no perder focus antes del blur
+  const item = e.target.closest('.suggest-item');
+  if (!item) return;
+  clienteInput.value = item.dataset.name;
+  clienteSuggest.classList.add('hidden');
 });
 
 document.querySelectorAll('.tab').forEach(btn => {
