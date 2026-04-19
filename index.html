@@ -493,6 +493,12 @@
     margin-left: 6px; display: inline-block; vertical-align: middle;
     text-transform: uppercase; letter-spacing: 0.3px;
   }
+  .version-tag {
+    font-size: 9px; font-weight: 600; color: #64748b;
+    background: rgba(100, 116, 139, 0.15);
+    padding: 1px 5px; border-radius: 5px;
+    margin-left: 3px; letter-spacing: 0.2px;
+  }
 
   /* ===== Stats ===== */
   .period-chips {
@@ -1271,6 +1277,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
+const APP_VERSION = 'v1.0';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1313,7 +1320,7 @@ function setSocia(id) {
   localStorage.setItem(SOCIA_KEY, String(id));
   sociaScreen.classList.add('hidden');
   const nombre = sociaNombre(id);
-  sociaChip.textContent = nombre;
+  sociaChip.innerHTML = nombre + ` <span class="version-tag">${APP_VERSION}</span>`;
   sociaChip.style.display = 'inline-block';
   onSociaReady();
 }
