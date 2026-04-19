@@ -2075,7 +2075,10 @@ function showConfirm() {
 listEl.addEventListener('click', async (e) => {
   if (e.target.classList.contains('del-btn')) {
     const id = e.target.dataset.id;
-    if (!confirm('¿Borrar esta venta?')) return;
+    const v = state.ventas.find(x => x.id === id);
+    const label = v ? `${v.cliente || '(sin cliente)'} — ${v.prenda || ''}` : 'esta venta';
+    if (!confirm(`¿Borrar "${label}"?\n\nSe elimina para las 3 socias y no se puede recuperar.`)) return;
+    if (!confirm(`¿Estás segura? Última confirmación — va a desaparecer definitivamente.`)) return;
     try {
       const { error } = await sb.from('ventas').delete().eq('id', id);
       if (error) throw error;
