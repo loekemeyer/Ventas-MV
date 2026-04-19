@@ -685,7 +685,7 @@
   #loginScreen {
     position: fixed;
     inset: 0;
-    background: linear-gradient(160deg, #007aff 0%, #5856d6 100%);
+    background-color: #f5f0e8;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -693,8 +693,38 @@
     padding: 20px;
     padding-top: calc(20px + env(safe-area-inset-top));
     padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    overflow: hidden;
   }
   #loginScreen.hidden { display: none; }
+  #loginScreen::before {
+    content: '';
+    position: absolute; inset: -20px;
+    background-image: url('logo.jpg');
+    background-repeat: repeat;
+    background-size: 130px 130px;
+    opacity: 0.55;
+    mix-blend-mode: multiply;
+    filter: contrast(1.05);
+    z-index: 0;
+    animation: collageDrift 60s linear infinite;
+  }
+  #loginScreen::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(245,240,232,0.2) 0%,
+      rgba(245,240,232,0.75) 60%,
+      rgba(245,240,232,0.95) 100%
+    );
+    z-index: 0;
+    pointer-events: none;
+  }
+  #loginScreen .login-card { position: relative; z-index: 1; }
+  @keyframes collageDrift {
+    0%   { background-position: 0 0; }
+    100% { background-position: 130px 130px; }
+  }
   .login-card {
     background: #fff;
     border-radius: 18px;
