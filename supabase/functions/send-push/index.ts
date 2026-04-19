@@ -248,10 +248,11 @@ Deno.serve(async (req) => {
 
   const clienteTxt = (row.cliente ?? "").toString().trim() || "sin nombre";
   const importeTxt = row.importe != null ? fmtMoney(row.importe) : "";
+  const title = `${autorNombre} cargó una venta`;
   const body = importeTxt
-    ? `${autorNombre} · ${clienteTxt} — ${importeTxt}`
-    : `${autorNombre} · ${clienteTxt}`;
-  const payload = JSON.stringify({ v: row.id, t: "Nueva venta", b: body });
+    ? `${clienteTxt} — ${importeTxt}`
+    : clienteTxt;
+  const payload = JSON.stringify({ v: row.id, t: title, b: body });
 
   const results = await Promise.allSettled(subs.map(async (s: any) => {
     try {
