@@ -1718,45 +1718,68 @@ function renderStats() {
   // Demora promedio entre Recepcionado y Entregado (por flujo)
   renderDemora(data);
 
-  // Top clientas por monto (guardo también el teléfono más reciente)
+  // Top clientas — render async (necesita cotizaciones blue por fecha)
+  renderTopClientas(data);
+}
+
+async function renderTopClientas(data) {
+  const clEl = document.getElementById('statsClientesTop');
+  clEl.innerHTML = '<div class="stats-empty">Calculando ranking dolarizado...</div>';
+
+  // 1. Prefetch cotizaciones blue para todas las fechas únicas
+  const fechasUnicas = data.map(v => v.fecha).filter(Boolean);
+  await prefetchBlueRates(fechasUnicas);
+
+  // 2. Agregar por clienta con equivalente en USD
   const clMap = new Map();
   data.forEach(v => {
     const key = (v.cliente || '').trim();
     if (!key) return;
-    const e = clMap.get(key.toLowerCase()) || { nombre: key, count: 0, totARS: 0, totUSD: 0, telefono: '' };
+    const e = clMap.get(key.toLowerCase()) || { nombre: key, count: 0, totARS: 0, totUSD: 0, eqUSD: 0, telefono: '' };
     e.count += 1;
     const imp = parseFloat(v.importe) || 0;
-    if (v.moneda === 'USD') e.totUSD += imp; else e.totARS += imp;
+    if (v.moneda === 'USD') {
+      e.totUSD += imp;
+      e.eqUSD += imp;
+    } else {
+      e.totARS += imp;
+      const rate = blueRateCached(v.fecha);
+      if (rate) e.eqUSD += imp / rate;
+    }
     const tel = (v.telefono || '').trim();
     if (tel && !e.telefono) e.telefono = tel;
     clMap.set(key.toLowerCase(), e);
   });
   const clArr = Array.from(clMap.values())
-    .sort((a, b) => (b.totARS + b.totUSD * 1000) - (a.totARS + a.totUSD * 1000) || b.count - a.count)
+    .sort((a, b) => b.eqUSD - a.eqUSD || b.count - a.count)
     .slice(0, 8);
-  const clEl = document.getElementById('statsClientesTop');
+
   if (!clArr.length) {
     clEl.innerHTML = '<div class="stats-empty">Sin datos</div>';
-  } else {
-    clEl.innerHTML = clArr.map(c => {
-      const tel = telHref(c.telefono);
-      const msg = encodeURIComponent(`Hola ${c.nombre.split(' ')[0] || ''}! Te escribo de MV Leather Studio ✨`);
-      const waBtn = tel
-        ? `<a class="btn-wa" href="https://wa.me/${tel}?text=${msg}" target="_blank" onclick="event.stopPropagation();">WhatsApp</a>`
-        : '';
-      return `
-        <div class="prenda-row">
-          <div style="flex:1; min-width:0;">
-            <div class="prenda-name">${escapeHtml(c.nombre)}</div>
-            <div class="prenda-meta">${c.count} compra${c.count === 1 ? '' : 's'}${c.telefono ? ' · ' + escapeHtml(c.telefono) : ''}</div>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-            ${waBtn}
-            <div class="prenda-value">${fmtTotales({ ARS: c.totARS, USD: c.totUSD })}</div>
-          </div>
-        </div>`;
-    }).join('');
+    return;
   }
+  clEl.innerHTML = clArr.map(c => {
+    const tel = telHref(c.telefono);
+    const msg = encodeURIComponent(`Hola ${c.nombre.split(' ')[0] || ''}! Te escribo de MV Leather Studio ✨`);
+    const waBtn = tel
+      ? `<a class="btn-wa" href="https://wa.me/${tel}?text=${msg}" target="_blank" onclick="event.stopPropagation();">WhatsApp</a>`
+      : '';
+    const eqTxt = c.eqUSD > 0 ? `≈ US$ ${c.eqUSD.toLocaleString('es-AR', { maximumFractionDigits: 0 })}` : '';
+    return `
+      <div class="prenda-row">
+        <div style="flex:1; min-width:0;">
+          <div class="prenda-name">${escapeHtml(c.nombre)}</div>
+          <div class="prenda-meta">${c.count} compra${c.count === 1 ? '' : 's'}${c.telefono ? ' · ' + escapeHtml(c.telefono) : ''}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+          ${waBtn}
+          <div style="text-align:right;">
+            <div class="prenda-value">${fmtTotales({ ARS: c.totARS, USD: c.totUSD })}</div>
+            ${eqTxt ? `<div style="font-size:11px; color:#8e8e93; font-weight:500; margin-top:1px;">${eqTxt}</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // Data viene desde state.ventas (poblado por bootApp + realtime)
@@ -1933,6 +1956,55 @@ function fmtFecha(f) {
   return `${d}/${m}/${y}`;
 }
 function monedaSymbol(m) { return m === 'USD' ? 'US$' : '$'; }
+
+// ====== Cotización dólar BLUE por fecha (para dolarizar ventas ARS) ======
+const BLUE_CACHE_KEY = 'mv_blue_rates_v1';
+function getBlueCache() {
+  try { return JSON.parse(localStorage.getItem(BLUE_CACHE_KEY)) || {}; } catch { return {}; }
+}
+function setBlueCache(d) { localStorage.setItem(BLUE_CACHE_KEY, JSON.stringify(d)); }
+
+async function fetchBlueRate(date) {
+  if (!date) return null;
+  const cache = getBlueCache();
+  if (cache[date]) return cache[date];
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    let rate = null;
+    if (date >= today) {
+      const r = await fetch('https://dolarapi.com/v1/dolares/blue');
+      const j = await r.json();
+      rate = parseFloat(j.venta);
+    } else {
+      const r = await fetch(`https://api.bluelytics.com.ar/v2/historical?day=${date}`);
+      if (r.ok) {
+        const j = await r.json();
+        rate = parseFloat(j.blue?.value_avg);
+      }
+    }
+    if (isFinite(rate) && rate > 0) {
+      cache[date] = rate;
+      setBlueCache(cache);
+      return rate;
+    }
+  } catch (e) { /* sin red */ }
+  // Fallback: usar el último valor cacheado más cercano
+  const dates = Object.keys(cache).sort();
+  if (dates.length) return cache[dates[dates.length - 1]];
+  return null;
+}
+
+// Precarga todas las cotizaciones necesarias (una por fecha única) en paralelo
+async function prefetchBlueRates(dates) {
+  const unique = Array.from(new Set(dates.filter(Boolean)));
+  await Promise.all(unique.map(fetchBlueRate));
+}
+function blueRateCached(date) {
+  const cache = getBlueCache();
+  if (cache[date]) return cache[date];
+  const keys = Object.keys(cache).sort();
+  return keys.length ? cache[keys[keys.length - 1]] : null;
+}
 // Suma importes separando por moneda → { ARS: total, USD: total }
 function sumByMoneda(arr) {
   const out = { ARS: 0, USD: 0 };
