@@ -1161,7 +1161,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.3</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.4</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1541,7 +1541,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v2.3';
+const APP_VERSION = 'v2.4';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -2395,12 +2395,11 @@ function renderStock() {
   });
 
   const conStock = Array.from(grupos.values())
-    .filter(g => g.ingresos - g.egresos > 0)
     .sort((a, b) => (b.ingresos - b.egresos) - (a.ingresos - a.egresos));
 
   const listEl = document.getElementById('stockMovList');
   if (!conStock.length) {
-    listEl.innerHTML = `<div class="caja-mov-empty">No hay prendas en stock.</div>`;
+    listEl.innerHTML = `<div class="caja-mov-empty">No hay movimientos de stock.</div>`;
     return;
   }
   listEl.innerHTML = conStock.map(g => {
