@@ -1117,7 +1117,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v1.7</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v1.8</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1315,17 +1315,24 @@
     <div class="card caja-warning">
       ⚠️ Todavía no terminado porque Marti no me dejó.
     </div>
-    <div class="card">
-      <h3 style="margin:0 0 8px;">Saldo de caja</h3>
-      <div id="cajaSaldo" class="caja-saldo">$0</div>
-      <div class="caja-actions">
-        <button type="button" id="btnAddGasto" class="btn-secondary">＋ Gasto</button>
-        <button type="button" id="btnAddRetiro" class="btn-secondary">＋ Retiro</button>
-      </div>
+
+    <div class="caja-actions" style="margin-bottom:12px;">
+      <button type="button" id="btnAddGasto" class="btn-secondary">＋ Gasto</button>
+      <button type="button" id="btnAddRetiro" class="btn-secondary">＋ Retiro</button>
     </div>
+
+    <!-- Caja en pesos -->
     <div class="card">
-      <h3 style="margin:0 0 8px;">Movimientos</h3>
-      <div id="cajaMovList" class="caja-mov-list"></div>
+      <h3 style="margin:0 0 4px;">Caja en $</h3>
+      <div id="cajaSaldoARS" class="caja-saldo">$0</div>
+      <div id="cajaMovListARS" class="caja-mov-list"></div>
+    </div>
+
+    <!-- Caja en dólares -->
+    <div class="card">
+      <h3 style="margin:0 0 4px;">Caja en USD</h3>
+      <div id="cajaSaldoUSD" class="caja-saldo">US$0</div>
+      <div id="cajaMovListUSD" class="caja-mov-list"></div>
     </div>
   </section>
 
@@ -1463,7 +1470,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v1.7';
+const APP_VERSION = 'v1.8';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1959,22 +1966,18 @@ function cajaMovimientosUnificados() {
   out.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
   return out;
 }
-function renderCaja() {
-  const sal = cajaSaldos();
-  const saldoEl = document.getElementById('cajaSaldo');
-  const lineas = [];
-  const fmtSal = (n, mon) => {
-    const cls = n < 0 ? ' class="negativo"' : '';
-    return `<span${cls}>${fmtMoneyShort(n, mon)}</span>`;
-  };
-  if (sal.ARS !== 0 || sal.USD === 0) lineas.push(fmtSal(sal.ARS, 'ARS'));
-  if (sal.USD !== 0) lineas.push(`<div class="linea-usd">${fmtSal(sal.USD, 'USD')}</div>`);
-  saldoEl.innerHTML = lineas.join('');
+function renderCajaUna(moneda) {
+  const sufijo = moneda; // 'ARS' o 'USD'
+  const saldoEl = document.getElementById('cajaSaldo' + sufijo);
+  const listEl  = document.getElementById('cajaMovList' + sufijo);
+  const sal = cajaSaldos()[moneda];
+  saldoEl.innerHTML = sal < 0
+    ? `<span class="negativo">${fmtMoneyShort(sal, moneda)}</span>`
+    : fmtMoneyShort(sal, moneda);
 
-  const listEl = document.getElementById('cajaMovList');
-  const movs = cajaMovimientosUnificados();
+  const movs = cajaMovimientosUnificados().filter(m => m.moneda === moneda);
   if (!movs.length) {
-    listEl.innerHTML = `<div class="caja-mov-empty">Todavía no hay movimientos.</div>`;
+    listEl.innerHTML = `<div class="caja-mov-empty">Sin movimientos en ${moneda === 'ARS' ? 'pesos' : 'dólares'}.</div>`;
     return;
   }
   listEl.innerHTML = movs.map(m => {
@@ -2000,6 +2003,10 @@ function renderCaja() {
       </div>
     `;
   }).join('');
+}
+function renderCaja() {
+  renderCajaUna('ARS');
+  renderCajaUna('USD');
 }
 
 // Modal para agregar gasto / retiro
@@ -2065,8 +2072,8 @@ function openCajaMovModal(tipo) {
 document.getElementById('btnAddGasto').addEventListener('click', () => openCajaMovModal('gasto'));
 document.getElementById('btnAddRetiro').addEventListener('click', () => openCajaMovModal('retiro'));
 
-// Borrar movimiento manual
-document.getElementById('cajaMovList').addEventListener('click', async (e) => {
+// Borrar movimiento manual (delegado en toda la sección)
+document.getElementById('caja').addEventListener('click', async (e) => {
   const btn = e.target.closest('.del-mov');
   if (!btn) return;
   const id = btn.dataset.movId;
