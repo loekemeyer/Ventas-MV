@@ -879,6 +879,29 @@
     color: #8e8e93;
     margin-top: 4px;
   }
+  .stock-grupo {
+    background: #f9f9fb;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .stock-grupo-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .stock-grupo-desc { font-weight: 600; color: #1c1c1e; }
+  .stock-grupo-meta { font-size: 12px; color: #8e8e93; margin-top: 2px; }
+  .stock-grupo.open .caja-chev { transform: rotate(180deg); }
+  .stock-grupo-movs {
+    padding: 0 8px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
   .caja-mov-row.stock-egreso { background: #fff3cd; }
   .caja-mov-row.stock-ingreso { background: #d1fae5; }
   .caja-mov-row .edit-mov {
@@ -1138,7 +1161,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.2</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.3</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1518,7 +1541,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v2.2';
+const APP_VERSION = 'v2.3';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -2349,41 +2372,94 @@ function renderStock() {
     ? `Costo total acumulado: ${fmtMoneyShort(costoTot, 'ARS')}`
     : '';
 
+  // Agrupar movimientos por combo prenda+material+color+talle
+  const grupos = new Map();
+  const keyFn = (m) => [m.prenda, m.material, m.color, m.talle]
+    .map(x => (x || '').toLowerCase().trim()).join('|');
+  stockMovimientosUnificados().forEach(m => {
+    const k = keyFn(m);
+    if (!grupos.has(k)) {
+      grupos.set(k, {
+        prenda: m.prenda, material: m.material, color: m.color, talle: m.talle,
+        ingresos: 0, egresos: 0, costoTot: 0, movs: [],
+      });
+    }
+    const g = grupos.get(k);
+    g.movs.push(m);
+    if (m.tipo === 'ingreso') {
+      g.ingresos += m.cantidad;
+      g.costoTot += (m.costo || 0);
+    } else {
+      g.egresos += m.cantidad;
+    }
+  });
+
+  const conStock = Array.from(grupos.values())
+    .filter(g => g.ingresos - g.egresos > 0)
+    .sort((a, b) => (b.ingresos - b.egresos) - (a.ingresos - a.egresos));
+
   const listEl = document.getElementById('stockMovList');
-  const movs = stockMovimientosUnificados();
-  if (!movs.length) {
-    listEl.innerHTML = `<div class="caja-mov-empty">Sin movimientos de stock.</div>`;
+  if (!conStock.length) {
+    listEl.innerHTML = `<div class="caja-mov-empty">No hay prendas en stock.</div>`;
     return;
   }
-  listEl.innerHTML = movs.map(m => {
-    const esIngreso = m.tipo === 'ingreso';
-    const signo = esIngreso ? '+' : '−';
-    const cls = esIngreso ? 'ingreso' : 'egreso';
-    const rowCls = esIngreso ? 'stock-ingreso' : 'stock-egreso';
-    const desc = [m.prenda, m.color, m.material, m.talle].filter(Boolean).join(' · ');
-    let metaParts = [fmtFecha(m.fecha)];
-    if (esIngreso) {
-      const provLabel = m.proveedor === 'fabian' ? 'Fabián' : m.proveedor === 'socias' ? 'Nosotras' : 'Stock previo';
-      metaParts.unshift(provLabel);
-      if (m.costo > 0) metaParts.push(`costo ${fmtMoneyShort(m.costo, 'ARS')}`);
-    } else {
-      metaParts.unshift(`Vendido a ${m.cliente || 'cliente'}`);
-    }
-    const meta = metaParts.filter(Boolean).join(' · ');
-    const editBtn = esIngreso
-      ? `<button class="edit-mov" data-stock-id="${m._sourceId}" title="Editar">✏️</button>`
-      : '';
-    return `
-      <div class="caja-mov-row ${rowCls}">
-        <div class="caja-mov-info">
-          <div class="concepto">${escapeHtml(desc) || '—'}</div>
-          <div class="meta">${escapeHtml(meta)}</div>
+  listEl.innerHTML = conStock.map(g => {
+    const stock = g.ingresos - g.egresos;
+    const desc = [g.prenda, g.color, g.material, g.talle].filter(Boolean).join(' · ');
+    const metaPartes = [`${stock} en stock`];
+    if (g.costoTot > 0) metaPartes.push(`costo acum ${fmtMoneyShort(g.costoTot, 'ARS')}`);
+    const movsHtml = g.movs.map(m => {
+      const esIngreso = m.tipo === 'ingreso';
+      const signo = esIngreso ? '+' : '−';
+      const cls = esIngreso ? 'ingreso' : 'egreso';
+      const rowCls = esIngreso ? 'stock-ingreso' : 'stock-egreso';
+      let meta = [fmtFecha(m.fecha)];
+      if (esIngreso) {
+        const prov = m.proveedor === 'fabian' ? 'Fabián'
+                   : m.proveedor === 'socias' ? 'Nosotras'
+                   : 'Stock previo';
+        meta.unshift(prov);
+        if (m.costo > 0) meta.push(`costo ${fmtMoneyShort(m.costo, 'ARS')}`);
+      } else {
+        meta.unshift(`Vendido a ${m.cliente || 'cliente'}`);
+      }
+      const editBtn = esIngreso
+        ? `<button class="edit-mov" data-stock-id="${m._sourceId}" title="Editar">✏️</button>`
+        : '';
+      return `
+        <div class="caja-mov-row ${rowCls}">
+          <div class="caja-mov-info">
+            <div class="meta">${escapeHtml(meta.filter(Boolean).join(' · '))}</div>
+          </div>
+          <div class="caja-mov-monto ${cls}">${signo}${m.cantidad}</div>
+          ${editBtn}
         </div>
-        <div class="caja-mov-monto ${cls}">${signo}${m.cantidad}</div>
-        ${editBtn}
+      `;
+    }).join('');
+    return `
+      <div class="stock-grupo">
+        <div class="stock-grupo-head">
+          <div>
+            <div class="stock-grupo-desc">${escapeHtml(desc) || '—'}</div>
+            <div class="stock-grupo-meta">${metaPartes.join(' · ')}</div>
+          </div>
+          <span class="caja-chev">▾</span>
+        </div>
+        <div class="stock-grupo-movs caja-collapsed">
+          ${movsHtml}
+        </div>
       </div>
     `;
   }).join('');
+
+  // Tap en el head para expandir/colapsar
+  listEl.querySelectorAll('.stock-grupo-head').forEach(head => {
+    head.addEventListener('click', () => {
+      const grupo = head.closest('.stock-grupo');
+      grupo.classList.toggle('open');
+      grupo.querySelector('.stock-grupo-movs').classList.toggle('caja-collapsed');
+    });
+  });
 }
 
 // Modal de ingreso de stock
@@ -2404,8 +2480,9 @@ function renderStockSheet(ingreso) {
     <form id="stockForm" autocomplete="off">
       <div class="grid">
         <label><span>Fecha</span><input type="date" name="fecha" value="${esc(i.fecha) || hoy}" required></label>
-        <label class="full"><span>Prenda</span>
-          <input type="text" name="prenda" value="${esc(i.prenda)}" autocapitalize="words" required>
+        <label class="full" style="position:relative;"><span>Prenda</span>
+          <input type="text" name="prenda" id="stockPrendaInput" value="${esc(i.prenda)}" autocapitalize="words" autocomplete="off" required>
+          <div id="stockPrendaSuggest" class="suggest-box hidden"></div>
         </label>
         <label><span>Material</span>
           <select name="material">
@@ -2415,7 +2492,10 @@ function renderStockSheet(ingreso) {
             <option value="Gamuza" ${sel(i.material,'Gamuza')}>Gamuza</option>
           </select>
         </label>
-        <label><span>Color</span><input type="text" name="color" value="${esc(i.color)}" autocapitalize="words"></label>
+        <label style="position:relative;"><span>Color</span>
+          <input type="text" name="color" id="stockColorInput" value="${esc(i.color)}" autocapitalize="words" autocomplete="off">
+          <div id="stockColorSuggest" class="suggest-box hidden"></div>
+        </label>
         <label><span>Talle</span>
           <select name="talle">
             <option value="">Elegir</option>
@@ -2452,8 +2532,9 @@ function renderStockSheet(ingreso) {
           </label>
         </div>
 
-        <label class="full"><span>Notas</span>
-          <input type="text" name="notas" value="${esc(i.notas)}" placeholder="(opcional)">
+        <label class="full" style="position:relative;"><span>Notas</span>
+          <input type="text" name="notas" id="stockNotasInput" value="${esc(i.notas)}" placeholder="(opcional)" autocomplete="off">
+          <div id="stockNotasSuggest" class="suggest-box hidden"></div>
         </label>
       </div>
       <div class="modal-actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
@@ -2469,6 +2550,29 @@ function renderStockSheet(ingreso) {
     document.getElementById('costoFabianBox').style.display = provSel.value === 'fabian' ? 'contents' : 'none';
     document.getElementById('costoSociasBox').style.display = provSel.value === 'socias' ? 'contents' : 'none';
   });
+
+  // Autocompletado en prenda, color y notas (combina ventas + stockIngresos)
+  const uniqueAll = (field) => {
+    const m = new Map();
+    for (const v of state.ventas)        { const x = (v[field] || '').toString().trim(); if (x) m.set(x.toLowerCase(), x); }
+    for (const i of state.stockIngresos) { const x = (i[field] || '').toString().trim(); if (x) m.set(x.toLowerCase(), x); }
+    return Array.from(m.values());
+  };
+  attachSuggest(
+    document.getElementById('stockPrendaInput'),
+    document.getElementById('stockPrendaSuggest'),
+    () => uniqueAll('prenda')
+  );
+  attachSuggest(
+    document.getElementById('stockColorInput'),
+    document.getElementById('stockColorSuggest'),
+    () => uniqueAll('color')
+  );
+  attachSuggest(
+    document.getElementById('stockNotasInput'),
+    document.getElementById('stockNotasSuggest'),
+    () => uniqueAll('notas')
+  );
   document.getElementById('stockCancel').onclick = () => stockModal.classList.remove('show');
   if (editing) {
     document.getElementById('stockDelete').onclick = async () => {
