@@ -874,6 +874,13 @@
   }
   .caja-mov-monto.ingreso { color: #34c759; }
   .caja-mov-monto.egreso  { color: #ff3b30; }
+  .stock-costo {
+    font-size: 14px;
+    color: #8e8e93;
+    margin-top: 4px;
+  }
+  .caja-mov-row.stock-egreso { background: #fff3cd; }
+  .caja-mov-row.stock-ingreso { background: #d1fae5; }
   .caja-mov-row .edit-mov {
     background: transparent; border: none;
     font-size: 18px;
@@ -1131,7 +1138,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.1</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.2</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1163,6 +1170,10 @@
   <div class="estado-sheet" id="cajaSheet"></div>
 </div>
 
+<div class="estado-modal" id="stockModal">
+  <div class="estado-sheet" id="stockSheet"></div>
+</div>
+
 <header>
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
     <button class="logout-btn" onclick="cambiarSocia()" style="font-size:11px; padding:4px 6px; min-height:auto; color:#5856d6; width:auto;" title="Cambiar socia">Cambiar</button>
@@ -1177,6 +1188,7 @@
     <button class="tab" data-tab="registro">Seguimiento<br>Pedidos</button>
     <button class="tab" data-tab="facturacion">Ventas<br>x Mes</button>
     <button class="tab" data-tab="caja">Caja</button>
+    <button class="tab" data-tab="stock">Stock</button>
     <button class="tab" data-tab="stats">Stats</button>
   </div>
 </header>
@@ -1356,6 +1368,22 @@
     </div>
   </section>
 
+  <!-- ============ STOCK ============ -->
+  <section id="stock" class="module">
+    <div class="card stock-summary-card">
+      <h3 style="margin:0 0 4px;">Stock actual</h3>
+      <div id="stockSaldo" class="caja-saldo">0 prendas</div>
+      <div id="stockCostoTotal" class="stock-costo"></div>
+      <div class="caja-actions" style="margin-top:10px;">
+        <button type="button" id="btnAddIngresoStock" class="btn-secondary">＋ Ingreso</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 8px;">Movimientos</h3>
+      <div id="stockMovList" class="caja-mov-list"></div>
+    </div>
+  </section>
+
   <!-- ============ STATS ============ -->
   <section id="stats" class="module">
     <div class="period-chips" role="tablist">
@@ -1490,7 +1518,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v2.1';
+const APP_VERSION = 'v2.2';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1508,7 +1536,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
 });
 
 // ====== Estado global ======
-const state = { ventas: [], cajaMovs: [], mySociaId: null };
+const state = { ventas: [], cajaMovs: [], stockIngresos: [], mySociaId: null };
 
 // ====== Selector de socia ======
 const sociaScreen = document.getElementById('sociaScreen');
@@ -1755,6 +1783,7 @@ document.querySelectorAll('.tab').forEach(btn => {
     if (btn.dataset.tab === 'stats') renderStats();
     if (btn.dataset.tab === 'facturacion') renderFacturacion();
     if (btn.dataset.tab === 'caja') renderCaja();
+    if (btn.dataset.tab === 'stock') renderStock();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
@@ -2252,6 +2281,265 @@ function openEditCobroVenta(ventaId) {
   });
 }
 
+// ====== STOCK ======
+function costoTotalIngreso(ing) {
+  if (ing.proveedor === 'fabian') return parseFloat(ing.costo_fabian) || 0;
+  if (ing.proveedor === 'socias') {
+    return (parseFloat(ing.costo_material)   || 0)
+         + (parseFloat(ing.costo_corte)      || 0)
+         + (parseFloat(ing.costo_confeccion) || 0)
+         + (parseFloat(ing.costo_otros)      || 0);
+  }
+  return 0; // legacy: sin costo
+}
+function stockSaldoActual() {
+  const ing = state.stockIngresos.reduce((a, x) => a + (parseInt(x.cantidad) || 1), 0);
+  const ven = state.ventas.length;
+  return ing - ven;
+}
+function stockMovimientosUnificados() {
+  const out = [];
+  state.stockIngresos.forEach(i => {
+    out.push({
+      tipo: 'ingreso',
+      fecha: i.fecha || '',
+      prenda: i.prenda || '',
+      material: i.material || '',
+      color: i.color || '',
+      talle: i.talle || '',
+      cantidad: parseInt(i.cantidad) || 1,
+      costo: costoTotalIngreso(i),
+      proveedor: i.proveedor,
+      socia_id: i.socia_id,
+      _sourceId: i.id,
+      _sourceKind: 'stock-ingreso',
+      _raw: i,
+    });
+  });
+  state.ventas.forEach(v => {
+    out.push({
+      tipo: 'egreso',
+      fecha: v.fecha || '',
+      prenda: v.prenda || '',
+      material: v.material || '',
+      color: v.color || '',
+      talle: v.talle || '',
+      cantidad: 1,
+      cliente: v.cliente,
+      socia_id: v.socia_id,
+      _sourceId: v.id,
+      _sourceKind: 'venta',
+    });
+  });
+  out.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+  return out;
+}
+function renderStock() {
+  const saldo = stockSaldoActual();
+  const saldoEl = document.getElementById('stockSaldo');
+  saldoEl.innerHTML = `${saldo} prenda${saldo === 1 ? '' : 's'}`;
+  if (saldo < 0) saldoEl.innerHTML = `<span class="negativo">${saldo}</span> prendas`;
+
+  // Costo total acumulado de ingresos reales (excluye legacy)
+  const costoTot = state.stockIngresos
+    .filter(i => i.proveedor !== 'legacy')
+    .reduce((a, i) => a + costoTotalIngreso(i), 0);
+  const costoEl = document.getElementById('stockCostoTotal');
+  costoEl.textContent = costoTot > 0
+    ? `Costo total acumulado: ${fmtMoneyShort(costoTot, 'ARS')}`
+    : '';
+
+  const listEl = document.getElementById('stockMovList');
+  const movs = stockMovimientosUnificados();
+  if (!movs.length) {
+    listEl.innerHTML = `<div class="caja-mov-empty">Sin movimientos de stock.</div>`;
+    return;
+  }
+  listEl.innerHTML = movs.map(m => {
+    const esIngreso = m.tipo === 'ingreso';
+    const signo = esIngreso ? '+' : '−';
+    const cls = esIngreso ? 'ingreso' : 'egreso';
+    const rowCls = esIngreso ? 'stock-ingreso' : 'stock-egreso';
+    const desc = [m.prenda, m.color, m.material, m.talle].filter(Boolean).join(' · ');
+    let metaParts = [fmtFecha(m.fecha)];
+    if (esIngreso) {
+      const provLabel = m.proveedor === 'fabian' ? 'Fabián' : m.proveedor === 'socias' ? 'Nosotras' : 'Stock previo';
+      metaParts.unshift(provLabel);
+      if (m.costo > 0) metaParts.push(`costo ${fmtMoneyShort(m.costo, 'ARS')}`);
+    } else {
+      metaParts.unshift(`Vendido a ${m.cliente || 'cliente'}`);
+    }
+    const meta = metaParts.filter(Boolean).join(' · ');
+    const editBtn = esIngreso
+      ? `<button class="edit-mov" data-stock-id="${m._sourceId}" title="Editar">✏️</button>`
+      : '';
+    return `
+      <div class="caja-mov-row ${rowCls}">
+        <div class="caja-mov-info">
+          <div class="concepto">${escapeHtml(desc) || '—'}</div>
+          <div class="meta">${escapeHtml(meta)}</div>
+        </div>
+        <div class="caja-mov-monto ${cls}">${signo}${m.cantidad}</div>
+        ${editBtn}
+      </div>
+    `;
+  }).join('');
+}
+
+// Modal de ingreso de stock
+const stockModal = document.getElementById('stockModal');
+const stockSheet = document.getElementById('stockSheet');
+stockModal.addEventListener('click', (e) => {
+  if (e.target === stockModal) stockModal.classList.remove('show');
+});
+function renderStockSheet(ingreso) {
+  const editing = !!ingreso;
+  const i = ingreso || {};
+  const hoy = new Date().toISOString().slice(0, 10);
+  const proveedor = i.proveedor || 'fabian';
+  const sel = (a, b) => a === b ? 'selected' : '';
+  const esc = (s) => escapeHtml(s || '');
+  stockSheet.innerHTML = `
+    <h3>${editing ? 'Editar ingreso' : 'Nuevo ingreso de stock'}</h3>
+    <form id="stockForm" autocomplete="off">
+      <div class="grid">
+        <label><span>Fecha</span><input type="date" name="fecha" value="${esc(i.fecha) || hoy}" required></label>
+        <label class="full"><span>Prenda</span>
+          <input type="text" name="prenda" value="${esc(i.prenda)}" autocapitalize="words" required>
+        </label>
+        <label><span>Material</span>
+          <select name="material">
+            <option value="">Elegir</option>
+            <option value="Oveja" ${sel(i.material,'Oveja')}>Oveja</option>
+            <option value="Vaca" ${sel(i.material,'Vaca')}>Vaca</option>
+            <option value="Gamuza" ${sel(i.material,'Gamuza')}>Gamuza</option>
+          </select>
+        </label>
+        <label><span>Color</span><input type="text" name="color" value="${esc(i.color)}" autocapitalize="words"></label>
+        <label><span>Talle</span>
+          <select name="talle">
+            <option value="">Elegir</option>
+            ${['XS','S','M','L','XL','A medida'].map(t => `<option value="${t}" ${sel(i.talle,t)}>${t}</option>`).join('')}
+          </select>
+        </label>
+        <label><span>Cantidad</span><input type="number" name="cantidad" min="1" value="${i.cantidad || 1}" required></label>
+
+        <div class="section-title" style="margin-top:6px;">¿Quién lo hizo?</div>
+        <label class="full">
+          <select name="proveedor" id="provSel">
+            <option value="fabian" ${proveedor==='fabian'?'selected':''}>Fabián</option>
+            <option value="socias" ${proveedor==='socias'?'selected':''}>Nosotras</option>
+          </select>
+        </label>
+
+        <div id="costoFabianBox" style="display:${proveedor==='fabian'?'contents':'none'};">
+          <label class="full"><span>Costo Fabián</span>
+            <input type="number" step="0.01" name="costo_fabian" value="${i.costo_fabian || ''}" inputmode="decimal" placeholder="0.00">
+          </label>
+        </div>
+        <div id="costoSociasBox" style="display:${proveedor==='socias'?'contents':'none'};">
+          <label><span>Material</span>
+            <input type="number" step="0.01" name="costo_material" value="${i.costo_material || ''}" inputmode="decimal" placeholder="0.00">
+          </label>
+          <label><span>Corte</span>
+            <input type="number" step="0.01" name="costo_corte" value="${i.costo_corte || ''}" inputmode="decimal" placeholder="0.00">
+          </label>
+          <label><span>Confección</span>
+            <input type="number" step="0.01" name="costo_confeccion" value="${i.costo_confeccion || ''}" inputmode="decimal" placeholder="0.00">
+          </label>
+          <label><span>Otros</span>
+            <input type="number" step="0.01" name="costo_otros" value="${i.costo_otros || ''}" inputmode="decimal" placeholder="0.00">
+          </label>
+        </div>
+
+        <label class="full"><span>Notas</span>
+          <input type="text" name="notas" value="${esc(i.notas)}" placeholder="(opcional)">
+        </label>
+      </div>
+      <div class="modal-actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn-secondary" id="stockCancel">Cancelar</button>
+        ${editing ? `<button type="button" class="btn-secondary" id="stockDelete" style="background:#ffe5e3; color:#ff3b30;">Borrar</button>` : ''}
+        <button type="submit" class="btn-primary" style="margin-left:auto;">Guardar</button>
+      </div>
+    </form>
+  `;
+  stockModal.classList.add('show');
+  const provSel = document.getElementById('provSel');
+  provSel.addEventListener('change', () => {
+    document.getElementById('costoFabianBox').style.display = provSel.value === 'fabian' ? 'contents' : 'none';
+    document.getElementById('costoSociasBox').style.display = provSel.value === 'socias' ? 'contents' : 'none';
+  });
+  document.getElementById('stockCancel').onclick = () => stockModal.classList.remove('show');
+  if (editing) {
+    document.getElementById('stockDelete').onclick = async () => {
+      if (!confirm('¿Borrar este ingreso de stock?')) return;
+      try {
+        const { error } = await sb.from('stock_ingresos').delete().eq('id', i.id);
+        if (error) throw error;
+        state.stockIngresos = state.stockIngresos.filter(x => x.id !== i.id);
+        stockModal.classList.remove('show');
+        renderStock();
+        showToast('Ingreso eliminado', '#ff3b30');
+      } catch (err) {
+        showToast('Error al borrar', '#ff3b30');
+      }
+    };
+  }
+  document.getElementById('stockForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const proveedor = fd.get('proveedor') === 'socias' ? 'socias' : 'fabian';
+    const num = (k) => {
+      const v = (fd.get(k) || '').toString().trim();
+      return v === '' ? null : Number(v);
+    };
+    const row = {
+      socia_id: state.mySociaId,
+      fecha: fd.get('fecha'),
+      prenda: (fd.get('prenda') || '').toString().trim() || null,
+      material: (fd.get('material') || '').toString().trim() || null,
+      color: (fd.get('color') || '').toString().trim() || null,
+      talle: (fd.get('talle') || '').toString().trim() || null,
+      cantidad: parseInt(fd.get('cantidad'), 10) || 1,
+      proveedor,
+      costo_fabian:     proveedor === 'fabian' ? num('costo_fabian') : null,
+      costo_material:   proveedor === 'socias' ? num('costo_material')   : null,
+      costo_corte:      proveedor === 'socias' ? num('costo_corte')      : null,
+      costo_confeccion: proveedor === 'socias' ? num('costo_confeccion') : null,
+      costo_otros:      proveedor === 'socias' ? num('costo_otros')      : null,
+      notas: (fd.get('notas') || '').toString().trim() || null,
+    };
+    try {
+      if (editing) {
+        const { data, error } = await sb.from('stock_ingresos').update(row).eq('id', i.id).select().single();
+        if (error) throw error;
+        const idx = state.stockIngresos.findIndex(x => x.id === i.id);
+        if (idx >= 0) state.stockIngresos[idx] = data;
+      } else {
+        const { data, error } = await sb.from('stock_ingresos').insert(row).select().single();
+        if (error) throw error;
+        state.stockIngresos.unshift(data);
+      }
+      stockModal.classList.remove('show');
+      renderStock();
+      showToast(`✓ Ingreso ${editing ? 'actualizado' : 'registrado'}`, '#34c759');
+    } catch (err) {
+      console.error(err);
+      showToast('Error al guardar — ' + (err.message || ''), '#ff3b30');
+    }
+  });
+}
+document.getElementById('btnAddIngresoStock').addEventListener('click', () => renderStockSheet());
+
+// Editar ingreso al tocar el lapicito
+document.getElementById('stock').addEventListener('click', (e) => {
+  const btn = e.target.closest('.edit-mov');
+  if (!btn) return;
+  const id = btn.dataset.stockId;
+  const ing = state.stockIngresos.find(x => x.id === id);
+  if (ing) renderStockSheet(ing);
+});
+
 // ====== STATS ======
 let statsPeriod = 'all';
 document.querySelectorAll('.period-chip').forEach(c => {
@@ -2545,6 +2833,18 @@ async function bootApp() {
     }
   } catch (e) {
     console.warn('Caja: tabla no disponible aún (correr el SQL).');
+  }
+  // 2c. Ingresos de stock
+  try {
+    const { data, error } = await sb.from('stock_ingresos')
+      .select('*')
+      .order('fecha', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (!error && data) {
+      state.stockIngresos = data;
+    }
+  } catch (e) {
+    console.warn('Stock: tabla no disponible aún (correr el SQL).');
   }
   // 3. Subscribirse a realtime
   subscribeRealtime();
