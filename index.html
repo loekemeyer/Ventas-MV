@@ -1049,7 +1049,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v1.5</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v1.6</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1089,7 +1089,7 @@
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="cargar">Cargar</button>
     <button class="tab" data-tab="registro">Seguimiento<br>Pedidos</button>
-    <button class="tab" data-tab="facturacion">Mes</button>
+    <button class="tab" data-tab="facturacion">Ventas<br>x Mes</button>
     <button class="tab" data-tab="stats">Stats</button>
   </div>
 </header>
@@ -1362,7 +1362,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v1.5';
+const APP_VERSION = 'v1.6';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1728,6 +1728,19 @@ function renderFacturacion() {
   const now = new Date();
   const currentMonth = now.getFullYear() === year ? now.getMonth() : -1;
 
+  // USD equivalente por mes (USD nativo + ARS convertidos al blue por fecha de cada venta)
+  const eqUsdByMonth = Array.from({ length: 12 }, () => 0);
+  data.forEach(v => {
+    const mi = parseInt((v.fecha || '').slice(5,7), 10) - 1;
+    if (isNaN(mi) || mi < 0 || mi > 11) return;
+    const imp = parseFloat(v.importe) || 0;
+    if (v.moneda === 'USD') eqUsdByMonth[mi] += imp;
+    else {
+      const rate = blueRateCached(v.fecha);
+      if (rate) eqUsdByMonth[mi] += imp / rate;
+    }
+  });
+
   const html = monthsToRender.map(({ m, idx }) => {
     const empty = m.count === 0;
     const current = idx === currentMonth;
@@ -1736,6 +1749,10 @@ function renderFacturacion() {
     const pctUSD = (m.totUSD / maxMonthUSD) * 100;
     const pct = Math.max(pctARS, pctUSD);
     const mTot = { ARS: m.totARS, USD: m.totUSD };
+    const eqUsd = eqUsdByMonth[idx];
+    const eqUsdTxt = eqUsd > 0
+      ? `≈ US$ ${eqUsd.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`
+      : '';
     let detail = '';
     if (!empty) {
       const sociasArr = Array.from(m.socias.entries())
@@ -1748,15 +1765,14 @@ function renderFacturacion() {
           </div>`).join('')}
       </div>`;
     }
-    const avgARS = m.count ? m.totARS / m.count : 0;
-    const avgUSD = m.count ? m.totUSD / m.count : 0;
+    const desglose = empty ? '' : fmtTotales(mTot);
     return `
       <div class="month-row ${empty?'empty':''} ${current?'current':''}" data-month="${idx}">
         <div class="month-head">
           <span class="month-name">${MESES[idx]}${current ? ' (actual)' : ''}</span>
-          <span class="month-total">${empty ? '—' : fmtTotales(mTot)}</span>
+          <span class="month-total">${empty ? '—' : eqUsdTxt}</span>
         </div>
-        <div class="month-meta">${m.count} venta${m.count===1?'':'s'}${m.count > 0 ? ' · prom ' + fmtTotales({ ARS: avgARS, USD: avgUSD }) : ''}</div>
+        <div class="month-meta">${m.count} venta${m.count===1?'':'s'}${desglose ? ' · ' + desglose : ''}</div>
         <div class="month-bar"><div class="month-bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
         ${detail}
       </div>`;
