@@ -815,6 +815,74 @@
     margin: 6px 0 2px;
   }
 
+  /* Caja */
+  .caja-warning {
+    background: #fff3cd;
+    border-left: 4px solid #ff9500;
+    color: #7a4f00;
+    font-weight: 500;
+  }
+  .caja-saldo {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1c1c1e;
+    margin-bottom: 12px;
+  }
+  .caja-saldo .negativo { color: #ff3b30; }
+  .caja-saldo .linea-usd {
+    font-size: 18px;
+    color: #007aff;
+    margin-top: 2px;
+  }
+  .caja-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .caja-actions button {
+    flex: 1;
+    min-height: 40px;
+    font-weight: 600;
+  }
+  .caja-mov-list { display: flex; flex-direction: column; gap: 8px; }
+  .caja-mov-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 10px 12px;
+    background: #f2f2f7;
+    border-radius: 10px;
+    gap: 8px;
+  }
+  .caja-mov-info { flex: 1; min-width: 0; }
+  .caja-mov-info .concepto { font-weight: 600; color: #1c1c1e; }
+  .caja-mov-info .meta { font-size: 12px; color: #8e8e93; margin-top: 2px; }
+  .caja-mov-monto {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .caja-mov-monto.ingreso { color: #34c759; }
+  .caja-mov-monto.egreso  { color: #ff3b30; }
+  .caja-mov-row .del-mov {
+    background: transparent; border: none;
+    color: #c7c7cc; font-size: 18px;
+    padding: 0 4px; cursor: pointer;
+    line-height: 1;
+  }
+  .caja-mov-row .del-mov:active { color: #ff3b30; }
+  .caja-mov-empty {
+    text-align: center; color: #8e8e93;
+    padding: 24px 8px; font-style: italic;
+  }
+  /* Checkbox row para "pagó el total" */
+  .check-row {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 8px;
+  }
+  .check-row input[type=checkbox] {
+    width: 20px; height: 20px;
+    margin: 0;
+  }
+  .check-row span { font-weight: 500; }
+
   .btn-estado {
     background: #5856d6; color: #fff;
     padding: 8px 12px; font-size: 13px;
@@ -1049,7 +1117,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v1.6</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v1.7</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1077,6 +1145,10 @@
   <div class="estado-sheet" id="editSheet"></div>
 </div>
 
+<div class="estado-modal" id="cajaModal">
+  <div class="estado-sheet" id="cajaSheet"></div>
+</div>
+
 <header>
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
     <button class="logout-btn" onclick="cambiarSocia()" style="font-size:11px; padding:4px 6px; min-height:auto; color:#5856d6; width:auto;" title="Cambiar socia">Cambiar</button>
@@ -1090,6 +1162,7 @@
     <button class="tab active" data-tab="cargar">Cargar</button>
     <button class="tab" data-tab="registro">Seguimiento<br>Pedidos</button>
     <button class="tab" data-tab="facturacion">Ventas<br>x Mes</button>
+    <button class="tab" data-tab="caja">Caja</button>
     <button class="tab" data-tab="stats">Stats</button>
   </div>
 </header>
@@ -1167,6 +1240,15 @@
             <input type="text" name="formaPagoOtro" placeholder="Ej: Mercado Pago, cheque..." autocapitalize="sentences">
           </label>
 
+          <label class="full check-row">
+            <input type="checkbox" name="pagadoCompleto" id="pagadoCompletoChk" checked>
+            <span>Pagó el total</span>
+          </label>
+          <label class="full" id="pagadoMontoLabel" style="display:none;">
+            <span>Monto pagado (adelanto)</span>
+            <input type="number" step="0.01" name="pagado" id="pagadoInput" inputmode="decimal" placeholder="0.00">
+          </label>
+
           <div class="section-title" id="medidasTitle" style="display:none;">Medidas (cm)</div>
           <label class="medida-field" style="display:none;"><span>Hombro a Hombro</span><input type="number" step="0.1" name="hombroHombro" inputmode="decimal"></label>
           <label class="medida-field" style="display:none;"><span>Largo Brazo</span><input type="number" step="0.1" name="largoBrazo" inputmode="decimal"></label>
@@ -1225,6 +1307,25 @@
 
     <div class="cost-hint" id="costHint">
       💡 Cuando carguemos los costos en Supabase acá vas a ver ganancia y margen por mes.
+    </div>
+  </section>
+
+  <!-- ============ CAJA ============ -->
+  <section id="caja" class="module">
+    <div class="card caja-warning">
+      ⚠️ Todavía no terminado porque Marti no me dejó.
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 8px;">Saldo de caja</h3>
+      <div id="cajaSaldo" class="caja-saldo">$0</div>
+      <div class="caja-actions">
+        <button type="button" id="btnAddGasto" class="btn-secondary">＋ Gasto</button>
+        <button type="button" id="btnAddRetiro" class="btn-secondary">＋ Retiro</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 8px;">Movimientos</h3>
+      <div id="cajaMovList" class="caja-mov-list"></div>
     </div>
   </section>
 
@@ -1362,7 +1463,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v1.6';
+const APP_VERSION = 'v1.7';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1380,7 +1481,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
 });
 
 // ====== Estado global ======
-const state = { ventas: [], mySociaId: null };
+const state = { ventas: [], cajaMovs: [], mySociaId: null };
 
 // ====== Selector de socia ======
 const sociaScreen = document.getElementById('sociaScreen');
@@ -1457,6 +1558,7 @@ const FIELD_MAP = [
   ['formaPago','forma_pago'], ['formaPagoOtro','forma_pago_otro'],
   ['hombroHombro','hombro_hombro'], ['largoBrazo','largo_brazo'],
   ['busto','busto'], ['cintura','cintura'], ['cadera','cadera'], ['largoTotal','largo_total'],
+  ['pagado','pagado'],
 ];
 const EXTRA_COLS = ['estado','hecho_por_fabian','fecha_promesa_fabian','quien_retira'];
 
@@ -1482,11 +1584,12 @@ function rowToVenta(r) {
   v.quienRetira = r.quien_retira || '';
   v.createdAt = r.created_at || '';
   v.entregadoAt = r.entregado_at || '';
+  v.pagadoCompleto = (r.pagado_completo === null || r.pagado_completo === undefined) ? null : !!r.pagado_completo;
   return v;
 }
 function formToRow(fd, sociaId) {
   const row = { socia_id: sociaId };
-  const numericCols = new Set(['importe','hombro_hombro','largo_brazo','busto','cintura','cadera','largo_total']);
+  const numericCols = new Set(['importe','hombro_hombro','largo_brazo','busto','cintura','cadera','largo_total','pagado']);
   for (const [app, col] of FIELD_MAP) {
     let val = (fd.get(app) || '').toString().trim();
     if (numericCols.has(col)) {
@@ -1498,6 +1601,10 @@ function formToRow(fd, sociaId) {
       row[col] = val === '' ? null : val;
     }
   }
+  // pagadoCompleto viene del checkbox: si está tildado, pagado = importe completo
+  const pagadoCompleto = fd.get('pagadoCompleto') === 'on';
+  row.pagado_completo = pagadoCompleto;
+  if (pagadoCompleto) row.pagado = row.importe;
   return row;
 }
 
@@ -1519,6 +1626,16 @@ formaPagoSel.addEventListener('change', () => {
   if (!mostrar) otroPagoInput.value = '';
 });
 
+// Mostrar/ocultar "Monto pagado" según checkbox "Pagó el total"
+const pagadoChk = document.getElementById('pagadoCompletoChk');
+const pagadoMontoLabel = document.getElementById('pagadoMontoLabel');
+const pagadoInput = document.getElementById('pagadoInput');
+pagadoChk.addEventListener('change', () => {
+  const parcial = !pagadoChk.checked;
+  pagadoMontoLabel.style.display = parcial ? 'flex' : 'none';
+  if (!parcial) pagadoInput.value = '';
+});
+
 // Mostrar/ocultar medidas según Talle
 const talleSel = document.getElementById('talleSel');
 const medidasTitle = document.getElementById('medidasTitle');
@@ -1536,6 +1653,8 @@ talleSel.addEventListener('change', toggleMedidas);
 form.addEventListener('reset', () => {
   setTimeout(() => {
     otroPagoLabel.style.display = 'none';
+    pagadoChk.checked = true;
+    pagadoMontoLabel.style.display = 'none';
     toggleMedidas();
   }, 0);
 });
@@ -1608,6 +1727,7 @@ document.querySelectorAll('.tab').forEach(btn => {
     if (btn.dataset.tab === 'registro') render();
     if (btn.dataset.tab === 'stats') renderStats();
     if (btn.dataset.tab === 'facturacion') renderFacturacion();
+    if (btn.dataset.tab === 'caja') renderCaja();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
@@ -1785,6 +1905,182 @@ function renderFacturacion() {
     row.addEventListener('click', () => row.classList.toggle('open'));
   });
 }
+
+// ====== CAJA ======
+function cajaSaldos() {
+  // Ingresos: suma de v.pagado por moneda
+  const sal = { ARS: 0, USD: 0 };
+  state.ventas.forEach(v => {
+    const pag = parseFloat(v.pagado) || 0;
+    if (pag <= 0) return;
+    const mon = v.moneda === 'USD' ? 'USD' : 'ARS';
+    sal[mon] += pag;
+  });
+  // Egresos: gastos + retiros
+  state.cajaMovs.forEach(m => {
+    const monto = parseFloat(m.monto) || 0;
+    const mon = m.moneda === 'USD' ? 'USD' : 'ARS';
+    sal[mon] -= monto;
+  });
+  return sal;
+}
+function cajaMovimientosUnificados() {
+  const out = [];
+  // Ingresos derivados de ventas con cobro
+  state.ventas.forEach(v => {
+    const pag = parseFloat(v.pagado) || 0;
+    if (pag <= 0) return;
+    out.push({
+      tipo: 'ingreso',
+      fecha: v.fecha || '',
+      concepto: `Cobro: ${v.cliente || 'Sin cliente'} — ${v.prenda || ''}`.trim(),
+      monto: pag,
+      moneda: v.moneda === 'USD' ? 'USD' : 'ARS',
+      socia_id: v.socia_id,
+      _sourceId: v.id,
+      _sourceKind: 'venta',
+      pagadoCompleto: v.pagadoCompleto === true,
+    });
+  });
+  // Gastos y retiros manuales
+  state.cajaMovs.forEach(m => {
+    out.push({
+      tipo: m.tipo,
+      fecha: m.fecha || '',
+      concepto: m.concepto || (m.tipo === 'gasto' ? 'Gasto' : 'Retiro'),
+      monto: parseFloat(m.monto) || 0,
+      moneda: m.moneda === 'USD' ? 'USD' : 'ARS',
+      socia_id: m.socia_id,
+      _sourceId: m.id,
+      _sourceKind: 'caja',
+    });
+  });
+  // Más nuevas arriba
+  out.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+  return out;
+}
+function renderCaja() {
+  const sal = cajaSaldos();
+  const saldoEl = document.getElementById('cajaSaldo');
+  const lineas = [];
+  const fmtSal = (n, mon) => {
+    const cls = n < 0 ? ' class="negativo"' : '';
+    return `<span${cls}>${fmtMoneyShort(n, mon)}</span>`;
+  };
+  if (sal.ARS !== 0 || sal.USD === 0) lineas.push(fmtSal(sal.ARS, 'ARS'));
+  if (sal.USD !== 0) lineas.push(`<div class="linea-usd">${fmtSal(sal.USD, 'USD')}</div>`);
+  saldoEl.innerHTML = lineas.join('');
+
+  const listEl = document.getElementById('cajaMovList');
+  const movs = cajaMovimientosUnificados();
+  if (!movs.length) {
+    listEl.innerHTML = `<div class="caja-mov-empty">Todavía no hay movimientos.</div>`;
+    return;
+  }
+  listEl.innerHTML = movs.map(m => {
+    const esIngreso = m.tipo === 'ingreso';
+    const signo = esIngreso ? '+' : '−';
+    const cls = esIngreso ? 'ingreso' : 'egreso';
+    const tipoLabel = m.tipo === 'ingreso' ? (m.pagadoCompleto ? 'Cobro total' : 'Adelanto')
+                    : m.tipo === 'gasto'   ? 'Gasto'
+                    : 'Retiro';
+    const socia = m.socia_id ? sociaNombre(m.socia_id) : '';
+    const meta = [tipoLabel, fmtFecha(m.fecha), socia].filter(Boolean).join(' · ');
+    const delBtn = m._sourceKind === 'caja'
+      ? `<button class="del-mov" data-mov-id="${m._sourceId}" title="Borrar">×</button>`
+      : '';
+    return `
+      <div class="caja-mov-row">
+        <div class="caja-mov-info">
+          <div class="concepto">${escapeHtml(m.concepto)}</div>
+          <div class="meta">${escapeHtml(meta)}</div>
+        </div>
+        <div class="caja-mov-monto ${cls}">${signo} ${fmtMoneyShort(m.monto, m.moneda)}</div>
+        ${delBtn}
+      </div>
+    `;
+  }).join('');
+}
+
+// Modal para agregar gasto / retiro
+const cajaModal = document.getElementById('cajaModal');
+const cajaSheet = document.getElementById('cajaSheet');
+cajaModal.addEventListener('click', (e) => {
+  if (e.target === cajaModal) cajaModal.classList.remove('show');
+});
+function openCajaMovModal(tipo) {
+  const titulo = tipo === 'gasto' ? 'Nuevo gasto' : 'Nuevo retiro';
+  const hoy = new Date().toISOString().slice(0, 10);
+  cajaSheet.innerHTML = `
+    <h3>${titulo}</h3>
+    <form id="cajaMovForm" autocomplete="off">
+      <div class="grid">
+        <label><span>Fecha</span><input type="date" name="fecha" value="${hoy}" required></label>
+        <label class="full"><span>Concepto</span>
+          <input type="text" name="concepto" placeholder="${tipo === 'gasto' ? 'Ej: cuero, hilos' : 'Ej: retiro Marti'}" required autocapitalize="sentences">
+        </label>
+        <label><span>Monto</span>
+          <div style="display:flex; gap:6px;">
+            <select name="moneda" style="width:auto; padding:9px 6px; flex-shrink:0;">
+              <option value="ARS">$</option>
+              <option value="USD">USD</option>
+            </select>
+            <input type="number" step="0.01" name="monto" inputmode="decimal" placeholder="0.00" required style="flex:1;">
+          </div>
+        </label>
+      </div>
+      <div class="modal-actions" style="margin-top:12px; display:flex; gap:8px;">
+        <button type="button" class="btn-secondary" id="cajaMovCancel">Cancelar</button>
+        <button type="submit" class="btn-primary">Guardar</button>
+      </div>
+    </form>
+  `;
+  cajaModal.classList.add('show');
+  document.getElementById('cajaMovCancel').onclick = () => cajaModal.classList.remove('show');
+  document.getElementById('cajaMovForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const row = {
+      socia_id: state.mySociaId,
+      fecha: fd.get('fecha'),
+      tipo,
+      concepto: (fd.get('concepto') || '').toString().trim(),
+      monto: Number(fd.get('monto')) || 0,
+      moneda: fd.get('moneda') === 'USD' ? 'USD' : 'ARS',
+    };
+    if (!row.monto) { showToast('Falta el monto', '#ff9500'); return; }
+    try {
+      const { data, error } = await sb.from('caja_movimientos').insert(row).select().single();
+      if (error) throw error;
+      state.cajaMovs.unshift(data);
+      cajaModal.classList.remove('show');
+      renderCaja();
+      showToast(`✓ ${tipo === 'gasto' ? 'Gasto' : 'Retiro'} registrado`, '#34c759');
+    } catch (err) {
+      console.error(err);
+      showToast('Error al guardar — ' + (err.message || 'sin red'), '#ff3b30');
+    }
+  });
+}
+document.getElementById('btnAddGasto').addEventListener('click', () => openCajaMovModal('gasto'));
+document.getElementById('btnAddRetiro').addEventListener('click', () => openCajaMovModal('retiro'));
+
+// Borrar movimiento manual
+document.getElementById('cajaMovList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.del-mov');
+  if (!btn) return;
+  const id = btn.dataset.movId;
+  if (!confirm('¿Borrar este movimiento de caja?')) return;
+  try {
+    const { error } = await sb.from('caja_movimientos').delete().eq('id', id);
+    if (error) throw error;
+    state.cajaMovs = state.cajaMovs.filter(m => m.id !== id);
+    renderCaja();
+    showToast('Movimiento eliminado', '#ff3b30');
+  } catch (err) {
+    showToast('Error al borrar', '#ff3b30');
+  }
+});
 
 // ====== STATS ======
 let statsPeriod = 'all';
@@ -2067,6 +2363,18 @@ async function bootApp() {
     if (!cached.length) {
       showToast('Sin conexión — revisá red', '#ff9500');
     }
+  }
+  // 2b. Movimientos de caja (gastos/retiros). Si la tabla no existe aún, no rompe.
+  try {
+    const { data, error } = await sb.from('caja_movimientos')
+      .select('*')
+      .order('fecha', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (!error && data) {
+      state.cajaMovs = data;
+    }
+  } catch (e) {
+    console.warn('Caja: tabla no disponible aún (correr el SQL).');
   }
   // 3. Subscribirse a realtime
   subscribeRealtime();
