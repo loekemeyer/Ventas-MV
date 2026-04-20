@@ -860,13 +860,13 @@
   }
   .caja-mov-monto.ingreso { color: #34c759; }
   .caja-mov-monto.egreso  { color: #ff3b30; }
-  .caja-mov-row .del-mov {
+  .caja-mov-row .edit-mov {
     background: transparent; border: none;
-    color: #c7c7cc; font-size: 18px;
+    font-size: 18px;
     padding: 0 4px; cursor: pointer;
     line-height: 1;
+    align-self: center;
   }
-  .caja-mov-row .del-mov:active { color: #ff3b30; }
   .caja-mov-empty {
     text-align: center; color: #8e8e93;
     padding: 24px 8px; font-style: italic;
@@ -1117,7 +1117,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v1.8</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v1.9</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1470,7 +1470,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v1.8';
+const APP_VERSION = 'v1.9';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1989,9 +1989,6 @@ function renderCajaUna(moneda) {
                     : 'Retiro';
     const socia = m.socia_id ? sociaNombre(m.socia_id) : '';
     const meta = [tipoLabel, fmtFecha(m.fecha), socia].filter(Boolean).join(' · ');
-    const delBtn = m._sourceKind === 'caja'
-      ? `<button class="del-mov" data-mov-id="${m._sourceId}" title="Borrar">×</button>`
-      : '';
     return `
       <div class="caja-mov-row">
         <div class="caja-mov-info">
@@ -1999,7 +1996,7 @@ function renderCajaUna(moneda) {
           <div class="meta">${escapeHtml(meta)}</div>
         </div>
         <div class="caja-mov-monto ${cls}">${signo} ${fmtMoneyShort(m.monto, m.moneda)}</div>
-        ${delBtn}
+        <button class="edit-mov" data-mov-kind="${m._sourceKind}" data-mov-id="${m._sourceId}" title="Editar">✏️</button>
       </div>
     `;
   }).join('');
@@ -2072,22 +2069,157 @@ function openCajaMovModal(tipo) {
 document.getElementById('btnAddGasto').addEventListener('click', () => openCajaMovModal('gasto'));
 document.getElementById('btnAddRetiro').addEventListener('click', () => openCajaMovModal('retiro'));
 
-// Borrar movimiento manual (delegado en toda la sección)
-document.getElementById('caja').addEventListener('click', async (e) => {
-  const btn = e.target.closest('.del-mov');
+// Editar/borrar cualquier movimiento (delegado en toda la sección)
+document.getElementById('caja').addEventListener('click', (e) => {
+  const btn = e.target.closest('.edit-mov');
   if (!btn) return;
+  const kind = btn.dataset.movKind;
   const id = btn.dataset.movId;
-  if (!confirm('¿Borrar este movimiento de caja?')) return;
-  try {
-    const { error } = await sb.from('caja_movimientos').delete().eq('id', id);
-    if (error) throw error;
-    state.cajaMovs = state.cajaMovs.filter(m => m.id !== id);
-    renderCaja();
-    showToast('Movimiento eliminado', '#ff3b30');
-  } catch (err) {
-    showToast('Error al borrar', '#ff3b30');
-  }
+  if (kind === 'caja') openEditMovManual(id);
+  else if (kind === 'venta') openEditCobroVenta(id);
 });
+
+function openEditMovManual(id) {
+  const m = state.cajaMovs.find(x => x.id === id);
+  if (!m) return;
+  const titulo = m.tipo === 'gasto' ? 'Editar gasto' : 'Editar retiro';
+  cajaSheet.innerHTML = `
+    <h3>${titulo}</h3>
+    <form id="cajaMovEditForm" autocomplete="off">
+      <div class="grid">
+        <label><span>Fecha</span><input type="date" name="fecha" value="${escapeHtml(m.fecha || '')}" required></label>
+        <label class="full"><span>Concepto</span>
+          <input type="text" name="concepto" value="${escapeHtml(m.concepto || '')}" required autocapitalize="sentences">
+        </label>
+        <label><span>Monto</span>
+          <div style="display:flex; gap:6px;">
+            <select name="moneda" style="width:auto; padding:9px 6px; flex-shrink:0;">
+              <option value="ARS" ${m.moneda==='ARS'?'selected':''}>$</option>
+              <option value="USD" ${m.moneda==='USD'?'selected':''}>USD</option>
+            </select>
+            <input type="number" step="0.01" name="monto" value="${m.monto}" inputmode="decimal" required style="flex:1;">
+          </div>
+        </label>
+      </div>
+      <div class="modal-actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn-secondary" id="cajaEditCancel">Cancelar</button>
+        <button type="button" class="btn-secondary" id="cajaEditDelete" style="background:#ffe5e3; color:#ff3b30;">Borrar</button>
+        <button type="submit" class="btn-primary" style="margin-left:auto;">Guardar</button>
+      </div>
+    </form>
+  `;
+  cajaModal.classList.add('show');
+  document.getElementById('cajaEditCancel').onclick = () => cajaModal.classList.remove('show');
+  document.getElementById('cajaEditDelete').onclick = async () => {
+    if (!confirm('¿Borrar este movimiento de caja?')) return;
+    try {
+      const { error } = await sb.from('caja_movimientos').delete().eq('id', id);
+      if (error) throw error;
+      state.cajaMovs = state.cajaMovs.filter(x => x.id !== id);
+      cajaModal.classList.remove('show');
+      renderCaja();
+      showToast('Movimiento eliminado', '#ff3b30');
+    } catch (err) {
+      showToast('Error al borrar', '#ff3b30');
+    }
+  };
+  document.getElementById('cajaMovEditForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const patch = {
+      fecha: fd.get('fecha'),
+      concepto: (fd.get('concepto') || '').toString().trim(),
+      monto: Number(fd.get('monto')) || 0,
+      moneda: fd.get('moneda') === 'USD' ? 'USD' : 'ARS',
+    };
+    if (!patch.monto) { showToast('Falta el monto', '#ff9500'); return; }
+    try {
+      const { data, error } = await sb.from('caja_movimientos').update(patch).eq('id', id).select().single();
+      if (error) throw error;
+      const idx = state.cajaMovs.findIndex(x => x.id === id);
+      if (idx >= 0) state.cajaMovs[idx] = data;
+      cajaModal.classList.remove('show');
+      renderCaja();
+      showToast('✓ Cambios guardados', '#34c759');
+    } catch (err) {
+      console.error(err);
+      showToast('Error al guardar', '#ff3b30');
+    }
+  });
+}
+
+function openEditCobroVenta(ventaId) {
+  const v = state.ventas.find(x => x.id === ventaId);
+  if (!v) return;
+  const importe = parseFloat(v.importe) || 0;
+  const pagado = parseFloat(v.pagado) || 0;
+  const completo = v.pagadoCompleto === true;
+  cajaSheet.innerHTML = `
+    <h3>Editar cobro</h3>
+    <p class="sub">${escapeHtml(v.cliente || '(sin cliente)')} — ${escapeHtml(v.prenda || '')}</p>
+    <p class="sub">Importe total: ${fmtMoneyShort(importe, v.moneda)}</p>
+    <form id="cobroEditForm" autocomplete="off">
+      <div class="grid">
+        <label class="full check-row">
+          <input type="checkbox" name="pagadoCompleto" id="cobroEditChk" ${completo ? 'checked' : ''}>
+          <span>Pagó el total</span>
+        </label>
+        <label class="full" id="cobroEditMontoLabel" style="display:${completo ? 'none' : 'flex'};">
+          <span>Monto cobrado (en ${v.moneda || 'ARS'})</span>
+          <input type="number" step="0.01" name="pagado" id="cobroEditMontoInput" value="${pagado || ''}" inputmode="decimal">
+        </label>
+      </div>
+      <div class="modal-actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn-secondary" id="cobroEditCancel">Cancelar</button>
+        <button type="button" class="btn-secondary" id="cobroEditDelete" style="background:#ffe5e3; color:#ff3b30;">Sacar de caja</button>
+        <button type="submit" class="btn-primary" style="margin-left:auto;">Guardar</button>
+      </div>
+    </form>
+  `;
+  cajaModal.classList.add('show');
+  const chk = document.getElementById('cobroEditChk');
+  const lbl = document.getElementById('cobroEditMontoLabel');
+  const inp = document.getElementById('cobroEditMontoInput');
+  chk.addEventListener('change', () => {
+    lbl.style.display = chk.checked ? 'none' : 'flex';
+  });
+  document.getElementById('cobroEditCancel').onclick = () => cajaModal.classList.remove('show');
+  document.getElementById('cobroEditDelete').onclick = async () => {
+    if (!confirm('¿Sacar este cobro de caja?\n\nLa venta se mantiene, pero se marca como NO cobrada.')) return;
+    try {
+      const { error } = await sb.from('ventas').update({ pagado: 0, pagado_completo: false }).eq('id', ventaId);
+      if (error) throw error;
+      const local = state.ventas.find(x => x.id === ventaId);
+      if (local) { local.pagado = '0'; local.pagadoCompleto = false; }
+      cajaModal.classList.remove('show');
+      renderCaja();
+      saveCache();
+      showToast('Cobro removido de caja', '#ff3b30');
+    } catch (err) {
+      showToast('Error', '#ff3b30');
+    }
+  };
+  document.getElementById('cobroEditForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const completoNew = fd.get('pagadoCompleto') === 'on';
+    const montoNew = completoNew ? importe : (Number(fd.get('pagado')) || 0);
+    if (!completoNew && montoNew <= 0) { showToast('Poné un monto válido', '#ff9500'); return; }
+    try {
+      const { error } = await sb.from('ventas').update({ pagado: montoNew, pagado_completo: completoNew }).eq('id', ventaId);
+      if (error) throw error;
+      const local = state.ventas.find(x => x.id === ventaId);
+      if (local) { local.pagado = String(montoNew); local.pagadoCompleto = completoNew; }
+      cajaModal.classList.remove('show');
+      renderCaja();
+      saveCache();
+      showToast('✓ Cobro actualizado', '#34c759');
+    } catch (err) {
+      console.error(err);
+      showToast('Error al guardar', '#ff3b30');
+    }
+  });
+}
 
 // ====== STATS ======
 let statsPeriod = 'all';
