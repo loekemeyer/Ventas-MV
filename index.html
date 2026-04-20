@@ -843,7 +843,21 @@
     min-height: 40px;
     font-weight: 600;
   }
-  .caja-mov-list { display: flex; flex-direction: column; gap: 8px; }
+  .caja-card .caja-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+  }
+  .caja-chev {
+    font-size: 22px;
+    color: #8e8e93;
+    transition: transform 0.2s ease;
+  }
+  .caja-card.open .caja-chev { transform: rotate(180deg); }
+  .caja-collapsed { display: none !important; }
+  .caja-mov-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
   .caja-mov-row {
     display: flex; justify-content: space-between; align-items: flex-start;
     padding: 10px 12px;
@@ -1117,7 +1131,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.0</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.1</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1318,17 +1332,27 @@
     </div>
 
     <!-- Caja en pesos -->
-    <div class="card">
-      <h3 style="margin:0 0 4px;">Caja en $</h3>
-      <div id="cajaSaldoARS" class="caja-saldo">$0</div>
-      <div id="cajaMovListARS" class="caja-mov-list"></div>
+    <div class="card caja-card" id="cajaCardARS">
+      <div class="caja-head">
+        <div>
+          <h3 style="margin:0 0 4px;">Caja en $</h3>
+          <div id="cajaSaldoARS" class="caja-saldo">$0</div>
+        </div>
+        <span class="caja-chev">▾</span>
+      </div>
+      <div id="cajaMovListARS" class="caja-mov-list caja-collapsed"></div>
     </div>
 
     <!-- Caja en dólares -->
-    <div class="card">
-      <h3 style="margin:0 0 4px;">Caja en USD</h3>
-      <div id="cajaSaldoUSD" class="caja-saldo">US$0</div>
-      <div id="cajaMovListUSD" class="caja-mov-list"></div>
+    <div class="card caja-card" id="cajaCardUSD">
+      <div class="caja-head">
+        <div>
+          <h3 style="margin:0 0 4px;">Caja en USD</h3>
+          <div id="cajaSaldoUSD" class="caja-saldo">US$0</div>
+        </div>
+        <span class="caja-chev">▾</span>
+      </div>
+      <div id="cajaMovListUSD" class="caja-mov-list caja-collapsed"></div>
     </div>
   </section>
 
@@ -1466,7 +1490,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v2.0';
+const APP_VERSION = 'v2.1';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -2001,6 +2025,17 @@ function renderCaja() {
   renderCajaUna('ARS');
   renderCajaUna('USD');
 }
+
+// Toggle expandir/colapsar cada caja al tocar el header
+['ARS','USD'].forEach(mon => {
+  const card = document.getElementById('cajaCard' + mon);
+  const head = card.querySelector('.caja-head');
+  const list = document.getElementById('cajaMovList' + mon);
+  head.addEventListener('click', () => {
+    const open = card.classList.toggle('open');
+    list.classList.toggle('caja-collapsed', !open);
+  });
+});
 
 // Modal para agregar gasto / retiro
 const cajaModal = document.getElementById('cajaModal');
