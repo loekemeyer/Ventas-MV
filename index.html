@@ -1161,7 +1161,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.4</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.5</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1195,6 +1195,10 @@
 
 <div class="estado-modal" id="stockModal">
   <div class="estado-sheet" id="stockSheet"></div>
+</div>
+
+<div class="estado-modal" id="cobroNuevoModal">
+  <div class="estado-sheet" id="cobroNuevoSheet"></div>
 </div>
 
 <header>
@@ -1287,15 +1291,6 @@
           <label class="full" id="otroPagoLabel" style="display:none;">
             <span>Especificar</span>
             <input type="text" name="formaPagoOtro" placeholder="Ej: Mercado Pago, cheque..." autocapitalize="sentences">
-          </label>
-
-          <label class="full check-row">
-            <input type="checkbox" name="pagadoCompleto" id="pagadoCompletoChk" checked>
-            <span>Pagó el total</span>
-          </label>
-          <label class="full" id="pagadoMontoLabel" style="display:none;">
-            <span>Monto pagado (adelanto)</span>
-            <input type="number" step="0.01" name="pagado" id="pagadoInput" inputmode="decimal" placeholder="0.00">
           </label>
 
           <div class="section-title" id="medidasTitle" style="display:none;">Medidas (cm)</div>
@@ -1541,7 +1536,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v2.4';
+const APP_VERSION = 'v2.5';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1679,10 +1674,6 @@ function formToRow(fd, sociaId) {
       row[col] = val === '' ? null : val;
     }
   }
-  // pagadoCompleto viene del checkbox: si está tildado, pagado = importe completo
-  const pagadoCompleto = fd.get('pagadoCompleto') === 'on';
-  row.pagado_completo = pagadoCompleto;
-  if (pagadoCompleto) row.pagado = row.importe;
   return row;
 }
 
@@ -1704,16 +1695,6 @@ formaPagoSel.addEventListener('change', () => {
   if (!mostrar) otroPagoInput.value = '';
 });
 
-// Mostrar/ocultar "Monto pagado" según checkbox "Pagó el total"
-const pagadoChk = document.getElementById('pagadoCompletoChk');
-const pagadoMontoLabel = document.getElementById('pagadoMontoLabel');
-const pagadoInput = document.getElementById('pagadoInput');
-pagadoChk.addEventListener('change', () => {
-  const parcial = !pagadoChk.checked;
-  pagadoMontoLabel.style.display = parcial ? 'flex' : 'none';
-  if (!parcial) pagadoInput.value = '';
-});
-
 // Mostrar/ocultar medidas según Talle
 const talleSel = document.getElementById('talleSel');
 const medidasTitle = document.getElementById('medidasTitle');
@@ -1731,8 +1712,6 @@ talleSel.addEventListener('change', toggleMedidas);
 form.addEventListener('reset', () => {
   setTimeout(() => {
     otroPagoLabel.style.display = 'none';
-    pagadoChk.checked = true;
-    pagadoMontoLabel.style.display = 'none';
     toggleMedidas();
   }, 0);
 });
@@ -3289,7 +3268,13 @@ form.addEventListener('submit', async (e) => {
     }
     form.reset();
     form.fecha.value = new Date().toISOString().slice(0, 10);
-    showConfirm();
+    // Si la venta tiene importe, preguntar total vs adelanto. Si no, confirmar directo.
+    const imp = parseFloat(venta.importe) || 0;
+    if (imp > 0) {
+      openCobroNuevoModal(venta);
+    } else {
+      showConfirm();
+    }
   } catch (err) {
     console.error(err);
     showToast('Error al guardar — ' + (err.message || 'sin red'), '#ff3b30');
@@ -3842,6 +3827,94 @@ enableNotifBtn.addEventListener('click', () => {
     }
   });
 });
+
+// ====== Modal de cobro post-alta ======
+const cobroNuevoModal = document.getElementById('cobroNuevoModal');
+const cobroNuevoSheet = document.getElementById('cobroNuevoSheet');
+
+function closeCobroNuevoModal() { cobroNuevoModal.classList.remove('show'); }
+
+// Guardar el cobro de una venta recién creada y cerrar el modal.
+async function guardarCobroNuevo(ventaId, pagadoCompleto, monto) {
+  try {
+    const { error } = await sb.from('ventas')
+      .update({ pagado: monto, pagado_completo: pagadoCompleto })
+      .eq('id', ventaId);
+    if (error) throw error;
+    const local = state.ventas.find(x => x.id === ventaId);
+    if (local) {
+      local.pagado = String(monto);
+      local.pagadoCompleto = pagadoCompleto;
+    }
+    saveCache();
+    render();
+    closeCobroNuevoModal();
+    showConfirm();
+  } catch (err) {
+    console.error(err);
+    showToast('Error al guardar el cobro', '#ff3b30');
+  }
+}
+
+function openCobroNuevoModal(v) {
+  const importe = parseFloat(v.importe) || 0;
+  const moneda = v.moneda === 'USD' ? 'USD' : 'ARS';
+  const simbolo = moneda === 'USD' ? 'US$' : '$';
+  const cliente = (v.cliente || '').toString().trim() || 'Sin cliente';
+  const prenda  = (v.prenda  || '').toString().trim();
+  const esc = (s) => escapeHtml(s || '');
+  cobroNuevoSheet.innerHTML = `
+    <h3>¿Cómo pagó?</h3>
+    <p class="sub">${esc(cliente)}${prenda ? ' — ' + esc(prenda) : ''}</p>
+    <p class="sub">Importe: ${fmtMoneyShort(importe, moneda)}</p>
+    <div id="cobroNuevoBotonera" style="display:flex; gap:8px; margin-top:12px;">
+      <button type="button" class="btn-primary" id="cobroNuevoBtnTotal" style="flex:1;">Pagó el total</button>
+      <button type="button" class="btn-secondary" id="cobroNuevoBtnAdelanto" style="flex:1;">Adelanto</button>
+    </div>
+    <div id="cobroNuevoAdelantoBox" style="display:none; margin-top:14px;">
+      <label class="full">
+        <span>Monto adelantado (en ${moneda})</span>
+        <input type="number" step="0.01" id="cobroNuevoMontoInput" inputmode="decimal" placeholder="0.00" value="${importe || ''}">
+      </label>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button type="button" class="btn-secondary" id="cobroNuevoBtnAtras" style="flex:1;">Atrás</button>
+        <button type="button" class="btn-primary" id="cobroNuevoBtnConfirmar" style="flex:1;">Confirmar</button>
+      </div>
+    </div>
+  `;
+  cobroNuevoModal.classList.add('show');
+
+  const botonera = document.getElementById('cobroNuevoBotonera');
+  const adelantoBox = document.getElementById('cobroNuevoAdelantoBox');
+  const montoInput = document.getElementById('cobroNuevoMontoInput');
+
+  document.getElementById('cobroNuevoBtnTotal').onclick = () => {
+    guardarCobroNuevo(v.id, true, importe);
+  };
+  document.getElementById('cobroNuevoBtnAdelanto').onclick = () => {
+    botonera.style.display = 'none';
+    adelantoBox.style.display = 'block';
+    setTimeout(() => { montoInput.focus(); montoInput.select(); }, 50);
+  };
+  document.getElementById('cobroNuevoBtnAtras').onclick = () => {
+    adelantoBox.style.display = 'none';
+    botonera.style.display = 'flex';
+  };
+  document.getElementById('cobroNuevoBtnConfirmar').onclick = () => {
+    const monto = parseFloat(montoInput.value);
+    if (!isFinite(monto) || monto <= 0) {
+      showToast('Poné un monto válido', '#ff9500');
+      montoInput.focus();
+      return;
+    }
+    if (monto >= importe) {
+      // Si el adelanto iguala o supera el total, tratar como pago completo.
+      guardarCobroNuevo(v.id, true, importe);
+    } else {
+      guardarCobroNuevo(v.id, false, monto);
+    }
+  };
+}
 </script>
 
 </body>
