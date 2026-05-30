@@ -1161,7 +1161,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.6</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.7</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1362,6 +1362,7 @@
       <div id="stockCostoTotal" class="stock-costo"></div>
       <div class="caja-actions" style="margin-top:10px;">
         <button type="button" id="btnAddIngresoStock" class="btn-secondary">＋ Ingreso</button>
+        <button type="button" id="btnStockCero" class="btn-secondary">Igualar a 0</button>
       </div>
     </div>
     <div class="card">
@@ -1504,7 +1505,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v2.6';
+const APP_VERSION = 'v2.7';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -2610,6 +2611,39 @@ function renderStockSheet(ingreso) {
   });
 }
 document.getElementById('btnAddIngresoStock').addEventListener('click', () => renderStockSheet());
+
+// Igualar stock a 0: genera un ingreso de 1 por cada venta (copiando la prenda)
+// hasta dejar el saldo en 0. Idempotente: si ya está en 0 o positivo, no hace nada.
+document.getElementById('btnStockCero').addEventListener('click', async () => {
+  const totalIngresos = state.stockIngresos.reduce((a, x) => a + (parseInt(x.cantidad) || 1), 0);
+  const faltan = state.ventas.length - totalIngresos; // = -saldo
+  if (faltan <= 0) { showToast('El stock ya está en 0 o positivo', '#34c759'); return; }
+  if (!confirm(`Se van a generar ${faltan} ingreso(s) de 1 (uno por venta) para dejar el stock en 0.\n\n¿Confirmás?`)) return;
+  const hoy = new Date().toISOString().slice(0, 10);
+  // Tomamos las ventas que aún no tienen su ingreso correspondiente (las más nuevas primero)
+  const objetivo = state.ventas.slice(0, faltan);
+  const rows = objetivo.map(v => ({
+    socia_id: v.socia_id || state.mySociaId,
+    fecha: v.fecha || hoy,
+    prenda: (v.prenda || '').toString().trim() || null,
+    material: (v.material || '').toString().trim() || null,
+    color: (v.color || '').toString().trim() || null,
+    talle: (v.talle || '').toString().trim() || null,
+    cantidad: 1,
+    proveedor: 'ajuste',
+    notas: 'Ingreso de ajuste (stock a 0)',
+  }));
+  try {
+    const { data, error } = await sb.from('stock_ingresos').insert(rows).select();
+    if (error) throw error;
+    state.stockIngresos.unshift(...data);
+    renderStock();
+    showToast(`✓ ${data.length} ingreso(s) generados — stock en 0`, '#34c759');
+  } catch (err) {
+    console.error(err);
+    showToast('Error al generar ingresos — ' + (err.message || 'sin red'), '#ff3b30');
+  }
+});
 
 // Editar ingreso al tocar el lapicito
 document.getElementById('stock').addEventListener('click', (e) => {
