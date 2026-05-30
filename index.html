@@ -1161,7 +1161,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.5</span></h2>
+    <h2>Ventas MV <span class="version-tag" id="loginVersionTag">v2.6</span></h2>
     <p>Ingresá la contraseña para continuar</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1213,10 +1213,9 @@
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="cargar">Cargar</button>
     <button class="tab" data-tab="registro">Seguimiento<br>Pedidos</button>
-    <button class="tab" data-tab="facturacion">Ventas<br>x Mes</button>
     <button class="tab" data-tab="caja">Caja</button>
     <button class="tab" data-tab="stock">Stock</button>
-    <button class="tab" data-tab="stats">Stats</button>
+    <button class="tab" data-tab="stats">Estadística<br>de Venta</button>
   </div>
 </header>
 
@@ -1322,43 +1321,12 @@
   </section>
 
   <!-- ============ FACTURACIÓN ============ -->
-  <section id="facturacion" class="module">
-    <div class="year-bar">
-      <span class="year-label">Año</span>
-      <select id="facturacionYear"></select>
-    </div>
-
-    <div class="year-summary">
-      <div class="stats-card">
-        <div class="stats-label">Total año</div>
-        <div class="stats-big" id="facTotal">$0</div>
-      </div>
-      <div class="stats-card">
-        <div class="stats-label">Ventas</div>
-        <div class="stats-big" id="facCount">0</div>
-      </div>
-      <div class="stats-card">
-        <div class="stats-label">Prom/mes</div>
-        <div class="stats-big" id="facAvgMonth">$0</div>
-      </div>
-    </div>
-    <div class="dolarized-line" id="facDolarizado" style="display:none;">
-      <span>💵 Dolarizado (blue por fecha):</span>
-      <span id="facDolarizadoVals"></span>
-    </div>
-
-    <div id="facturacionMonths"></div>
-
-    <div class="cost-hint" id="costHint">
-      💡 Cuando carguemos los costos en Supabase acá vas a ver ganancia y margen por mes.
-    </div>
-  </section>
-
   <!-- ============ CAJA ============ -->
   <section id="caja" class="module">
     <div class="caja-actions" style="margin-bottom:12px;">
       <button type="button" id="btnAddGasto" class="btn-secondary">＋ Gasto</button>
       <button type="button" id="btnAddRetiro" class="btn-secondary">＋ Retiro</button>
+      <button type="button" id="btnAjustarCaja" class="btn-secondary">Ajustar a 0</button>
     </div>
 
     <!-- Caja en pesos -->
@@ -1536,7 +1504,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v2.5';
+const APP_VERSION = 'v2.6';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1783,7 +1751,6 @@ document.querySelectorAll('.tab').forEach(btn => {
     document.getElementById(btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'registro') render();
     if (btn.dataset.tab === 'stats') renderStats();
-    if (btn.dataset.tab === 'facturacion') renderFacturacion();
     if (btn.dataset.tab === 'caja') renderCaja();
     if (btn.dataset.tab === 'stock') renderStock();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2037,6 +2004,7 @@ function renderCajaUna(moneda) {
     const cls = esIngreso ? 'ingreso' : 'egreso';
     const tipoLabel = m.tipo === 'ingreso' ? (m.pagadoCompleto ? 'Cobro total' : 'Adelanto')
                     : m.tipo === 'gasto'   ? 'Gasto'
+                    : m.tipo === 'ajuste'  ? 'Ajuste'
                     : 'Retiro';
     const socia = m.socia_id ? sociaNombre(m.socia_id) : '';
     const meta = [tipoLabel, fmtFecha(m.fecha), socia].filter(Boolean).join(' · ');
@@ -2130,6 +2098,36 @@ function openCajaMovModal(tipo) {
 }
 document.getElementById('btnAddGasto').addEventListener('click', () => openCajaMovModal('gasto'));
 document.getElementById('btnAddRetiro').addEventListener('click', () => openCajaMovModal('retiro'));
+
+// Ajustar caja a 0: inserta un movimiento de ajuste por cada moneda con saldo distinto de 0
+document.getElementById('btnAjustarCaja').addEventListener('click', async () => {
+  const sal = cajaSaldos();
+  const pendientes = ['ARS', 'USD'].filter(mon => Math.round((sal[mon] || 0) * 100) !== 0);
+  if (!pendientes.length) { showToast('La caja ya está en 0', '#34c759'); return; }
+  const detalle = pendientes.map(mon => `${mon}: ${fmtMoneyShort(sal[mon], mon)}`).join('\n');
+  if (!confirm(`Se va a registrar un ajuste para dejar la caja en 0.\n\nSaldo actual:\n${detalle}\n\n¿Confirmás?`)) return;
+  const hoy = new Date().toISOString().slice(0, 10);
+  try {
+    for (const mon of pendientes) {
+      const row = {
+        socia_id: state.mySociaId,
+        fecha: hoy,
+        tipo: 'ajuste',
+        concepto: 'Ajuste de caja a 0',
+        monto: sal[mon],           // cajaSaldos hace saldo -= monto → queda 0
+        moneda: mon,
+      };
+      const { data, error } = await sb.from('caja_movimientos').insert(row).select().single();
+      if (error) throw error;
+      state.cajaMovs.unshift(data);
+    }
+    renderCaja();
+    showToast('✓ Caja ajustada a 0', '#34c759');
+  } catch (err) {
+    console.error(err);
+    showToast('Error al ajustar — ' + (err.message || 'sin red'), '#ff3b30');
+  }
+});
 
 // Editar/borrar cualquier movimiento (delegado en toda la sección)
 document.getElementById('caja').addEventListener('click', (e) => {
