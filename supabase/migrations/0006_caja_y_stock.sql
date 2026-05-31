@@ -15,13 +15,20 @@ create table if not exists caja_movimientos (
   moneda text not null default 'ARS'
 );
 
+-- Si la tabla se creó antes con un CHECK inline, Postgres lo nombró
+-- caja_movimientos_tipo_check (auto). Hay que dropear ESE además del _chk:
+-- si no, la constraint vieja (sin 'ajuste') sigue viva y bloquea los ajustes.
 alter table caja_movimientos
   drop constraint if exists caja_movimientos_tipo_chk;
+alter table caja_movimientos
+  drop constraint if exists caja_movimientos_tipo_check;
 alter table caja_movimientos
   add constraint caja_movimientos_tipo_chk check (tipo in ('gasto','retiro','ajuste'));
 
 alter table caja_movimientos
   drop constraint if exists caja_movimientos_moneda_chk;
+alter table caja_movimientos
+  drop constraint if exists caja_movimientos_moneda_check;
 alter table caja_movimientos
   add constraint caja_movimientos_moneda_chk check (moneda in ('ARS','USD'));
 
