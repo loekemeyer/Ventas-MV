@@ -1505,7 +1505,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v2.8';
+const APP_VERSION = 'v2.9';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1752,7 +1752,7 @@ document.querySelectorAll('.tab').forEach(btn => {
     document.getElementById(btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'registro') render();
     if (btn.dataset.tab === 'stats') renderStats();
-    if (btn.dataset.tab === 'caja') renderCaja();
+    if (btn.dataset.tab === 'caja') refreshCaja();
     if (btn.dataset.tab === 'stock') renderStock();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -2024,6 +2024,35 @@ function renderCajaUna(moneda) {
 function renderCaja() {
   renderCajaUna('ARS');
   renderCajaUna('USD');
+}
+
+// Re-leer la caja desde Supabase (fuente de verdad) y renderizar.
+// Se llama al entrar a la pestaña Caja: caja_movimientos no tiene realtime y
+// las ventas sincronizan INSERT/DELETE pero no UPDATE (cobros), así que sin
+// esto un ajuste/gasto hecho en otro celular no se ve. Refrescamos ambas para
+// que el saldo sea igual en todos los perfiles/dispositivos que entren.
+async function refreshCaja() {
+  renderCaja(); // pinta lo que ya tenemos (instantáneo)
+  try {
+    const [ventasRes, cajaRes] = await Promise.all([
+      sb.from('ventas').select('*')
+        .order('fecha', { ascending: false })
+        .order('created_at', { ascending: false }),
+      sb.from('caja_movimientos').select('*')
+        .order('fecha', { ascending: false })
+        .order('created_at', { ascending: false }),
+    ]);
+    if (!ventasRes.error && ventasRes.data) {
+      state.ventas = ventasRes.data.map(rowToVenta);
+      saveCache();
+    }
+    if (!cajaRes.error && cajaRes.data) {
+      state.cajaMovs = cajaRes.data;
+    }
+    renderCaja();
+  } catch (e) {
+    console.warn('No se pudo refrescar la caja:', e);
+  }
 }
 
 // Toggle expandir/colapsar cada caja al tocar el header
