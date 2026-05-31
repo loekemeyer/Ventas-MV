@@ -1505,7 +1505,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v2.9';
+const APP_VERSION = 'v3.0';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -3056,6 +3056,7 @@ async function maybeMigrateLegacy() {
 }
 
 function subscribeRealtime() {
+  // Ventas: alta, baja Y modificación (cobros y cambios de estado afectan la caja)
   sb.channel('ventas-changes')
     .on('postgres_changes',
         { event: '*', schema: 'public', table: 'ventas' },
@@ -3067,20 +3068,57 @@ function subscribeRealtime() {
               state.ventas.unshift(v);
               saveCache();
               render();
+              renderCaja();
             }
             // Toast in-app solo si fue de OTRA socia
             if (payload.new.socia_id !== state.mySociaId) {
               const autor = sociaNombre(payload.new.socia_id);
               showRealtimeToast(`🔔 ${autor} cargó una venta`);
             }
+          } else if (payload.eventType === 'UPDATE') {
+            // Cobro / estado modificado en otro dispositivo → reflejarlo (y la caja)
+            const v = rowToVenta(payload.new);
+            const idx = state.ventas.findIndex(x => x.id === v.id);
+            if (idx >= 0) state.ventas[idx] = v; else state.ventas.unshift(v);
+            saveCache();
+            render();
+            renderCaja();
           } else if (payload.eventType === 'DELETE') {
             state.ventas = state.ventas.filter(x => x.id !== payload.old.id);
             saveCache();
             render();
+            renderCaja();
           }
         })
     .subscribe();
+
+  // Caja: gastos / retiros / ajustes hechos en cualquier dispositivo
+  sb.channel('caja-changes')
+    .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'caja_movimientos' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            if (!state.cajaMovs.find(x => x.id === payload.new.id)) {
+              state.cajaMovs.unshift(payload.new);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const idx = state.cajaMovs.findIndex(x => x.id === payload.new.id);
+            if (idx >= 0) state.cajaMovs[idx] = payload.new;
+            else state.cajaMovs.unshift(payload.new);
+          } else if (payload.eventType === 'DELETE') {
+            state.cajaMovs = state.cajaMovs.filter(x => x.id !== payload.old.id);
+          }
+          renderCaja();
+        })
+    .subscribe();
 }
+
+// Red de seguridad por si el realtime no llega (app en segundo plano, sin
+// publicación, etc.): al volver a la app o reenfocar, re-leemos de Supabase.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshCaja();
+});
+window.addEventListener('focus', () => refreshCaja());
 
 function showRealtimeToast(msg) {
   realtimeToast.textContent = msg;

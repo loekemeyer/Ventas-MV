@@ -67,3 +67,16 @@ drop policy if exists "anon all" on stock_ingresos;
 
 create policy "anon all" on caja_movimientos for all to anon using (true) with check (true);
 create policy "anon all" on stock_ingresos   for all to anon using (true) with check (true);
+
+-- ====== Realtime: que los cambios de caja lleguen en vivo a todos los celulares ======
+-- Sin esto, el front se suscribe a caja_movimientos pero nunca recibe eventos,
+-- y un ajuste/gasto hecho en un dispositivo no se refleja en los demás.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'caja_movimientos'
+  ) then
+    execute 'alter publication supabase_realtime add table caja_movimientos';
+  end if;
+end $$;
