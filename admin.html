@@ -1201,7 +1201,7 @@
 
 <div id="loginScreen">
   <div class="login-card">
-    <h2>MV Leather · Admin <span class="version-tag" id="loginVersionTag">v3.1</span></h2>
+    <h2>MV Leather · Admin <span class="version-tag" id="loginVersionTag">v3.2</span></h2>
     <p>Panel de control — ingresá la contraseña</p>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
@@ -1393,6 +1393,8 @@
             <input type="text" id="cfgAnuncio" placeholder="Cuero genuino argentino · Hecho a mano"></label>
           <label><span>Texto de envíos</span>
             <input type="text" id="cfgEnvio" placeholder="Envíos a todo el país..."></label>
+          <label><span>Envío gratis desde ($) — 0 = desactivado</span>
+            <input type="number" id="cfgEnvioGratis" inputmode="numeric" placeholder="0"></label>
           <label class="chk-row" style="flex-direction:row; align-items:center; gap:8px;">
             <input type="checkbox" id="cfgMpActivo" style="width:auto;">
             <span style="margin:0;">Cobrar con Mercado Pago (requiere token en Supabase)</span></label>
@@ -1400,6 +1402,26 @@
         <div class="actions" style="margin-top:8px;">
           <button type="button" id="btnGuardarCfg" class="btn-primary">Guardar ajustes</button>
         </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tienda-cfg-head" id="cuponesHead" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+        <h3 style="margin:0;">Cupones de descuento</h3>
+        <span class="caja-chev">▾</span>
+      </div>
+      <div id="cuponesBody" class="caja-collapsed" style="margin-top:10px;">
+        <div class="grid">
+          <label><span>Código</span><input type="text" id="cupCodigo" placeholder="VERANO10" autocapitalize="characters"></label>
+          <label><span>Tipo</span>
+            <select id="cupTipo"><option value="porcentaje">% porcentaje</option><option value="fijo">$ monto fijo</option></select></label>
+          <label><span>Valor (10 = 10% o $10)</span><input type="number" id="cupValor" inputmode="decimal" placeholder="10"></label>
+          <label><span>Compra mínima ($)</span><input type="number" id="cupMinimo" inputmode="decimal" placeholder="0"></label>
+          <label><span>Vence (opcional)</span><input type="date" id="cupVence"></label>
+          <label><span>Máx. usos (opcional)</span><input type="number" id="cupMaxUsos" inputmode="numeric" placeholder="ilimitado"></label>
+        </div>
+        <div class="actions" style="margin-top:8px;"><button type="button" id="btnAddCupon" class="btn-primary">Crear cupón</button></div>
+        <div id="cuponesList" style="margin-top:10px;"></div>
       </div>
     </div>
 
@@ -1591,7 +1613,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v3.1';
+const APP_VERSION = 'v3.2';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4296,6 +4318,7 @@ function fillTiendaCfgForm() {
   set('cfgInstagram', c.instagram);
   set('cfgAnuncio', c.anuncio);
   set('cfgEnvio', c.envio_texto);
+  set('cfgEnvioGratis', c.envio_gratis_desde);
   const mp = document.getElementById('cfgMpActivo');
   if (mp) mp.checked = c.mp_activo === '1' || c.mp_activo === 'true';
 }
@@ -4306,6 +4329,7 @@ async function guardarTiendaCfg() {
     { clave: 'instagram', valor: (document.getElementById('cfgInstagram').value || '').replace(/^@/, '').trim() },
     { clave: 'anuncio',   valor: document.getElementById('cfgAnuncio').value.trim() },
     { clave: 'envio_texto', valor: document.getElementById('cfgEnvio').value.trim() },
+    { clave: 'envio_gratis_desde', valor: (document.getElementById('cfgEnvioGratis').value || '0').replace(/[^\d.]/g, '') || '0' },
     { clave: 'mp_activo', valor: document.getElementById('cfgMpActivo').checked ? '1' : '0' },
   ].map(r => ({ ...r, updated_at: new Date().toISOString() }));
   try {
@@ -4356,8 +4380,67 @@ document.getElementById('productosList')?.addEventListener('click', async (e) =>
     } catch { showToast('Error al borrar', '#ff3b30'); }
   }
 });
+// ===== Cupones =====
+let _cupones = [];
+async function loadCupones() {
+  try {
+    const { data, error } = await sb.from('cupones').select('*').order('created_at', { ascending: false });
+    if (!error && data) { _cupones = data; renderCupones(); }
+  } catch (e) { /* tabla nueva: correr 0008 */ }
+}
+function renderCupones() {
+  const el = document.getElementById('cuponesList'); if (!el) return;
+  if (!_cupones.length) { el.innerHTML = '<div style="color:#8e8e93; font-size:13px;">Sin cupones todavía.</div>'; return; }
+  el.innerHTML = _cupones.map(c => {
+    const val = c.tipo === 'porcentaje' ? `${c.valor}%` : fmtMoney(c.valor, 'ARS');
+    const meta = [c.minimo > 0 ? `mín ${fmtMoney(c.minimo,'ARS')}` : '', c.vence ? `vence ${c.vence}` : '', c.max_usos != null ? `${c.usos||0}/${c.max_usos} usos` : ''].filter(Boolean).join(' · ');
+    return `<div class="venta-card" style="padding:10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+      <div><b style="font-size:15px;">${escapeHtml(c.codigo)}</b> <span class="estado-chip" style="background:#e4f8ec; color:#1a9c46;">${val}</span>
+      <div style="font-size:11px; color:#8e8e93;">${escapeHtml(meta) || '—'} ${c.activo ? '' : '· inactivo'}</div></div>
+      <button class="del-btn" data-del-cupon="${escapeHtml(c.codigo)}">Borrar</button>
+    </div>`;
+  }).join('');
+}
+document.getElementById('cuponesHead')?.addEventListener('click', () => {
+  document.getElementById('cuponesBody').classList.toggle('caja-collapsed');
+  if (!_cupones.length) loadCupones();
+});
+document.getElementById('btnAddCupon')?.addEventListener('click', async () => {
+  const codigo = (document.getElementById('cupCodigo').value || '').trim().toUpperCase();
+  if (!codigo) { showToast('Poné un código', '#ff9500'); return; }
+  const num = (id) => { const n = parseFloat(document.getElementById(id).value); return isFinite(n) ? n : null; };
+  const row = {
+    codigo,
+    tipo: document.getElementById('cupTipo').value,
+    valor: num('cupValor') ?? 0,
+    minimo: num('cupMinimo') ?? 0,
+    vence: document.getElementById('cupVence').value || null,
+    max_usos: (() => { const n = parseInt(document.getElementById('cupMaxUsos').value, 10); return isFinite(n) ? n : null; })(),
+    activo: true,
+  };
+  try {
+    const { data, error } = await sb.from('cupones').upsert(row, { onConflict: 'codigo' }).select().single();
+    if (error) throw error;
+    _cupones = [data, ..._cupones.filter(c => c.codigo !== codigo)];
+    renderCupones();
+    ['cupCodigo','cupValor','cupMinimo','cupVence','cupMaxUsos'].forEach(id => document.getElementById(id).value = '');
+    showToast('✓ Cupón creado', '#34c759');
+  } catch (e) { console.error(e); showToast('Error al crear cupón', '#ff3b30'); }
+});
+document.getElementById('cuponesList')?.addEventListener('click', async (e) => {
+  const cod = e.target.closest('[data-del-cupon]')?.dataset.delCupon;
+  if (!cod) return;
+  if (!confirm(`¿Borrar el cupón ${cod}?`)) return;
+  try {
+    const { error } = await sb.from('cupones').delete().eq('codigo', cod);
+    if (error) throw error;
+    _cupones = _cupones.filter(c => c.codigo !== cod); renderCupones();
+    showToast('Cupón eliminado', '#ff3b30');
+  } catch { showToast('Error al borrar', '#ff3b30'); }
+});
+
 // Refrescar catálogo al abrir la pestaña
-document.querySelector('[data-tab="tienda"]')?.addEventListener('click', renderTienda);
+document.querySelector('[data-tab="tienda"]')?.addEventListener('click', () => { renderTienda(); if (!_cupones.length) loadCupones(); });
 </script>
 
 </body>

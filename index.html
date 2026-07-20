@@ -8,6 +8,12 @@
 <meta property="og:title" content="MV Leather Studio · Cuero genuino hecho a mano">
 <meta property="og:description" content="Camperas de cuero genuino argentino. Diseño atemporal, confección artesanal.">
 <meta property="og:type" content="website">
+<meta property="og:image" content="logo.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MV Leather Studio">
+<meta name="twitter:description" content="Camperas de cuero genuino argentino, hechas a mano.">
+<meta name="twitter:image" content="logo.jpg">
+<link rel="canonical" href="https://loekemeyer.github.io/Ventas-MV/">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -335,6 +341,87 @@
   .mnav { position: fixed; inset: 0 0 auto 0; background: var(--surface); z-index: 45; padding: 80px 24px 24px; transform: translateY(-100%); transition: transform .3s; box-shadow: var(--shadow); }
   .mnav.show { transform: translateY(0); }
   .mnav a { display: block; font-family: var(--serif); font-size: 24px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+
+  /* ===== Wishlist heart on cards ===== */
+  .wish-btn {
+    position: absolute; top: 10px; right: 10px; z-index: 2; width: 34px; height: 34px;
+    border-radius: 50%; background: rgba(255,255,255,0.9); border: none; display: flex;
+    align-items: center; justify-content: center; color: var(--ink); backdrop-filter: blur(4px);
+  }
+  .wish-btn svg { width: 18px; height: 18px; }
+  .wish-btn.on { color: #c0392b; }
+  .wish-btn.on svg { fill: #c0392b; stroke: #c0392b; }
+
+  /* ===== Rating stars ===== */
+  .stars { color: #d9a441; font-size: 13px; letter-spacing: 1px; }
+  .stars .empty { color: #d8cdbb; }
+  .card-rating { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+
+  /* ===== Agotado ===== */
+  .tag.soldout { background: #6b6259; left: 12px; right: auto; }
+  .card.is-out .card-media img { opacity: .6; }
+
+  /* ===== Sort/filter bar ===== */
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-bottom: 30px; }
+  .toolbar select {
+    padding: 10px 16px; border-radius: 40px; border: 1px solid var(--line); background: var(--surface);
+    font-size: 13px; font-family: inherit; color: var(--ink);
+  }
+
+  /* ===== Free shipping bar (cart) ===== */
+  .ship-bar { background: var(--surface); border: 1px solid var(--line); padding: 12px 14px; margin-bottom: 14px; font-size: 13px; }
+  .ship-bar .track { height: 6px; background: #eae1d4; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .ship-bar .fill { height: 100%; background: var(--leather); border-radius: 3px; transition: width .3s; }
+
+  /* ===== Coupon row ===== */
+  .coupon-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .coupon-row input { flex: 1; padding: 11px 14px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; font-family: inherit; text-transform: uppercase; border-radius: 2px; }
+  .coupon-row button { padding: 0 18px; border: 1px solid var(--ink); background: var(--surface); font-weight: 600; font-size: 13px; border-radius: 2px; }
+  .coupon-ok { color: var(--ok); font-size: 12px; font-weight: 600; margin: -6px 0 12px; }
+
+  /* ===== Quantity in modal ===== */
+  .pm-qty { display: inline-flex; align-items: center; gap: 14px; border: 1px solid var(--line); border-radius: 2px; padding: 6px 10px; }
+  .pm-qty button { width: 28px; height: 28px; border: none; background: none; font-size: 20px; line-height: 1; }
+
+  /* ===== Related ===== */
+  .related { grid-column: 1 / -1; border-top: 1px solid var(--line); margin-top: 8px; padding: 24px 30px 30px; }
+  .related h3 { font-size: 22px; margin-bottom: 14px; }
+  .related-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+  .rel-card { cursor: pointer; }
+  .rel-card .rel-media { aspect-ratio: 4/5; background: #eae1d4; overflow: hidden; }
+  .rel-card img { width: 100%; height: 100%; object-fit: cover; }
+  .rel-card .rel-ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b6a894; font-size:11px; }
+  .rel-card .rel-n { font-family: var(--serif); font-size: 15px; margin-top: 6px; }
+  .rel-card .rel-p { font-size: 13px; font-weight: 600; }
+
+  /* ===== Reviews ===== */
+  .reviews { grid-column: 1 / -1; border-top: 1px solid var(--line); padding: 24px 30px 30px; }
+  .reviews h3 { font-size: 22px; margin-bottom: 4px; }
+  .rev-item { border-bottom: 1px solid var(--line); padding: 12px 0; }
+  .rev-item .rh { display: flex; justify-content: space-between; align-items: center; }
+  .rev-item .rn { font-weight: 600; }
+  .rev-item p { color: var(--muted); font-size: 14px; margin: 4px 0 0; }
+  .rev-form { margin-top: 16px; background: var(--bg); padding: 16px; border-radius: 4px; }
+  .star-pick { font-size: 26px; color: #d8cdbb; cursor: pointer; }
+  .star-pick .s.on { color: #d9a441; }
+
+  /* ===== Account ===== */
+  .acc-hero { text-align: center; padding: 20px 0 24px; }
+  .acc-hero img { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 10px; object-fit: cover; }
+  .acc-hero .nm { font-family: var(--serif); font-size: 22px; }
+  .acc-hero .em { color: var(--muted); font-size: 13px; }
+  .google-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+    padding: 13px; border: 1px solid var(--line); background: #fff; border-radius: 2px;
+    font-weight: 600; font-size: 14px; color: #1c1712;
+  }
+  .google-btn svg { width: 18px; height: 18px; }
+  .order-card { border: 1px solid var(--line); background: var(--surface); padding: 12px 14px; margin-bottom: 10px; }
+  .order-card .oh { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .order-card .op { font-family: var(--serif); font-size: 16px; margin: 4px 0; }
+  .badge-estado { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: #eee6d8; color: var(--leather-dark); font-weight: 600; }
+
+  .newsletter { background: var(--surface); border-top: 1px solid var(--line); }
 </style>
 </head>
 <body>
@@ -357,6 +444,14 @@
       <a href="#contacto">Contacto</a>
     </nav>
     <div class="nav-actions">
+      <button class="icon-btn" id="openWish" aria-label="Favoritos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="cart-count" id="wishCount">0</span>
+      </button>
+      <button class="icon-btn" id="openAccount" aria-label="Mi cuenta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <img id="accountAvatar" alt="" style="display:none; width:26px; height:26px; border-radius:50%; object-fit:cover;">
+      </button>
       <button class="icon-btn" id="openCart" aria-label="Carrito">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         <span class="cart-count" id="cartCount">0</span>
@@ -407,6 +502,7 @@
     </div>
     <div class="filters" id="filters"></div>
     <div class="search-row"><input type="search" id="search" placeholder="Buscar por nombre, color o material…"></div>
+    <div class="toolbar" id="toolbar"></div>
     <div class="grid" id="grid"></div>
   </div>
 </section>
@@ -439,6 +535,19 @@
       <button class="btn btn-ghost" id="openTalles">Ver guía de talles</button>
       <button class="btn btn-ghost" id="openCuidado">Cuidado del cuero</button>
     </div>
+  </div>
+</section>
+
+<!-- ===== NEWSLETTER ===== -->
+<section class="newsletter">
+  <div class="wrap" style="text-align:center; padding:52px 20px;">
+    <span class="eyebrow" style="color:var(--gold)">Sumate al club</span>
+    <h2 style="font-size:clamp(26px,4vw,36px); margin-top:8px; color:var(--ink);">Novedades y descuentos exclusivos</h2>
+    <p style="color:var(--muted); margin:12px auto 20px; max-width:460px;">Dejanos tu email y enterate primero de nuevos ingresos, ofertas y cupones.</p>
+    <form id="nlForm" style="display:flex; gap:8px; max-width:440px; margin:0 auto; flex-wrap:wrap;">
+      <input type="email" name="email" required placeholder="tu@email.com" style="flex:1; min-width:200px; padding:13px 16px; border:1px solid var(--line); background:var(--surface); border-radius:2px; font-size:15px; font-family:inherit;">
+      <button class="btn btn-dark" type="submit">Suscribirme</button>
+    </form>
   </div>
 </section>
 
@@ -499,6 +608,24 @@
   <div class="drawer-body" id="checkoutBody"></div>
 </aside>
 
+<!-- ===== ACCOUNT DRAWER ===== -->
+<aside class="drawer" id="accountDrawer" aria-label="Mi cuenta">
+  <div class="drawer-head">
+    <h3>Mi cuenta</h3>
+    <button class="close-x" data-close-account>&times;</button>
+  </div>
+  <div class="drawer-body" id="accountBody"></div>
+</aside>
+
+<!-- ===== WISHLIST DRAWER ===== -->
+<aside class="drawer" id="wishDrawer" aria-label="Favoritos">
+  <div class="drawer-head">
+    <h3>Tus favoritos</h3>
+    <button class="close-x" data-close-wish>&times;</button>
+  </div>
+  <div class="drawer-body" id="wishBody"></div>
+</aside>
+
 <!-- ===== INFO MODAL (talles / cuidado) ===== -->
 <div class="pmodal" id="infoModal"><div class="pmodal-inner" id="infoInner" style="grid-template-columns:1fr; max-width:620px;"></div></div>
 
@@ -524,12 +651,19 @@ try {
 
 const store = {
   productos: [],
-  cfg: { whatsapp: '', instagram: '', anuncio: '', envio_texto: '', mp_activo: '0', nombre_tienda: 'MV Leather Studio' },
+  cfg: { whatsapp: '', instagram: '', anuncio: '', envio_texto: '', mp_activo: '0', nombre_tienda: 'MV Leather Studio', envio_gratis_desde: '0' },
   cart: [],
+  wish: [],
+  ratings: {},            // { productoId: { avg, count } }
   filtro: 'all',
+  filtroMaterial: 'all',
+  orden: 'destacados',
   busca: '',
   sociaId: null,
+  user: null,             // sesión de la clienta (Supabase Auth)
+  cupon: null,            // { codigo, tipo, valor, minimo }
 };
+const WISH_KEY = 'mv_wish_v1';
 
 // ---------- helpers ----------
 const $ = (s, r = document) => r.querySelector(s);
@@ -554,13 +688,15 @@ function toast(msg) {
 // ---------- carga inicial ----------
 async function init() {
   loadCart();
+  loadWish();
   $('#year').textContent = new Date().getFullYear();
-  // config + productos + socia en paralelo (si hay conexión a Supabase)
+  // config + productos + socia + reseñas en paralelo (si hay conexión a Supabase)
   if (sb) {
-    const [cfgRes, prodRes, sociaRes] = await Promise.allSettled([
+    const [cfgRes, prodRes, sociaRes, revRes] = await Promise.allSettled([
       sb.from('tienda_config').select('*'),
       sb.from('productos').select('*').eq('activo', true).order('orden', { ascending: true }).order('created_at', { ascending: false }),
       sb.from('socias').select('id,nombre').eq('nombre', 'Tienda Online').maybeSingle(),
+      sb.from('resenas').select('producto_id,rating').eq('aprobada', true),
     ]);
     if (cfgRes.status === 'fulfilled' && cfgRes.value.data) {
       cfgRes.value.data.forEach(r => { store.cfg[r.clave] = r.valor; });
@@ -571,12 +707,19 @@ async function init() {
     if (sociaRes.status === 'fulfilled' && sociaRes.value.data) {
       store.sociaId = sociaRes.value.data.id;
     }
+    if (revRes.status === 'fulfilled' && revRes.value.data) {
+      aggregateRatings(revRes.value.data);
+    }
+    initAuth();
   }
   applyConfig();
   renderFilters();
+  renderToolbar();
   renderGrid();
   renderStat();
+  injectStoreJsonLd();
   handlePaymentReturn();
+  openDeepLinkProduct();
 }
 
 function applyConfig() {
@@ -615,14 +758,40 @@ function renderFilters() {
     `<button class="chip ${c === store.filtro ? 'active' : ''}" data-cat="${esc(c)}">${c === 'all' ? 'Todo' : esc(c)}</button>`
   ).join('');
 }
+function materiales() {
+  const set = new Set();
+  store.productos.forEach(p => { if (p.material) set.add(p.material); });
+  return [...set];
+}
+function renderToolbar() {
+  const mats = materiales();
+  const matSel = mats.length ? `<select id="matSel">
+      <option value="all">Todos los materiales</option>
+      ${mats.map(m => `<option value="${esc(m)}" ${m===store.filtroMaterial?'selected':''}>${esc(m)}</option>`).join('')}
+    </select>` : '';
+  $('#toolbar').innerHTML = `${matSel}
+    <select id="ordenSel">
+      <option value="destacados" ${store.orden==='destacados'?'selected':''}>Destacados</option>
+      <option value="nuevos" ${store.orden==='nuevos'?'selected':''}>Novedades</option>
+      <option value="precio_asc" ${store.orden==='precio_asc'?'selected':''}>Precio: menor a mayor</option>
+      <option value="precio_desc" ${store.orden==='precio_desc'?'selected':''}>Precio: mayor a menor</option>
+    </select>`;
+}
 function filtered() {
   const q = store.busca.toLowerCase().trim();
-  return store.productos.filter(p => {
+  let list = store.productos.filter(p => {
     if (store.filtro !== 'all' && p.categoria !== store.filtro) return false;
+    if (store.filtroMaterial !== 'all' && p.material !== store.filtroMaterial) return false;
     if (!q) return true;
     const hay = [p.nombre, p.material, p.categoria, ...(arr(p.colores))].join(' ').toLowerCase();
     return hay.includes(q);
   });
+  const o = store.orden;
+  if (o === 'precio_asc') list.sort((a, b) => (a.precio||0) - (b.precio||0));
+  else if (o === 'precio_desc') list.sort((a, b) => (b.precio||0) - (a.precio||0));
+  else if (o === 'nuevos') list.sort((a, b) => (b.created_at||'').localeCompare(a.created_at||''));
+  else list.sort((a, b) => (b.destacado?1:0) - (a.destacado?1:0)); // destacados primero
+  return list;
 }
 function renderGrid() {
   const grid = $('#grid');
@@ -637,16 +806,23 @@ function renderGrid() {
     const off = p.precio_anterior && p.precio_anterior > p.precio
       ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
     const swatches = arr(p.colores).slice(0, 5).map(c => `<span class="sw" title="${esc(c)}" style="background:${colorDot(c)}"></span>`).join('');
+    const agotado = p.stock === 0;
+    const wished = isWished(p.id);
+    const rating = store.ratings[p.id];
     return `
-      <article class="card" data-prod="${p.id}">
+      <article class="card ${agotado ? 'is-out' : ''}" data-prod="${p.id}">
         <div class="card-media">
           ${img ? `<img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy">` : `<div class="ph">MV LEATHER</div>`}
-          ${p.destacado ? `<span class="tag">Destacado</span>` : ''}
-          ${off ? `<span class="tag off">-${off}%</span>` : ''}
+          <button class="wish-btn ${wished ? 'on' : ''}" data-wish="${p.id}" aria-label="Favorito" title="Guardar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+          </button>
+          ${agotado ? `<span class="tag soldout">Agotado</span>` : (p.destacado ? `<span class="tag">Destacado</span>` : '')}
+          ${off && !agotado ? `<span class="tag off">-${off}%</span>` : ''}
         </div>
         <div class="card-body">
           <span class="card-cat">${esc(p.categoria || p.material || 'Cuero')}</span>
           <span class="card-title">${esc(p.nombre)}</span>
+          ${rating ? `<div class="card-rating">${starsHtml(rating.avg)} <span>(${rating.count})</span></div>` : ''}
           ${swatches ? `<div class="card-swatches">${swatches}</div>` : ''}
           <span class="card-price">${money(p.precio, p.moneda)}${p.precio_anterior && p.precio_anterior > p.precio ? ` <s>${money(p.precio_anterior, p.moneda)}</s>` : ''}</span>
         </div>
@@ -656,13 +832,16 @@ function renderGrid() {
 
 // ---------- product modal ----------
 let pmState = null;
-function openProduct(id) {
+function openProduct(id, pushUrl = true) {
   const p = store.productos.find(x => x.id === id); if (!p) return;
   const imgs = arr(p.imagenes);
   const colores = arr(p.colores);
   const talles = arr(p.talles);
-  pmState = { p, img: imgs[0] || null, color: colores.length === 1 ? colores[0] : null, talle: talles.length === 1 ? talles[0] : null };
+  const agotado = p.stock === 0;
+  pmState = { p, img: imgs[0] || null, color: colores.length === 1 ? colores[0] : null, talle: talles.length === 1 ? talles[0] : null, qty: 1 };
   const off = p.precio_anterior && p.precio_anterior > p.precio ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
+  const rating = store.ratings[p.id];
+  const wished = isWished(p.id);
 
   $('#pmodalInner').innerHTML = `
     <button class="close-x" data-close-pmodal>&times;</button>
@@ -673,25 +852,72 @@ function openProduct(id) {
     <div class="pm-info">
       <span class="card-cat">${esc(p.categoria || p.material || 'Cuero')}</span>
       <h2>${esc(p.nombre)}</h2>
+      ${rating ? `<div class="card-rating" style="margin-bottom:6px;">${starsHtml(rating.avg)} <span>${rating.avg.toFixed(1)} · ${rating.count} reseña${rating.count===1?'':'s'}</span></div>` : ''}
       <div class="pm-price">${money(p.precio, p.moneda)}${off ? ` <s>${money(p.precio_anterior, p.moneda)}</s>` : ''}</div>
       ${off ? `<span style="color:var(--danger); font-size:13px; font-weight:600;">${off}% OFF</span>` : ''}
       ${p.descripcion ? `<p class="pm-desc">${esc(p.descripcion)}</p>` : ''}
       <div class="pm-meta">
         ${p.material ? `<span>🧵 ${esc(p.material)}</span>` : ''}
-        ${p.stock != null ? `<span>${p.stock > 0 ? '✓ Disponible' : 'Bajo pedido'}</span>` : ''}
+        ${p.stock != null ? `<span>${agotado ? '⏳ Agotado' : (p.stock > 0 ? '✓ Disponible' : 'Bajo pedido')}</span>` : ''}
       </div>
       ${colores.length ? `<div class="opt-label">Color${pmState.color ? `: <span style="text-transform:none;letter-spacing:0;color:var(--ink)" id="pmColorLbl">${esc(pmState.color)}</span>` : ''}</div>
         <div class="opt-row" id="pmColors">${colores.map(c => `<button class="opt color ${pmState.color===c?'active':''}" data-color="${esc(c)}"><span class="dot" style="background:${colorDot(c)}"></span>${esc(c)}</button>`).join('')}</div>` : ''}
       ${talles.length ? `<div class="opt-label">Talle · <span class="link-u" id="pmTalleGuide">guía</span></div>
         <div class="opt-row" id="pmTalles">${talles.map(t => `<button class="opt ${pmState.talle===t?'active':''}" data-talle="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
-      <div style="margin-top:22px;">
-        <button class="btn btn-primary btn-block" id="pmAdd">Agregar al carrito</button>
+      <div class="opt-label">Cantidad</div>
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <div class="pm-qty"><button data-qminus>−</button><span id="pmQty">1</span><button data-qplus>+</button></div>
+        <button class="wish-btn ${wished ? 'on' : ''}" id="pmWish" data-wish="${p.id}" style="position:static; background:var(--bg); border:1px solid var(--line);" aria-label="Favorito" title="Guardar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        </button>
+        <button class="wish-btn" id="pmShare" style="position:static; background:var(--bg); border:1px solid var(--line);" aria-label="Compartir" title="Compartir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+        </button>
+      </div>
+      <div style="margin-top:20px;">
+        <button class="btn btn-primary btn-block" id="pmAdd" ${agotado ? 'disabled' : ''}>${agotado ? 'Sin stock — avisame' : 'Agregar al carrito'}</button>
       </div>
       <p class="pay-note">${esc(store.cfg.envio_texto || 'Coordinamos envío o retiro al confirmar tu pedido.')}</p>
-    </div>`;
+    </div>
+    ${relatedHtml(p)}
+    ${reviewsHtml(p)}`;
   $('#pmodal').classList.add('show');
   $('#overlay').classList.add('show');
   document.body.style.overflow = 'hidden';
+  document.getElementById('pmodal').scrollTop = 0;
+  injectProductJsonLd(p);
+  if (pushUrl) {
+    const ref = p.slug || p.id;
+    history.pushState({ producto: ref }, '', '?producto=' + encodeURIComponent(ref));
+  }
+  loadProductReviews(p.id);
+}
+
+function relatedHtml(p) {
+  const rel = store.productos.filter(x => x.id !== p.id && (x.categoria === p.categoria || x.material === p.material)).slice(0, 4);
+  if (!rel.length) return '';
+  return `<div class="related"><h3>También te puede gustar</h3><div class="related-grid">${rel.map(r => {
+    const img = arr(r.imagenes)[0];
+    return `<div class="rel-card" data-prod="${r.id}">
+      <div class="rel-media">${img ? `<img src="${esc(img)}" alt="${esc(r.nombre)}" loading="lazy">` : `<div class="rel-ph">MV LEATHER</div>`}</div>
+      <div class="rel-n">${esc(r.nombre)}</div><div class="rel-p">${money(r.precio, r.moneda)}</div>
+    </div>`;
+  }).join('')}</div></div>`;
+}
+
+function reviewsHtml(p) {
+  const rating = store.ratings[p.id];
+  return `<div class="reviews" id="pmReviews">
+    <h3>Reseñas ${rating ? `<span style="font-size:14px; color:var(--muted); font-weight:400;">${starsHtml(rating.avg)} ${rating.avg.toFixed(1)}/5</span>` : ''}</h3>
+    <div id="pmReviewList" style="margin-top:10px; color:var(--muted); font-size:14px;">Cargando…</div>
+    <div class="rev-form">
+      <div class="opt-label" style="margin-top:0;">Dejá tu reseña</div>
+      <div class="star-pick" id="revStars" data-val="5">${[1,2,3,4,5].map(n => `<span class="s on" data-star="${n}">★</span>`).join('')}</div>
+      <div class="field" style="margin-top:8px;"><input id="revNombre" placeholder="Tu nombre" value="${esc(store.user?.name || '')}"></div>
+      <div class="field"><textarea id="revTexto" rows="2" placeholder="Contanos qué te pareció"></textarea></div>
+      <button class="btn btn-dark" id="revSubmit" style="padding:10px 22px;">Enviar reseña</button>
+    </div>
+  </div>`;
 }
 
 // ---------- cart ----------
@@ -710,13 +936,22 @@ function addToCart(p, color, talle, qty = 1) {
   else store.cart.push({ key, id: p.id, nombre: p.nombre, precio: parseFloat(p.precio) || 0, moneda: p.moneda || 'ARS', color: color || '', talle: talle || '', img: arr(p.imagenes)[0] || '', qty });
   saveCart();
 }
+function shipBarHtml() {
+  const umbral = parseFloat(store.cfg.envio_gratis_desde) || 0;
+  if (umbral <= 0) return '';
+  const t = cartTotal();
+  if (t >= umbral) return `<div class="ship-bar" style="color:var(--ok);">🎉 ¡Tenés envío gratis!</div>`;
+  const falta = umbral - t;
+  const pct = Math.min(100, Math.round(t / umbral * 100));
+  return `<div class="ship-bar">Te faltan <b>${money(falta, 'ARS')}</b> para envío gratis<div class="track"><div class="fill" style="width:${pct}%"></div></div></div>`;
+}
 function renderCart() {
   const body = $('#cartBody'); const foot = $('#cartFoot');
   if (!store.cart.length) {
     body.innerHTML = `<div class="cart-empty"><p style="font-family:var(--serif);font-size:22px;">Tu carrito está vacío</p><p>Sumá una prenda de nuestra colección.</p><button class="btn btn-dark" data-close-cart style="margin-top:14px;">Ver colección</button></div>`;
     foot.style.display = 'none'; return;
   }
-  body.innerHTML = store.cart.map(i => `
+  body.innerHTML = shipBarHtml() + store.cart.map(i => `
     <div class="cart-item">
       ${i.img ? `<img src="${esc(i.img)}" alt="">` : `<div class="ci-ph">MV</div>`}
       <div class="ci-info">
@@ -738,27 +973,48 @@ function openCart() { renderCart(); $('#cartDrawer').classList.add('show'); $('#
 function closeAll() {
   $('#cartDrawer').classList.remove('show');
   $('#checkoutDrawer').classList.remove('show');
+  $('#accountDrawer').classList.remove('show');
+  $('#wishDrawer').classList.remove('show');
   $('#pmodal').classList.remove('show');
   $('#infoModal').classList.remove('show');
   $('#overlay').classList.remove('show');
   $('#mnav').classList.remove('show');
   document.body.style.overflow = '';
+  // limpiar deep-link del producto al cerrar el modal
+  if (location.search.includes('producto=')) history.replaceState(null, '', location.pathname);
 }
 
 // ---------- checkout ----------
+function discountAmount(subtotal) {
+  const c = store.cupon;
+  if (!c) return 0;
+  if (subtotal < (parseFloat(c.minimo) || 0)) return 0;
+  const d = c.tipo === 'porcentaje' ? subtotal * (parseFloat(c.valor) || 0) / 100 : (parseFloat(c.valor) || 0);
+  return Math.min(d, subtotal);
+}
 function openCheckout() {
   if (!store.cart.length) { toast('Tu carrito está vacío'); return; }
   const mpOn = store.cfg.mp_activo === '1' || store.cfg.mp_activo === 'true';
+  const subtotal = cartTotal();
+  const desc = discountAmount(subtotal);
+  const total = subtotal - desc;
+  const mon = store.cart[0]?.moneda || 'ARS';
   const rows = store.cart.map(i => `<div class="row"><span>${esc(i.nombre)} ${i.talle?`(${esc(i.talle)})`:''} ×${i.qty}</span><span>${money(i.precio*i.qty, i.moneda)}</span></div>`).join('');
   $('#checkoutBody').innerHTML = `
     <div class="co-summary">
       ${rows}
-      <div class="tot"><span>Total</span><span>${money(cartTotal(), store.cart[0]?.moneda||'ARS')}</span></div>
+      ${desc > 0 ? `<div class="row" style="color:var(--ok); font-weight:600;"><span>Cupón ${esc(store.cupon.codigo)}</span><span>−${money(desc, mon)}</span></div>` : ''}
+      <div class="tot"><span>Total</span><span>${money(total, mon)}</span></div>
     </div>
+    <div class="coupon-row">
+      <input id="cuponInput" placeholder="Código de cupón" value="${esc(store.cupon?.codigo || '')}">
+      <button type="button" id="cuponBtn">Aplicar</button>
+    </div>
+    ${store.cupon ? `<div class="coupon-ok">✓ Cupón ${esc(store.cupon.codigo)} aplicado</div>` : ''}
     <form id="coForm" autocomplete="on">
-      <div class="field"><label>Nombre y apellido *</label><input name="nombre" required autocomplete="name"></div>
+      <div class="field"><label>Nombre y apellido *</label><input name="nombre" required autocomplete="name" value="${esc(store.user?.name || '')}"></div>
       <div class="field"><label>WhatsApp *</label><input name="telefono" type="tel" inputmode="tel" required autocomplete="tel" placeholder="11 1234-5678"></div>
-      <div class="field"><label>Email ${mpOn ? '*' : '(opcional)'}</label><input name="email" type="email" ${mpOn?'required':''} autocomplete="email" placeholder="para el comprobante de pago"></div>
+      <div class="field"><label>Email ${mpOn ? '*' : '(opcional)'}</label><input name="email" type="email" ${mpOn?'required':''} autocomplete="email" value="${esc(store.user?.email || '')}" placeholder="para el comprobante de pago"></div>
       <div class="field">
         <label>Entrega</label>
         <div class="seg">
@@ -773,6 +1029,8 @@ function openCheckout() {
       : `<button type="submit" class="btn btn-primary btn-block" data-pay="wa">Enviar pedido por WhatsApp</button>`}
       <p class="pay-note">Al confirmar, guardamos tu pedido y te contactamos para coordinar. ${mpOn ? 'Con Mercado Pago pagás online de forma segura.' : ''}</p>
     </form>`;
+  // cupón
+  $('#cuponBtn').onclick = () => aplicarCupon($('#cuponInput').value);
   // toggle dirección
   const form = $('#coForm');
   const syncDir = () => { $('#dirField').style.display = form.entrega.value === 'Envío a domicilio' ? 'block' : 'none'; };
@@ -805,7 +1063,9 @@ async function finalizarPedido(form, metodo) {
   const items = store.cart.map(i => ({
     id: i.id, nombre: i.nombre, color: i.color, talle: i.talle, qty: i.qty, precio: i.precio, moneda: i.moneda,
   }));
-  const total = cartTotal();
+  const subtotal = cartTotal();
+  const descuento = discountAmount(subtotal);
+  const total = subtotal - descuento;
   const moneda = store.cart[0]?.moneda || 'ARS';
   const resumen = store.cart.map(i => `${i.nombre}${i.color||i.talle?` (${[i.color,i.talle].filter(Boolean).join('/')})`:''} ×${i.qty}`).join(' + ');
 
@@ -814,6 +1074,10 @@ async function finalizarPedido(form, metodo) {
     fecha: new Date().toISOString().slice(0, 10),
     cliente: nombre,
     telefono,
+    cliente_email: email || (store.user?.email || null),
+    cliente_user_id: store.user?.id || null,
+    cupon: store.cupon?.codigo || null,
+    descuento: descuento || null,
     prenda: resumen.slice(0, 500),
     importe: total,
     moneda,
@@ -821,7 +1085,7 @@ async function finalizarPedido(form, metodo) {
     estado: 'Recepcionado',
     origen: 'web',
     pago_estado: 'pendiente',
-    pedido_json: { items, cliente: { nombre, telefono, email }, entrega, direccion, notas, total, moneda },
+    pedido_json: { items, cliente: { nombre, telefono, email }, entrega, direccion, notas, subtotal, descuento, cupon: store.cupon?.codigo || null, total, moneda },
   };
 
   let ventaId = null;
@@ -829,18 +1093,26 @@ async function finalizarPedido(form, metodo) {
     const { data, error } = await sb.from('ventas').insert(ventaRow).select('id').single();
     if (error) throw error;
     ventaId = data.id;
+    // registrar uso de cupón (best-effort, no bloquea el pedido)
+    if (store.cupon?.codigo) {
+      sb.from('cupones').update({ usos: (parseInt(store.cupon.usos, 10) || 0) + 1 }).eq('codigo', store.cupon.codigo).then(() => {}, () => {});
+    }
   } catch (err) {
     console.error('No se pudo guardar el pedido:', err);
     // Aun sin guardar, dejamos que el pedido salga por WhatsApp para no perder la venta.
   }
 
   if (metodo === 'mp') {
-    const ok = await pagarConMP(ventaId, items, { nombre, email, telefono });
+    // Si hay descuento, mandamos un ítem consolidado para que el monto sea exacto.
+    const mpItems = descuento > 0
+      ? [{ nombre: 'Pedido MV Leather' + (store.cupon ? ` (cupón ${store.cupon.codigo})` : ''), qty: 1, precio: total, moneda, talle: '' }]
+      : items;
+    const ok = await pagarConMP(ventaId, mpItems, { nombre, email, telefono });
     if (ok) return; // redirige a MP
     toast('Mercado Pago no disponible — coordinamos por WhatsApp');
   }
   // WhatsApp (o fallback)
-  abrirWhatsappPedido({ nombre, telefono, email, entrega, direccion, notas, resumen, total, moneda }, ventaId);
+  abrirWhatsappPedido({ nombre, telefono, email, entrega, direccion, notas, resumen, total, moneda, descuento, cupon: store.cupon?.codigo }, ventaId);
   finalizarUI();
   btns.forEach(b => b.disabled = false);
 }
@@ -883,6 +1155,7 @@ function abrirWhatsappPedido(o, ventaId) {
   L.push('*Pedido:*');
   store.cart.forEach(i => L.push(`• ${i.nombre}${i.color||i.talle?` (${[i.color,i.talle].filter(Boolean).join(' / ')})`:''} ×${i.qty} — ${money(i.precio*i.qty, i.moneda)}`));
   L.push('');
+  if (o.descuento > 0) L.push(`*Cupón ${o.cupon || ''}:* −${money(o.descuento, o.moneda)}`);
   L.push(`*Total:* ${money(o.total, o.moneda)}`);
   L.push(`*Entrega:* ${o.entrega}`);
   if (o.entrega === 'Envío a domicilio' && o.direccion) L.push(`*Dirección:* ${o.direccion}`);
@@ -951,8 +1224,15 @@ function openInfo(tipo) {
 //  Event wiring
 // ============================================================================
 $('#grid').addEventListener('click', (e) => {
+  const wb = e.target.closest('[data-wish]');
+  if (wb) { e.stopPropagation(); toggleWish(wb.dataset.wish); return; }
   const card = e.target.closest('[data-prod]');
   if (card) openProduct(card.dataset.prod);
+});
+$('#toolbar').addEventListener('change', (e) => {
+  if (e.target.id === 'matSel') store.filtroMaterial = e.target.value;
+  if (e.target.id === 'ordenSel') store.orden = e.target.value;
+  renderGrid();
 });
 $('#filters').addEventListener('click', (e) => {
   const b = e.target.closest('[data-cat]'); if (!b) return;
@@ -984,11 +1264,26 @@ $('#pmodalInner').addEventListener('click', (e) => {
     return;
   }
   if (e.target.id === 'pmTalleGuide') { openInfo('talles'); return; }
+  if (e.target.closest('[data-qminus]')) { pmState.qty = Math.max(1, pmState.qty - 1); $('#pmQty').textContent = pmState.qty; return; }
+  if (e.target.closest('[data-qplus]')) { pmState.qty++; $('#pmQty').textContent = pmState.qty; return; }
+  const wb = e.target.closest('#pmWish');
+  if (wb) { toggleWish(wb.dataset.wish); wb.classList.toggle('on', isWished(wb.dataset.wish)); return; }
+  if (e.target.closest('#pmShare')) { compartirProducto(pmState.p); return; }
+  const rel = e.target.closest('.rel-card[data-prod]');
+  if (rel) { openProduct(rel.dataset.prod); return; }
+  const star = e.target.closest('#revStars [data-star]');
+  if (star) {
+    const val = parseInt(star.dataset.star, 10);
+    $('#revStars').dataset.val = val;
+    $$('#revStars .s').forEach((s, i) => s.classList.toggle('on', i < val));
+    return;
+  }
+  if (e.target.id === 'revSubmit') { enviarResena(pmState.p.id); return; }
   if (e.target.id === 'pmAdd') {
     const p = pmState.p;
     if (arr(p.colores).length && !pmState.color) { toast('Elegí un color'); return; }
     if (arr(p.talles).length && !pmState.talle) { toast('Elegí un talle'); return; }
-    addToCart(p, pmState.color, pmState.talle, 1);
+    addToCart(p, pmState.color, pmState.talle, pmState.qty || 1);
     closeAll();
     toast('Agregado al carrito ✓');
     setTimeout(openCart, 350);
@@ -1012,12 +1307,282 @@ $('#openCart').addEventListener('click', openCart);
 $('#goCheckout').addEventListener('click', openCheckout);
 $('#openTalles').addEventListener('click', () => openInfo('talles'));
 $('#openCuidado').addEventListener('click', () => openInfo('cuidado'));
+$('#openWish').addEventListener('click', openWish);
+$('#openAccount').addEventListener('click', openAccount);
+$('#wishBody').addEventListener('click', (e) => {
+  const wb = e.target.closest('[data-wish]');
+  if (wb) { toggleWish(wb.dataset.wish); renderWish(); return; }
+  const card = e.target.closest('[data-prod]');
+  if (card) { closeAll(); openProduct(card.dataset.prod); }
+});
+$('#accountBody').addEventListener('click', (e) => {
+  if (e.target.closest('#btnGoogle')) signInGoogle();
+  if (e.target.closest('#btnSignOut')) signOut();
+});
+$('#nlForm').addEventListener('submit', suscribirNewsletter);
 $('#menuToggle').addEventListener('click', () => { $('#mnav').classList.toggle('show'); $('#overlay').classList.toggle('show'); });
 document.body.addEventListener('click', (e) => {
-  if (e.target.closest('[data-close-cart],[data-close-checkout],[data-close-info],[data-close-mnav]')) closeAll();
+  if (e.target.closest('[data-close-cart],[data-close-checkout],[data-close-info],[data-close-mnav],[data-close-account],[data-close-wish]')) closeAll();
 });
 $('#overlay').addEventListener('click', closeAll);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
+window.addEventListener('popstate', () => {
+  const ref = new URLSearchParams(location.search).get('producto');
+  if (ref) { const p = findProductByRef(ref); if (p) { openProduct(p.id, false); return; } }
+  closeAll();
+});
+
+// ============================================================================
+//  Login de clientas (Supabase Auth — Google / Gmail)
+// ============================================================================
+function setUserFromSession(session) {
+  const u = session?.user;
+  if (u) {
+    store.user = {
+      id: u.id,
+      email: u.email || '',
+      name: u.user_metadata?.full_name || u.user_metadata?.name || (u.email || '').split('@')[0],
+      avatar: u.user_metadata?.avatar_url || u.user_metadata?.picture || '',
+    };
+  } else {
+    store.user = null;
+  }
+  updateAccountBadge();
+}
+function updateAccountBadge() {
+  const img = $('#accountAvatar');
+  const btn = $('#openAccount');
+  if (store.user?.avatar) {
+    img.src = store.user.avatar; img.style.display = 'block';
+    btn.querySelector('svg').style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    const svg = btn.querySelector('svg'); if (svg) svg.style.display = '';
+  }
+}
+async function initAuth() {
+  if (!sb?.auth) return;
+  try {
+    const { data } = await sb.auth.getSession();
+    setUserFromSession(data.session);
+    sb.auth.onAuthStateChange((_ev, session) => setUserFromSession(session));
+  } catch (e) { console.warn('Auth no disponible', e); }
+}
+async function signInGoogle() {
+  if (!sb?.auth) { toast('Login no disponible ahora'); return; }
+  const redirectTo = location.origin + location.pathname;
+  const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
+  if (error) { console.error(error); toast('No se pudo iniciar sesión con Google'); }
+}
+async function signOut() {
+  try { await sb.auth.signOut(); } catch {}
+  store.user = null; updateAccountBadge(); renderAccount();
+  toast('Sesión cerrada');
+}
+function openAccount() { renderAccount(); $('#accountDrawer').classList.add('show'); $('#overlay').classList.add('show'); document.body.style.overflow = 'hidden'; }
+async function renderAccount() {
+  const body = $('#accountBody');
+  if (!store.user) {
+    body.innerHTML = `
+      <div class="acc-hero">
+        <div style="font-size:40px;">🧥</div>
+        <div class="nm">Iniciá sesión</div>
+        <div class="em">Entrá con tu Gmail para ver tus pedidos y comprar más rápido.</div>
+      </div>
+      <button class="google-btn" id="btnGoogle">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.5 13.2l7.8 6.1C12.2 13.3 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.1 5.4-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16z"/><path fill="#FBBC05" d="M10.3 28.3c-.5-1.4-.8-2.9-.8-4.3s.3-3 .8-4.3l-7.8-6.1C.9 16.7 0 20.2 0 24s.9 7.3 2.5 10.4l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.5-2 15.3-5.5l-7.1-5.5c-2 1.3-4.6 2.1-8.2 2.1-6.4 0-11.8-3.8-13.7-9.3l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+        Continuar con Google
+      </button>
+      <p style="color:var(--muted); font-size:12px; text-align:center; margin-top:14px;">También podés comprar como invitada, sin cuenta.</p>`;
+    return;
+  }
+  body.innerHTML = `
+    <div class="acc-hero">
+      ${store.user.avatar ? `<img src="${esc(store.user.avatar)}" alt="">` : `<div style="font-size:40px;">👤</div>`}
+      <div class="nm">${esc(store.user.name)}</div>
+      <div class="em">${esc(store.user.email)}</div>
+    </div>
+    <div class="opt-label">Mis pedidos</div>
+    <div id="accOrders" style="color:var(--muted); font-size:14px;">Cargando…</div>
+    <button class="btn btn-ghost btn-block" id="btnSignOut" style="color:var(--ink); border-color:var(--line); margin-top:18px;">Cerrar sesión</button>`;
+  // historial de pedidos por email
+  try {
+    const { data } = await sb.from('ventas').select('created_at,prenda,importe,moneda,estado,pago_estado')
+      .eq('origen', 'web').ilike('cliente_email', store.user.email).order('created_at', { ascending: false }).limit(20);
+    const cont = $('#accOrders'); if (!cont) return;
+    if (!data || !data.length) { cont.innerHTML = 'Todavía no tenés pedidos. ¡Empezá por la colección!'; return; }
+    cont.innerHTML = data.map(o => `
+      <div class="order-card">
+        <div class="oh"><span>${new Date(o.created_at).toLocaleDateString('es-AR')}</span><span class="badge-estado">${esc(o.estado || 'Recepcionado')}</span></div>
+        <div class="op">${money(o.importe, o.moneda)}</div>
+        <div style="font-size:13px; color:var(--muted);">${esc(o.prenda || '')}</div>
+      </div>`).join('');
+  } catch (e) { const c = $('#accOrders'); if (c) c.textContent = 'No pudimos cargar tus pedidos.'; }
+}
+
+// ============================================================================
+//  Favoritos (wishlist)
+// ============================================================================
+function loadWish() { try { store.wish = JSON.parse(localStorage.getItem(WISH_KEY)) || []; } catch { store.wish = []; } updateWishBadge(); }
+function saveWish() { localStorage.setItem(WISH_KEY, JSON.stringify(store.wish)); updateWishBadge(); }
+function isWished(id) { return store.wish.includes(id); }
+function toggleWish(id) {
+  if (isWished(id)) store.wish = store.wish.filter(x => x !== id);
+  else { store.wish.push(id); toast('Guardado en favoritos ♥'); }
+  saveWish(); renderGrid();
+  const on = isWished(id);
+  $$(`[data-wish="${id}"]`).forEach(b => b.classList.toggle('on', on));
+}
+function updateWishBadge() {
+  const el = $('#wishCount'); const n = store.wish.length;
+  el.textContent = n; el.classList.toggle('show', n > 0);
+}
+function openWish() { renderWish(); $('#wishDrawer').classList.add('show'); $('#overlay').classList.add('show'); document.body.style.overflow = 'hidden'; }
+function renderWish() {
+  const body = $('#wishBody');
+  const items = store.productos.filter(p => store.wish.includes(p.id));
+  if (!items.length) {
+    body.innerHTML = `<div class="cart-empty"><p style="font-family:var(--serif);font-size:22px;">Sin favoritos aún</p><p>Tocá el ♥ en las prendas que te gusten para guardarlas.</p></div>`;
+    return;
+  }
+  body.innerHTML = items.map(p => {
+    const img = arr(p.imagenes)[0];
+    return `<div class="cart-item" data-prod="${p.id}" style="cursor:pointer;">
+      ${img ? `<img src="${esc(img)}" alt="">` : `<div class="ci-ph">MV</div>`}
+      <div class="ci-info"><div class="n">${esc(p.nombre)}</div><div class="o">${esc(p.categoria || p.material || '')}</div>
+      <div class="ci-price" style="text-align:left;">${money(p.precio, p.moneda)}</div></div>
+      <button class="ci-remove" data-wish="${p.id}">Quitar</button>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================================
+//  Reseñas / rating
+// ============================================================================
+function aggregateRatings(rows) {
+  const acc = {};
+  rows.forEach(r => { (acc[r.producto_id] = acc[r.producto_id] || []).push(r.rating); });
+  store.ratings = {};
+  Object.keys(acc).forEach(id => {
+    const a = acc[id];
+    store.ratings[id] = { avg: a.reduce((x, y) => x + y, 0) / a.length, count: a.length };
+  });
+}
+function starsHtml(avg) {
+  const full = Math.round(avg);
+  return `<span class="stars">${[1,2,3,4,5].map(n => n <= full ? '★' : '<span class="empty">★</span>').join('')}</span>`;
+}
+async function loadProductReviews(pid) {
+  const cont = $('#pmReviewList'); if (!cont || !sb) return;
+  try {
+    const { data } = await sb.from('resenas').select('nombre,rating,comentario,created_at')
+      .eq('producto_id', pid).eq('aprobada', true).order('created_at', { ascending: false }).limit(20);
+    if (!data || !data.length) { cont.innerHTML = 'Sé la primera en dejar una reseña.'; return; }
+    cont.innerHTML = data.map(r => `<div class="rev-item"><div class="rh"><span class="rn">${esc(r.nombre || 'Clienta')}</span>${starsHtml(r.rating)}</div>${r.comentario ? `<p>${esc(r.comentario)}</p>` : ''}</div>`).join('');
+  } catch { cont.innerHTML = ''; }
+}
+async function enviarResena(pid) {
+  if (!sb) { toast('No disponible ahora'); return; }
+  const rating = parseInt($('#revStars').dataset.val, 10) || 5;
+  const nombre = ($('#revNombre').value || '').trim() || 'Clienta';
+  const comentario = ($('#revTexto').value || '').trim();
+  try {
+    const { error } = await sb.from('resenas').insert({ producto_id: pid, nombre, rating, comentario });
+    if (error) throw error;
+    toast('¡Gracias por tu reseña! ♥');
+    // refrescar agregados y lista
+    const { data } = await sb.from('resenas').select('producto_id,rating').eq('aprobada', true);
+    if (data) aggregateRatings(data);
+    loadProductReviews(pid);
+    $('#revTexto').value = '';
+  } catch (e) { console.error(e); toast('No se pudo enviar la reseña'); }
+}
+
+// ============================================================================
+//  Cupones
+// ============================================================================
+async function aplicarCupon(codigo) {
+  codigo = (codigo || '').trim().toUpperCase();
+  if (!codigo) { store.cupon = null; openCheckout(); return; }
+  if (!sb) { toast('Cupones no disponibles ahora'); return; }
+  try {
+    const { data, error } = await sb.from('cupones').select('*').eq('codigo', codigo).eq('activo', true).maybeSingle();
+    if (error) throw error;
+    if (!data) { toast('Cupón inválido'); store.cupon = null; openCheckout(); return; }
+    if (data.vence && data.vence < new Date().toISOString().slice(0, 10)) { toast('Ese cupón venció'); return; }
+    if (data.max_usos != null && data.usos >= data.max_usos) { toast('Cupón agotado'); return; }
+    if (cartTotal() < (parseFloat(data.minimo) || 0)) { toast(`El cupón aplica desde ${money(data.minimo, 'ARS')}`); return; }
+    store.cupon = data;
+    toast('✓ Cupón aplicado');
+    openCheckout();
+  } catch (e) { console.error(e); toast('No se pudo validar el cupón'); }
+}
+
+// ============================================================================
+//  Newsletter
+// ============================================================================
+async function suscribirNewsletter(e) {
+  e.preventDefault();
+  const email = (new FormData(e.target).get('email') || '').toString().trim().toLowerCase();
+  if (!email) return;
+  if (sb) { try { await sb.from('newsletter').upsert({ email }, { onConflict: 'email' }); } catch (err) { console.warn(err); } }
+  e.target.reset();
+  toast('¡Listo! Ya estás suscripta ♥');
+}
+
+// ============================================================================
+//  Compartir + deep-link + SEO estructurado
+// ============================================================================
+function findProductByRef(ref) {
+  return store.productos.find(p => (p.slug && p.slug === ref) || p.id === ref);
+}
+function productUrl(p) {
+  return location.origin + location.pathname + '?producto=' + encodeURIComponent(p.slug || p.id);
+}
+async function compartirProducto(p) {
+  const url = productUrl(p);
+  const shareData = { title: p.nombre, text: `Mirá esta pieza de ${store.cfg.nombre_tienda}: ${p.nombre}`, url };
+  if (navigator.share) { try { await navigator.share(shareData); return; } catch {} }
+  try { await navigator.clipboard.writeText(url); toast('Link copiado ✓'); }
+  catch { toast(url); }
+}
+function openDeepLinkProduct() {
+  const ref = new URLSearchParams(location.search).get('producto');
+  if (!ref) return;
+  const p = findProductByRef(ref);
+  if (p) setTimeout(() => openProduct(p.id, false), 200);
+}
+function injectStoreJsonLd() {
+  const ld = {
+    '@context': 'https://schema.org', '@type': 'Store',
+    name: store.cfg.nombre_tienda || 'MV Leather Studio',
+    description: 'Camperas y prendas de cuero genuino argentino, hechas a mano.',
+    image: location.origin + location.pathname.replace(/index\.html$/, '') + 'logo.jpg',
+    url: location.origin + location.pathname,
+  };
+  putJsonLd('ld-store', ld);
+}
+function injectProductJsonLd(p) {
+  const rating = store.ratings[p.id];
+  const ld = {
+    '@context': 'https://schema.org', '@type': 'Product',
+    name: p.nombre, description: p.descripcion || '', category: p.categoria || '',
+    image: arr(p.imagenes)[0] || (location.origin + location.pathname.replace(/index\.html$/, '') + 'logo.jpg'),
+    brand: { '@type': 'Brand', name: store.cfg.nombre_tienda || 'MV Leather Studio' },
+    offers: {
+      '@type': 'Offer', price: p.precio, priceCurrency: p.moneda === 'USD' ? 'USD' : 'ARS',
+      availability: p.stock === 0 ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+      url: productUrl(p),
+    },
+  };
+  if (rating) ld.aggregateRating = { '@type': 'AggregateRating', ratingValue: rating.avg.toFixed(1), reviewCount: rating.count };
+  putJsonLd('ld-product', ld);
+}
+function putJsonLd(id, obj) {
+  let el = document.getElementById(id);
+  if (!el) { el = document.createElement('script'); el.type = 'application/ld+json'; el.id = id; document.head.appendChild(el); }
+  el.textContent = JSON.stringify(obj);
+}
 
 // PWA
 if ('serviceWorker' in navigator) {

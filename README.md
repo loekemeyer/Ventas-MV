@@ -13,12 +13,18 @@ La tienda y el panel comparten el mismo proyecto Supabase, así que **los pedido
 
 ## Tienda pública (`index.html`)
 
-- Catálogo en vivo desde Supabase (tabla `productos`, sólo los `activo`).
-- Filtros por categoría, buscador, ficha de producto con galería, selector de color y talle.
-- Carrito persistente (localStorage) y checkout.
-- **Checkout:** guarda el pedido en Supabase y ofrece pagar con **Mercado Pago** (si está configurado) o coordinar por **WhatsApp** con el resumen del pedido listo.
-- Guía de talles, cuidado del cuero, historia de marca, señales de confianza y botón flotante de WhatsApp.
-- Responsive y con estética de marca de cuero (paleta cálida, tipografía serif).
+Funcionalidades tipo plan full de TiendaNube:
+
+- **Catálogo** en vivo desde Supabase (sólo productos `activo`), con **filtros** por categoría y material, **orden** (destacados, novedades, precio ↑/↓) y **buscador**.
+- **Ficha de producto** con galería, selector de color/talle, **cantidad**, estado de stock (badge "Agotado" + bloqueo de compra), **productos relacionados** y **URL propia compartible** (`?producto=slug`, con botón compartir nativo).
+- **Login de clientas con Gmail** (Supabase Auth · Google): historial de "Mis pedidos" y checkout prellenado.
+- **Favoritos / wishlist** (persistente) y **reseñas con estrellas** por producto.
+- **Cupones de descuento** en el checkout (%, monto fijo, mínimo, vencimiento).
+- **Envío gratis desde $X** con barra de progreso en el carrito.
+- **Carrito** persistente + **checkout** que guarda el pedido en Supabase (`origen=web`) y ofrece **Mercado Pago** (si está configurado) o **WhatsApp** con el resumen listo.
+- **Newsletter**, guía de talles, cuidado del cuero, historia de marca, señales de confianza y botón flotante de WhatsApp.
+- **SEO**: Open Graph con imagen, Twitter cards, canonical y **datos estructurados JSON-LD** (`Store` + `Product` con rating).
+- Responsive, PWA y con estética de marca de cuero; degradación elegante si Supabase/Mercado Pago no están disponibles.
 
 ## Panel de control (`admin.html`)
 
@@ -29,15 +35,24 @@ Todo lo que antes era "Ventas MV", más una pestaña nueva:
 
 ## Configuración
 
-1. **Base de datos:** correr las migraciones de `supabase/migrations/` (la nueva es `0007_tienda.sql`, que crea `productos`, `tienda_config`, la socia *Tienda Online* y agrega columnas de pedido web a `ventas`).
-2. **Mercado Pago (opcional):** deployar la Edge Function y cargar el token:
+1. **Base de datos:** correr las migraciones de `supabase/migrations/` en orden. Las nuevas:
+   - `0007_tienda.sql`: `productos`, `tienda_config`, socia *Tienda Online*, columnas de pedido web en `ventas`.
+   - `0008_tienda_pro.sql`: `cupones`, `resenas`, `newsletter`, columnas de cliente/descuento en `ventas`, config de envío.
+2. **Login con Gmail (Supabase Auth):** en el dashboard de Supabase → *Authentication → Providers → Google*, habilitar Google y cargar el Client ID/Secret (Google Cloud Console). En *Authentication → URL Configuration* agregar la URL del sitio como redirect (p. ej. `https://loekemeyer.github.io/Ventas-MV/`). Sin esto, el botón "Continuar con Google" no inicia sesión (el resto de la tienda funciona igual, como invitada).
+3. **Mercado Pago (opcional):** deployar la Edge Function y cargar el token:
    ```
    supabase functions deploy crear-preferencia-mp --no-verify-jwt
    # Secret en Supabase > Edge Functions:
    MP_ACCESS_TOKEN=<access token de producción de Mercado Pago>
    ```
    Luego activar "Cobrar con Mercado Pago" en el panel (pestaña Tienda). Sin token, el checkout usa WhatsApp automáticamente.
-3. **Cargar productos:** desde el panel → pestaña **Tienda** → ＋ Producto.
+4. **Cargar productos y cupones:** desde el panel → pestaña **Tienda** (＋ Producto, cupones, envío gratis, WhatsApp, etc.).
+
+## Loop de mejoras automático
+
+- `.claude/agents/mejoras-tienda.md` es un **agente auditor**: revisa la tienda y devuelve un backlog priorizado de mejoras (paridad TiendaNube + buenas prácticas). No edita, sólo propone.
+- Una **rutina programada** corre el loop cada 8 hs: audita, implementa el próximo ítem del backlog de forma segura e incremental, lo verifica (syntax + smoke test en Chromium) y lo pushea a la branch de trabajo. Hace **una** mejora por corrida.
+- Para pausar/ajustar el loop: gestionar la rutina "Loop de mejoras — Tienda MV Leather" (o pedirlo por chat).
 
 ## Notas
 
