@@ -1,4 +1,4 @@
-const CACHE = 'ventas-mv-v25';
+const CACHE = 'ventas-mv-v26';
 const CORE = ['./manifest.json', './icon-192.png', './icon-512.png', './logo.jpg'];
 
 self.addEventListener('install', (e) => {
@@ -18,8 +18,10 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
-  const isIndex = url.pathname.endsWith('/') || url.pathname.endsWith('index.html');
-  if (isIndex) {
+  // Network-first para las páginas HTML (tienda y admin): evita quedar pegado
+  // a una versión vieja tras un deploy.
+  const isPage = url.pathname.endsWith('/') || url.pathname.endsWith('.html');
+  if (isPage) {
     e.respondWith(
       fetch(e.request).then(res => {
         const copy = res.clone();
@@ -49,7 +51,7 @@ self.addEventListener('push', (e) => {
     const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const focused = list.some(c => c.focused);
     if (focused) return; // el realtime ya mostró el toast in-app
-    await self.registration.showNotification(data.t || 'Ventas MV', {
+    await self.registration.showNotification(data.t || 'MV Leather', {
       body: data.b || 'Nueva venta',
       icon: './icon-192.png',
       badge: './icon-192.png',
@@ -64,9 +66,11 @@ self.addEventListener('notificationclick', (e) => {
   e.notification.close();
   e.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    // Preferir una tab ya abierta bajo nuestro scope
-    const target = all.find(c => c.url.includes(self.registration.scope) || c.url.includes('/Ventas-MV/'));
+    // Las notificaciones son para las socias -> preferir el panel admin.
+    const target = all.find(c => c.url.includes('admin.html'))
+      || all.find(c => c.url.includes(self.registration.scope) || c.url.includes('/Ventas-MV/'));
     if (target) { await target.focus(); return; }
-    await self.clients.openWindow(self.registration.scope || './');
+    const base = (self.registration.scope || './').replace(/\/$/, '/');
+    await self.clients.openWindow(base + 'admin.html');
   })());
 });
