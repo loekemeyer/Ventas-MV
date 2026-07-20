@@ -436,6 +436,29 @@
   .card-transfer span { color: var(--muted); }
   .pm-transfer { font-size: 14px; color: var(--leather); margin: 6px 0 2px; font-weight: 500; }
   .pm-transfer span { color: var(--muted); font-size: 12px; }
+
+  /* ===== Colecciones (rails) ===== */
+  .collection { margin-bottom: 38px; }
+  .collection-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
+  .collection-head h3 { font-size: clamp(22px, 3vw, 30px); }
+  .rail { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -20px; padding: 4px 20px 10px; scroll-snap-type: x proximity; }
+  .rail::-webkit-scrollbar { height: 5px; }
+  .rail::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  .rail-track { display: flex; gap: 16px; }
+  .rail-card2 {
+    flex: 0 0 auto; width: 220px; scroll-snap-align: start; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--line); transition: transform .25s, box-shadow .25s;
+  }
+  .rail-card2:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .rail-media { aspect-ratio: 4/5; background: #eae1d4; position: relative; overflow: hidden; }
+  .rail-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+  .rail-card2:hover .rail-media img { transform: scale(1.05); }
+  .rail-body { padding: 12px 14px; }
+  .rail-cat { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+  .rail-name { font-family: var(--serif); font-size: 18px; margin-top: 2px; line-height: 1.1; }
+  .rail-price { font-size: 14px; font-weight: 600; margin-top: 3px; }
+  .rail-price s { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 4px; }
+  @media (max-width: 640px) { .rail-card2 { width: 158px; } .rail-name { font-size: 16px; } }
 </style>
 </head>
 <body>
@@ -509,6 +532,7 @@
 <!-- ===== TIENDA ===== -->
 <section class="section" id="tienda">
   <div class="wrap">
+    <div id="colecciones"></div>
     <div class="section-head">
       <span class="eyebrow">Colección</span>
       <h2>Nuestras piezas de cuero</h2>
@@ -745,6 +769,7 @@ async function init() {
   applyConfig();
   renderFilters();
   renderToolbar();
+  renderColecciones();
   renderGrid();
   renderStat();
   injectStoreJsonLd();
@@ -773,6 +798,37 @@ function renderStat() {
   const el = $('#statPiezas');
   const n = store.productos.length;
   el.textContent = n > 0 ? `${n}+` : 'Hecho';
+}
+
+// ---------- colecciones editoriales (rails horizontales) ----------
+function railCard(p) {
+  const img = arr(p.imagenes)[0];
+  const off = p.precio_anterior && p.precio_anterior > p.precio ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
+  return `<article class="rail-card2" data-prod="${p.id}">
+    <div class="rail-media">
+      ${img ? `<img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy">` : `<div class="rel-ph">MV LEATHER</div>`}
+      ${off ? `<span class="tag off">-${off}%</span>` : ''}
+    </div>
+    <div class="rail-body">
+      <div class="rail-cat">${esc(p.categoria || p.material || 'Cuero')}</div>
+      <div class="rail-name">${esc(p.nombre)}</div>
+      <div class="rail-price">${money(p.precio, p.moneda)}${off ? ` <s>${money(p.precio_anterior, p.moneda)}</s>` : ''}</div>
+    </div>
+  </article>`;
+}
+function railHtml(titulo, list) {
+  if (list.length < 2) return '';
+  return `<div class="collection">
+    <div class="collection-head"><h3>${esc(titulo)}</h3><a href="#tienda" class="link-u">Ver todo</a></div>
+    <div class="rail"><div class="rail-track">${list.map(railCard).join('')}</div></div>
+  </div>`;
+}
+function renderColecciones() {
+  const el = $('#colecciones'); if (!el) return;
+  if (store.productos.length < 4) { el.innerHTML = ''; return; }
+  const nuevos = [...store.productos].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')).slice(0, 10);
+  const ofertas = store.productos.filter(p => p.precio_anterior && p.precio_anterior > p.precio).slice(0, 10);
+  el.innerHTML = railHtml('Nuevos ingresos', nuevos) + railHtml('Ofertas', ofertas);
 }
 
 // ---------- filtros + grid ----------
@@ -1268,6 +1324,10 @@ $('#toolbar').addEventListener('change', (e) => {
   if (e.target.id === 'matSel') store.filtroMaterial = e.target.value;
   if (e.target.id === 'ordenSel') store.orden = e.target.value;
   renderGrid();
+});
+$('#colecciones').addEventListener('click', (e) => {
+  const card = e.target.closest('[data-prod]');
+  if (card) openProduct(card.dataset.prod);
 });
 $('#filters').addEventListener('click', (e) => {
   const b = e.target.closest('[data-cat]'); if (!b) return;
