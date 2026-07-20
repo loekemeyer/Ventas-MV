@@ -1425,6 +1425,27 @@
       </div>
     </div>
 
+    <div class="card">
+      <div class="tienda-cfg-head" id="mediaHead" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+        <h3 style="margin:0;">Portada — fotos y videos</h3>
+        <span class="caja-chev">▾</span>
+      </div>
+      <div id="mediaBody" class="caja-collapsed" style="margin-top:10px;">
+        <div style="font-size:12px; color:#8e8e93; margin-bottom:8px;">Slides del carrusel de portada. Pegá la URL de una foto (.jpg/.png) o de un video (.mp4/.webm). Título, subtítulo y botón son opcionales. Se ordenan por "Orden" (menor primero).</div>
+        <div class="grid">
+          <label><span>Tipo</span><select id="medTipo"><option value="imagen">Foto</option><option value="video">Video</option></select></label>
+          <label><span>Orden</span><input type="number" id="medOrden" inputmode="numeric" placeholder="0"></label>
+          <label class="full"><span>URL de la foto / video</span><input type="url" id="medUrl" placeholder="https://...jpg  ·  https://...mp4"></label>
+          <label class="full"><span>Título (opcional)</span><input type="text" id="medTitulo" placeholder="Nueva colección de invierno"></label>
+          <label class="full"><span>Subtítulo (opcional)</span><input type="text" id="medSub"></label>
+          <label><span>Texto del botón (opcional)</span><input type="text" id="medCta" placeholder="Ver colección"></label>
+          <label><span>Link del botón</span><input type="text" id="medCtaLink" placeholder="#tienda"></label>
+        </div>
+        <div class="actions" style="margin-top:8px;"><button type="button" id="btnAddMedia" class="btn-primary">Agregar a la portada</button></div>
+        <div id="mediaList" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
     <div id="productosList" class="venta-list"></div>
   </section>
 
@@ -4439,8 +4460,72 @@ document.getElementById('cuponesList')?.addEventListener('click', async (e) => {
   } catch { showToast('Error al borrar', '#ff3b30'); }
 });
 
+// ===== Portada: fotos y videos =====
+let _media = [];
+async function loadMedia() {
+  try {
+    const { data, error } = await sb.from('tienda_media').select('*').order('orden', { ascending: true }).order('created_at', { ascending: true });
+    if (!error && data) { _media = data; renderMedia(); }
+  } catch (e) { /* tabla nueva: correr 0009 */ }
+}
+function renderMedia() {
+  const el = document.getElementById('mediaList'); if (!el) return;
+  if (!_media.length) { el.innerHTML = '<div style="color:#8e8e93; font-size:13px;">Sin slides. Agregá fotos o videos para el carrusel de portada.</div>'; return; }
+  el.innerHTML = _media.map(m => {
+    const thumb = m.tipo === 'video'
+      ? '🎬'
+      : `<img src="${escapeHtml(m.url)}" alt="" style="width:46px; height:46px; object-fit:cover; border-radius:6px;" onerror="this.replaceWith(document.createTextNode('🖼️'))">`;
+    return `<div class="venta-card" style="padding:10px; display:flex; align-items:center; gap:10px;">
+      <div style="width:46px; text-align:center; font-size:22px;">${thumb}</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight:600; font-size:13px;">${escapeHtml(m.titulo || (m.tipo === 'video' ? 'Video' : 'Foto'))} ${m.activo ? '' : '· <span style="color:#ff3b30">oculto</span>'}</div>
+        <div style="font-size:11px; color:#8e8e93; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">orden ${m.orden} · ${escapeHtml(m.url)}</div>
+      </div>
+      <button class="del-btn" data-del-media="${m.id}">Borrar</button>
+    </div>`;
+  }).join('');
+}
+document.getElementById('mediaHead')?.addEventListener('click', () => {
+  document.getElementById('mediaBody').classList.toggle('caja-collapsed');
+  if (!_media.length) loadMedia();
+});
+document.getElementById('btnAddMedia')?.addEventListener('click', async () => {
+  const url = (document.getElementById('medUrl').value || '').trim();
+  if (!url) { showToast('Poné la URL de la foto o video', '#ff9500'); return; }
+  const ord = parseInt(document.getElementById('medOrden').value, 10);
+  const row = {
+    tipo: document.getElementById('medTipo').value,
+    url,
+    titulo: (document.getElementById('medTitulo').value || '').trim() || null,
+    subtitulo: (document.getElementById('medSub').value || '').trim() || null,
+    cta_texto: (document.getElementById('medCta').value || '').trim() || null,
+    cta_link: (document.getElementById('medCtaLink').value || '').trim() || null,
+    orden: isFinite(ord) ? ord : 0,
+    activo: true,
+  };
+  try {
+    const { data, error } = await sb.from('tienda_media').insert(row).select().single();
+    if (error) throw error;
+    _media.push(data); _media.sort((a, b) => a.orden - b.orden);
+    renderMedia();
+    ['medUrl','medTitulo','medSub','medCta','medCtaLink','medOrden'].forEach(id => document.getElementById(id).value = '');
+    showToast('✓ Agregado a la portada', '#34c759');
+  } catch (e) { console.error(e); showToast('Error al agregar', '#ff3b30'); }
+});
+document.getElementById('mediaList')?.addEventListener('click', async (e) => {
+  const id = e.target.closest('[data-del-media]')?.dataset.delMedia;
+  if (!id) return;
+  if (!confirm('¿Borrar este slide de la portada?')) return;
+  try {
+    const { error } = await sb.from('tienda_media').delete().eq('id', id);
+    if (error) throw error;
+    _media = _media.filter(m => m.id !== id); renderMedia();
+    showToast('Slide eliminado', '#ff3b30');
+  } catch { showToast('Error al borrar', '#ff3b30'); }
+});
+
 // Refrescar catálogo al abrir la pestaña
-document.querySelector('[data-tab="tienda"]')?.addEventListener('click', () => { renderTienda(); if (!_cupones.length) loadCupones(); });
+document.querySelector('[data-tab="tienda"]')?.addEventListener('click', () => { renderTienda(); if (!_cupones.length) loadCupones(); if (!_media.length) loadMedia(); });
 </script>
 
 </body>
