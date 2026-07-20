@@ -1,14 +1,14 @@
 {
-  "id": "/Ventas-MV/",
-  "name": "MV Leather Studio",
-  "short_name": "MV Leather",
-  "description": "Camperas y prendas de cuero genuino argentino, hechas a mano.",
-  "start_url": "./",
+  "id": "/Ventas-MV/admin",
+  "name": "MV Leather · Panel",
+  "short_name": "MV Panel",
+  "description": "Panel de control interno: ventas, pedidos, caja, stock y catálogo.",
+  "start_url": "./admin.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#1a1613",
-  "theme_color": "#1a1613",
+  "background_color": "#007aff",
+  "theme_color": "#ffffff",
   "lang": "es-AR",
   "icons": [
     {
