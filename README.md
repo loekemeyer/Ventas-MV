@@ -47,6 +47,7 @@ Todo lo que antes era "Ventas MV", más una pestaña nueva:
    ```
    Luego activar "Cobrar con Mercado Pago" en el panel (pestaña Tienda). Sin token, el checkout usa WhatsApp automáticamente.
 4. **Cargar productos y cupones:** desde el panel → pestaña **Tienda** (＋ Producto, cupones, envío gratis, WhatsApp, etc.).
+   - Atajo: `supabase/seed_productos.sql` crea productos de ejemplo **usando los nombres de las ventas ya cargadas** en `ventas` (pegalo en el SQL Editor y corré). Después ajustás foto/precio desde el panel.
 
 ## Loop de mejoras automático
 
