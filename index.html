@@ -434,6 +434,8 @@
   .pm-cuotas b { font-weight: 700; }
   .card-transfer { font-size: 11px; color: var(--leather); margin-top: 3px; line-height: 1.3; }
   .card-transfer span { color: var(--muted); }
+  .card-stock { font-size: 11px; color: #c0392b; font-weight: 600; margin-top: 3px; }
+  .stock-hot { color: #c0392b; font-weight: 700; }
   .pm-transfer { font-size: 14px; color: var(--leather); margin: 6px 0 2px; font-weight: 500; }
   .pm-transfer span { color: var(--muted); font-size: 12px; }
 
@@ -715,7 +717,7 @@ try {
 
 const store = {
   productos: [],
-  cfg: { whatsapp: '', instagram: '', anuncio: '', envio_texto: '', mp_activo: '0', nombre_tienda: 'MV Leather Studio', envio_gratis_desde: '0', cuotas_sin_interes: '3', cuotas_max: '12', descuento_transferencia: '0' },
+  cfg: { whatsapp: '', instagram: '', anuncio: '', envio_texto: '', mp_activo: '0', nombre_tienda: 'MV Leather Studio', envio_gratis_desde: '0', cuotas_sin_interes: '3', cuotas_max: '12', descuento_transferencia: '0', stock_bajo_umbral: '3' },
   cart: [],
   wish: [],
   media: [],              // slides de portada (fotos/videos)
@@ -748,6 +750,14 @@ function cuotasHtml(precio, moneda, cls = 'card-cuotas') {
   const max = parseInt(store.cfg.cuotas_max, 10) || 0;
   const extra = max > n ? ` · hasta ${max} cuotas` : '';
   return `<div class="${cls}"><b>${n} cuotas sin interés</b> de ${money(cuota, moneda)}${extra}</div>`;
+}
+function stockBajoN(p) {
+  const u = parseInt(store.cfg.stock_bajo_umbral, 10) || 3;
+  const s = p.stock;
+  return (s != null && s > 0 && s <= u) ? s : 0;
+}
+function stockBajoTexto(n) {
+  return n === 1 ? '🔥 Última unidad' : `🔥 Últimas ${n} unidades`;
 }
 function transferHtml(precio, moneda, cls = 'card-transfer') {
   const d = parseFloat(store.cfg.descuento_transferencia) || 0;
@@ -984,6 +994,7 @@ function renderGrid() {
           <span class="card-price">${money(p.precio, p.moneda)}${p.precio_anterior && p.precio_anterior > p.precio ? ` <s>${money(p.precio_anterior, p.moneda)}</s>` : ''}</span>
           ${transferHtml(p.precio, p.moneda)}
           ${cuotasHtml(p.precio, p.moneda)}
+          ${stockBajoN(p) ? `<div class="card-stock">${stockBajoTexto(stockBajoN(p))}</div>` : ''}
         </div>
       </article>`;
   }).join('');
@@ -1019,7 +1030,7 @@ function openProduct(id, pushUrl = true) {
       ${p.descripcion ? `<p class="pm-desc">${esc(p.descripcion)}</p>` : ''}
       <div class="pm-meta">
         ${p.material ? `<span>🧵 ${esc(p.material)}</span>` : ''}
-        ${p.stock != null ? `<span>${agotado ? '⏳ Agotado' : (p.stock > 0 ? '✓ Disponible' : 'Bajo pedido')}</span>` : ''}
+        ${p.stock != null ? `<span${stockBajoN(p) ? ' class="stock-hot"' : ''}>${agotado ? '⏳ Agotado' : (stockBajoN(p) ? stockBajoTexto(stockBajoN(p)) : (p.stock > 0 ? '✓ Disponible' : 'Bajo pedido'))}</span>` : ''}
       </div>
       ${colores.length ? `<div class="opt-label">Color${pmState.color ? `: <span style="text-transform:none;letter-spacing:0;color:var(--ink)" id="pmColorLbl">${esc(pmState.color)}</span>` : ''}</div>
         <div class="opt-row" id="pmColors">${colores.map(c => `<button class="opt color ${pmState.color===c?'active':''}" data-color="${esc(c)}"><span class="dot" style="background:${colorDot(c)}"></span>${esc(c)}</button>`).join('')}</div>` : ''}
