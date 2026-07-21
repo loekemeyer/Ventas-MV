@@ -321,6 +321,10 @@
   .skeleton { background: linear-gradient(90deg,#ece4d8 25%,#f3ede3 50%,#ece4d8 75%); background-size: 200% 100%; animation: sk 1.3s infinite; }
   @keyframes sk { to { background-position: -200% 0; } }
   .sk-card { aspect-ratio: 4/5; }
+  .card.sk { cursor: default; }
+  .card.sk:hover { transform: none; box-shadow: none; }
+  .card.sk .card-media { aspect-ratio: 4/5; }
+  .sk-line { border-radius: 4px; }
 
   /* ===== Responsive ===== */
   @media (max-width: 900px) {
@@ -790,6 +794,7 @@ async function init() {
   $('#year').textContent = new Date().getFullYear();
   // config + productos + socia + reseñas en paralelo (si hay conexión a Supabase)
   if (sb) {
+    renderGridSkeleton();   // placeholder mientras carga el catálogo
     const [cfgRes, prodRes, sociaRes, revRes] = await Promise.allSettled([
       sb.from('tienda_config').select('*'),
       sb.from('productos').select('*').eq('activo', true).order('orden', { ascending: true }).order('created_at', { ascending: false }),
@@ -988,6 +993,18 @@ function filtered() {
   else if (o === 'nuevos') list.sort((a, b) => (b.created_at||'').localeCompare(a.created_at||''));
   else list.sort((a, b) => (b.destacado?1:0) - (a.destacado?1:0)); // destacados primero
   return list;
+}
+function renderGridSkeleton(n = 8) {
+  const grid = $('#grid'); if (!grid) return;
+  grid.innerHTML = Array.from({ length: n }).map(() => `
+    <article class="card sk" aria-hidden="true">
+      <div class="card-media skeleton"></div>
+      <div class="card-body">
+        <div class="sk-line skeleton" style="width:38%; height:9px;"></div>
+        <div class="sk-line skeleton" style="width:72%; height:16px;"></div>
+        <div class="sk-line skeleton" style="width:34%; height:14px; margin-top:10px;"></div>
+      </div>
+    </article>`).join('');
 }
 function renderGrid() {
   const grid = $('#grid');
