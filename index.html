@@ -101,7 +101,12 @@
     background-image: url("logo.jpg"); background-size: 150px; background-repeat: repeat;
     mix-blend-mode: overlay;
   }
-  .hero-inner { position: relative; z-index: 2; color: #f4ead9; padding: 70px 0; max-width: 640px; }
+  .hero-inner { position: relative; z-index: 2; color: #f4ead9; padding: 70px 20px; max-width: 680px; }
+  .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  @media (max-width: 640px) {
+    .hero-cta { justify-content: center; }
+    .hero-cta .btn { flex: 1 1 200px; }
+  }
   .hero h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.02; color: #fbf3e6; }
   .hero p { font-size: 17px; color: #e2d3bf; margin: 20px 0 30px; max-width: 480px; }
   .hero .eyebrow { color: var(--gold); }
@@ -540,7 +545,7 @@
     <span class="eyebrow">MV Leather Studio</span>
     <h1>El cuero que dura toda una vida.</h1>
     <p>Camperas y prendas de cuero genuino argentino, cortadas y cosidas a mano en nuestro taller. Piezas atemporales, hechas para acompañarte por años.</p>
-    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+    <div class="hero-cta">
       <a href="#tienda" class="btn btn-primary">Ver colección</a>
       <a href="#historia" class="btn btn-ghost">Nuestra historia</a>
     </div>
