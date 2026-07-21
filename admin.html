@@ -1398,6 +1398,9 @@
           <label class="chk-row" style="flex-direction:row; align-items:center; gap:8px;">
             <input type="checkbox" id="cfgMpActivo" style="width:auto;">
             <span style="margin:0;">Cobrar con Mercado Pago (requiere token en Supabase)</span></label>
+          <label class="chk-row" style="flex-direction:row; align-items:center; gap:8px;">
+            <input type="checkbox" id="cfgGoogleLogin" style="width:auto;">
+            <span style="margin:0;">Activar login con Google (habilitá antes el proveedor Google en Supabase)</span></label>
         </div>
         <div class="actions" style="margin-top:8px;">
           <button type="button" id="btnGuardarCfg" class="btn-primary">Guardar ajustes</button>
@@ -4342,6 +4345,8 @@ function fillTiendaCfgForm() {
   set('cfgEnvioGratis', c.envio_gratis_desde);
   const mp = document.getElementById('cfgMpActivo');
   if (mp) mp.checked = c.mp_activo === '1' || c.mp_activo === 'true';
+  const gl = document.getElementById('cfgGoogleLogin');
+  if (gl) gl.checked = c.google_login === '1' || c.google_login === 'true';
 }
 
 async function guardarTiendaCfg() {
@@ -4352,6 +4357,7 @@ async function guardarTiendaCfg() {
     { clave: 'envio_texto', valor: document.getElementById('cfgEnvio').value.trim() },
     { clave: 'envio_gratis_desde', valor: (document.getElementById('cfgEnvioGratis').value || '0').replace(/[^\d.]/g, '') || '0' },
     { clave: 'mp_activo', valor: document.getElementById('cfgMpActivo').checked ? '1' : '0' },
+    { clave: 'google_login', valor: document.getElementById('cfgGoogleLogin').checked ? '1' : '0' },
   ].map(r => ({ ...r, updated_at: new Date().toISOString() }));
   try {
     const { error } = await sb.from('tienda_config').upsert(rows, { onConflict: 'clave' });
