@@ -850,6 +850,13 @@ function renderStat() {
 
 // ---------- carrusel de portada (fotos + videos) ----------
 let heroIndex = 0, heroTimer = null;
+// Slides por defecto (imágenes genéricas de cuero, auto-hospedadas). Se usan
+// mientras no haya contenido cargado en Supabase (tabla tienda_media).
+const DEFAULT_HERO_SLIDES = [
+  { tipo: 'imagen', url: 'assets/hero-1.jpg', titulo: 'El cuero que dura toda una vida.', subtitulo: 'Camperas y prendas de cuero genuino argentino, cortadas y cosidas a mano.', cta_texto: 'Ver colección', cta_link: '#tienda' },
+  { tipo: 'imagen', url: 'assets/hero-2.jpg', titulo: 'Hecho a mano, para durar.', subtitulo: 'Cuero seleccionado y confección artesanal, pieza por pieza.', cta_texto: 'Ver colección', cta_link: '#tienda' },
+  { tipo: 'imagen', url: 'assets/hero-3.jpg', titulo: 'Un oficio que se hereda.', subtitulo: 'Conocé el taller detrás de cada campera.', cta_texto: 'Nuestra historia', cta_link: '#historia' },
+];
 function heroSlideHtml(m, i) {
   const media = m.tipo === 'video'
     ? `<video class="hero-vid" src="${esc(m.url)}" autoplay muted loop playsinline preload="metadata"></video>`
@@ -868,16 +875,16 @@ function heroSlideHtml(m, i) {
 function renderHero() {
   const car = $('#heroCarousel'), def = $('#heroDefault'), hero = $('#hero');
   clearInterval(heroTimer);
-  if (!store.media.length) { hero.classList.remove('has-media'); car.innerHTML = ''; def.style.display = ''; return; }
+  const slides = (store.media && store.media.length) ? store.media : DEFAULT_HERO_SLIDES;
   def.style.display = 'none';
   hero.classList.add('has-media');
-  car.innerHTML = store.media.map(heroSlideHtml).join('')
-    + (store.media.length > 1 ? `
+  car.innerHTML = slides.map(heroSlideHtml).join('')
+    + (slides.length > 1 ? `
       <button class="hero-arrow prev" data-hero-prev aria-label="Anterior">‹</button>
       <button class="hero-arrow next" data-hero-next aria-label="Siguiente">›</button>
-      <div class="hero-dots">${store.media.map((_, i) => `<button class="hero-dot ${i === 0 ? 'active' : ''}" data-hero-dot="${i}" aria-label="Slide ${i + 1}"></button>`).join('')}</div>` : '');
+      <div class="hero-dots">${slides.map((_, i) => `<button class="hero-dot ${i === 0 ? 'active' : ''}" data-hero-dot="${i}" aria-label="Slide ${i + 1}"></button>`).join('')}</div>` : '');
   heroIndex = 0;
-  if (store.media.length > 1) heroTimer = setInterval(() => heroGo(heroIndex + 1), 6500);
+  if (slides.length > 1) heroTimer = setInterval(() => heroGo(heroIndex + 1), 6500);
 }
 function heroGo(i) {
   const slides = $$('#heroCarousel .hero-slide'); if (!slides.length) return;

@@ -1,5 +1,6 @@
-const CACHE = 'ventas-mv-v27';
-const CORE = ['./manifest.json', './icon-192.png', './icon-512.png', './logo.jpg'];
+const CACHE = 'ventas-mv-v28';
+const CORE = ['./manifest.json', './icon-192.png', './icon-512.png', './logo.jpg',
+  './assets/hero-1.jpg', './assets/hero-2.jpg', './assets/hero-3.jpg'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)));
