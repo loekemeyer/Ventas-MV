@@ -730,6 +730,7 @@ const store = {
   ratings: {},            // { productoId: { avg, count } }
   filtro: 'all',
   filtroMaterial: 'all',
+  filtroTalle: 'all',
   orden: 'destacados',
   busca: '',
   sociaId: null,
@@ -943,13 +944,27 @@ function materiales() {
   store.productos.forEach(p => { if (p.material) set.add(p.material); });
   return [...set];
 }
+const TALLE_ORDEN = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Único'];
+function talles() {
+  const set = new Set();
+  store.productos.forEach(p => arr(p.talles).forEach(t => { if (t) set.add(t); }));
+  return [...set].sort((a, b) => {
+    const ia = TALLE_ORDEN.indexOf(a), ib = TALLE_ORDEN.indexOf(b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b);
+  });
+}
 function renderToolbar() {
   const mats = materiales();
+  const tls = talles();
   const matSel = mats.length ? `<select id="matSel">
       <option value="all">Todos los materiales</option>
       ${mats.map(m => `<option value="${esc(m)}" ${m===store.filtroMaterial?'selected':''}>${esc(m)}</option>`).join('')}
     </select>` : '';
-  $('#toolbar').innerHTML = `${matSel}
+  const talleSel = tls.length ? `<select id="talleSel">
+      <option value="all">Todos los talles</option>
+      ${tls.map(t => `<option value="${esc(t)}" ${t===store.filtroTalle?'selected':''}>Talle ${esc(t)}</option>`).join('')}
+    </select>` : '';
+  $('#toolbar').innerHTML = `${matSel}${talleSel}
     <select id="ordenSel">
       <option value="destacados" ${store.orden==='destacados'?'selected':''}>Destacados</option>
       <option value="nuevos" ${store.orden==='nuevos'?'selected':''}>Novedades</option>
@@ -962,6 +977,7 @@ function filtered() {
   let list = store.productos.filter(p => {
     if (store.filtro !== 'all' && p.categoria !== store.filtro) return false;
     if (store.filtroMaterial !== 'all' && p.material !== store.filtroMaterial) return false;
+    if (store.filtroTalle !== 'all' && !arr(p.talles).includes(store.filtroTalle)) return false;
     if (!q) return true;
     const hay = [p.nombre, p.material, p.categoria, ...(arr(p.colores))].join(' ').toLowerCase();
     return hay.includes(q);
@@ -1417,6 +1433,7 @@ $('#grid').addEventListener('click', (e) => {
 });
 $('#toolbar').addEventListener('change', (e) => {
   if (e.target.id === 'matSel') store.filtroMaterial = e.target.value;
+  if (e.target.id === 'talleSel') store.filtroTalle = e.target.value;
   if (e.target.id === 'ordenSel') store.orden = e.target.value;
   renderGrid();
 });
