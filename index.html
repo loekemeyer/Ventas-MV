@@ -1254,26 +1254,41 @@ function discountAmount(subtotal) {
   const d = c.tipo === 'porcentaje' ? subtotal * (parseFloat(c.valor) || 0) / 100 : (parseFloat(c.valor) || 0);
   return Math.min(d, subtotal);
 }
-function openCheckout() {
-  if (!store.cart.length) { toast('Tu carrito está vacío'); return; }
-  const mpOn = store.cfg.mp_activo === '1' || store.cfg.mp_activo === 'true';
+// Resumen + cupón del checkout. Se re-pinta solo (sin tocar el formulario) al
+// aplicar un cupón, para no borrar los datos que la clienta ya tipeó.
+function coHeadHtml() {
   const subtotal = cartTotal();
   const desc = discountAmount(subtotal);
   const total = subtotal - desc;
   const mon = store.cart[0]?.moneda || 'ARS';
+  const dt = parseFloat(store.cfg.descuento_transferencia) || 0;
   const rows = store.cart.map(i => `<div class="row"><span>${esc(i.nombre)} ${i.talle?`(${esc(i.talle)})`:''} ×${i.qty}</span><span>${money(i.precio*i.qty, i.moneda)}</span></div>`).join('');
-  $('#checkoutBody').innerHTML = `
+  return `
     <div class="co-summary">
       ${rows}
       ${desc > 0 ? `<div class="row" style="color:var(--ok); font-weight:600;"><span>Cupón ${esc(store.cupon.codigo)}</span><span>−${money(desc, mon)}</span></div>` : ''}
       <div class="tot"><span>Total</span><span>${money(total, mon)}</span></div>
-      ${(parseFloat(store.cfg.descuento_transferencia) || 0) > 0 ? `<div class="row" style="color:var(--ok); margin-top:6px;"><span>Pagando por transferencia</span><span><b>${money(Math.round(total * (1 - (parseFloat(store.cfg.descuento_transferencia)||0)/100)), mon)}</b> (−${parseFloat(store.cfg.descuento_transferencia)}%)</span></div>` : ''}
+      ${dt > 0 ? `<div class="row" style="color:var(--ok); margin-top:6px;"><span>Pagando por transferencia</span><span><b>${money(Math.round(total * (1 - dt/100)), mon)}</b> (−${dt}%)</span></div>` : ''}
     </div>
     <div class="coupon-row">
       <input id="cuponInput" placeholder="Código de cupón" value="${esc(store.cupon?.codigo || '')}">
       <button type="button" id="cuponBtn">Aplicar</button>
     </div>
-    ${store.cupon ? `<div class="coupon-ok">✓ Cupón ${esc(store.cupon.codigo)} aplicado</div>` : ''}
+    ${store.cupon ? `<div class="coupon-ok">✓ Cupón ${esc(store.cupon.codigo)} aplicado</div>` : ''}`;
+}
+function wireCoHead() {
+  const btn = $('#cuponBtn');
+  if (btn) btn.onclick = () => aplicarCupon($('#cuponInput').value);
+}
+function refreshCoHead() {
+  const el = $('#coHead');
+  if (el) { el.innerHTML = coHeadHtml(); wireCoHead(); }
+}
+function openCheckout() {
+  if (!store.cart.length) { toast('Tu carrito está vacío'); return; }
+  const mpOn = store.cfg.mp_activo === '1' || store.cfg.mp_activo === 'true';
+  $('#checkoutBody').innerHTML = `
+    <div id="coHead">${coHeadHtml()}</div>
     <form id="coForm" autocomplete="on">
       <div class="field"><label>Nombre y apellido *</label><input name="nombre" required autocomplete="name" value="${esc(store.user?.name || '')}"></div>
       <div class="field"><label>WhatsApp *</label><input name="telefono" type="tel" inputmode="tel" required autocomplete="tel" placeholder="11 1234-5678"></div>
@@ -1292,8 +1307,7 @@ function openCheckout() {
       : `<button type="submit" class="btn btn-primary btn-block" data-pay="wa">Enviar pedido por WhatsApp</button>`}
       <p class="pay-note">Al confirmar, guardamos tu pedido y te contactamos para coordinar. ${mpOn ? 'Con Mercado Pago pagás online de forma segura.' : ''}</p>
     </form>`;
-  // cupón
-  $('#cuponBtn').onclick = () => aplicarCupon($('#cuponInput').value);
+  wireCoHead();
   // toggle dirección
   const form = $('#coForm');
   const syncDir = () => { $('#dirField').style.display = form.entrega.value === 'Envío a domicilio' ? 'block' : 'none'; };
@@ -1815,18 +1829,18 @@ async function enviarResena(pid) {
 // ============================================================================
 async function aplicarCupon(codigo) {
   codigo = (codigo || '').trim().toUpperCase();
-  if (!codigo) { store.cupon = null; openCheckout(); return; }
+  if (!codigo) { store.cupon = null; refreshCoHead(); return; }
   if (!sb) { toast('Cupones no disponibles ahora'); return; }
   try {
     const { data, error } = await sb.from('cupones').select('*').eq('codigo', codigo).eq('activo', true).maybeSingle();
     if (error) throw error;
-    if (!data) { toast('Cupón inválido'); store.cupon = null; openCheckout(); return; }
+    if (!data) { toast('Cupón inválido'); store.cupon = null; refreshCoHead(); return; }
     if (data.vence && data.vence < new Date().toISOString().slice(0, 10)) { toast('Ese cupón venció'); return; }
     if (data.max_usos != null && data.usos >= data.max_usos) { toast('Cupón agotado'); return; }
     if (cartTotal() < (parseFloat(data.minimo) || 0)) { toast(`El cupón aplica desde ${money(data.minimo, 'ARS')}`); return; }
     store.cupon = data;
     toast('✓ Cupón aplicado');
-    openCheckout();
+    refreshCoHead();
   } catch (e) { console.error(e); toast('No se pudo validar el cupón'); }
 }
 
