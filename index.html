@@ -1134,7 +1134,9 @@ function openProduct(id, pushUrl = true) {
         </button>
       </div>
       <div style="margin-top:20px;">
-        <button class="btn btn-primary btn-block" id="pmAdd" ${agotado ? 'disabled' : ''}>${agotado ? 'Sin stock — avisame' : 'Agregar al carrito'}</button>
+        ${agotado
+          ? `<button class="btn btn-dark btn-block" id="pmNotify">Avisame cuando vuelva</button>`
+          : `<button class="btn btn-primary btn-block" id="pmAdd">Agregar al carrito</button>`}
       </div>
       <p class="pay-note">${esc(store.cfg.envio_texto || 'Coordinamos envío o retiro al confirmar tu pedido.')}</p>
     </div>
@@ -1552,6 +1554,14 @@ $('#pmodalInner').addEventListener('click', (e) => {
     return;
   }
   if (e.target.id === 'pmTalleGuide') { openInfo('talles'); return; }
+  if (e.target.id === 'pmNotify') {
+    const p = pmState.p;
+    const wa = (store.cfg.whatsapp || '').replace(/[^\d]/g, '');
+    const det = [pmState.color, pmState.talle].filter(Boolean).join(' / ');
+    const txt = encodeURIComponent(`Hola! Quiero que me avisen cuando vuelva la *${p.nombre}*${det ? ` (${det})` : ''} 🧥`);
+    window.open(wa ? `https://wa.me/${wa}?text=${txt}` : `https://wa.me/?text=${txt}`, '_blank');
+    return;
+  }
   if (e.target.closest('[data-qminus]')) { pmState.qty = Math.max(1, pmState.qty - 1); $('#pmQty').textContent = pmState.qty; return; }
   if (e.target.closest('[data-qplus]')) { pmState.qty++; $('#pmQty').textContent = pmState.qty; return; }
   const wb = e.target.closest('#pmWish');
