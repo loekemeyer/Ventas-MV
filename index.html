@@ -1152,7 +1152,8 @@ function openProduct(id, pushUrl = true) {
       <div style="margin-top:20px;">
         ${agotado
           ? `<button class="btn btn-dark btn-block" id="pmNotify">Avisame cuando vuelva</button>`
-          : `<button class="btn btn-primary btn-block" id="pmAdd">Agregar al carrito</button>`}
+          : `<button class="btn btn-primary btn-block" id="pmAdd">Agregar al carrito</button>
+             <button class="btn btn-dark btn-block" id="pmBuyNow" style="margin-top:8px;">Comprar ahora</button>`}
       </div>
       <p class="pay-note">${esc(store.cfg.envio_texto || 'Coordinamos envío o retiro al confirmar tu pedido.')}</p>
     </div>
@@ -1625,14 +1626,15 @@ $('#pmodalInner').addEventListener('click', (e) => {
     return;
   }
   if (e.target.id === 'revSubmit') { enviarResena(pmState.p.id); return; }
-  if (e.target.id === 'pmAdd') {
+  if (e.target.id === 'pmAdd' || e.target.id === 'pmBuyNow') {
     const p = pmState.p;
     if (arr(p.colores).length && !pmState.color) { toast('Elegí un color'); return; }
     if (arr(p.talles).length && !pmState.talle) { toast('Elegí un talle'); return; }
     addToCart(p, pmState.color, pmState.talle, pmState.qty || 1);
+    const comprarAhora = e.target.id === 'pmBuyNow';
     closeAll();
-    toast('Agregado al carrito ✓');
-    setTimeout(openCart, 350);
+    if (comprarAhora) { setTimeout(openCheckout, 350); }
+    else { toast('Agregado al carrito ✓'); setTimeout(openCart, 350); }
   }
 });
 
