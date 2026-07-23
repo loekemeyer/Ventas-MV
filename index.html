@@ -179,6 +179,8 @@
   .sw { width: 15px; height: 15px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); }
 
   .empty-store { text-align: center; color: var(--muted); padding: 60px 20px; grid-column: 1/-1; }
+  .grid-info { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; font-size: 13px; color: var(--muted); min-height: 20px; }
+  .grid-info button.link-u { padding: 0; }
 
   /* ===== Story ===== */
   .story { background: var(--ink); color: #f0e6d8; }
@@ -594,6 +596,7 @@
     <div class="filters" id="filters"></div>
     <div class="search-row"><input type="search" id="search" placeholder="Buscar por nombre, color o material…"></div>
     <div class="toolbar" id="toolbar"></div>
+    <div class="grid-info" id="gridInfo"></div>
     <div class="grid" id="grid"></div>
   </div>
 </section>
@@ -1048,14 +1051,26 @@ function renderGridSkeleton(n = 8) {
       </div>
     </article>`).join('');
 }
+function filtrosActivos() {
+  return store.filtro !== 'all' || store.filtroMaterial !== 'all' || store.filtroTalle !== 'all' || (store.busca || '').trim() !== '';
+}
 function renderGrid() {
   const grid = $('#grid');
+  const info = $('#gridInfo');
   const list = filtered();
+  if (info) info.innerHTML = '';
   if (!store.productos.length) {
     grid.innerHTML = `<div class="empty-store"><p style="font-family:var(--serif); font-size:22px;">Muy pronto, nuevas piezas</p><p>Estamos preparando la colección. Escribinos por WhatsApp y te avisamos.</p></div>`;
     return;
   }
-  if (!list.length) { grid.innerHTML = `<div class="empty-store">No encontramos prendas con ese filtro.</div>`; return; }
+  if (info) {
+    const clear = filtrosActivos() ? `<button class="link-u" data-clear-filters style="background:none;border:none;">Limpiar filtros</button>` : '';
+    info.innerHTML = `<span>${list.length} ${list.length === 1 ? 'pieza' : 'piezas'}</span>${clear}`;
+  }
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-store"><p style="font-family:var(--serif); font-size:20px;">No encontramos prendas con ese filtro.</p><button class="btn btn-dark" data-clear-filters style="margin-top:14px;">Limpiar filtros</button></div>`;
+    return;
+  }
   grid.innerHTML = list.map(p => {
     const img = arr(p.imagenes)[0];
     const off = p.precio_anterior && p.precio_anterior > p.precio
@@ -1551,6 +1566,12 @@ $('#filters').addEventListener('click', (e) => {
   store.filtro = b.dataset.cat; renderFilters(); renderGrid();
 });
 $('#search').addEventListener('input', (e) => { store.busca = e.target.value; renderGrid(); });
+function limpiarFiltros() {
+  store.filtro = 'all'; store.filtroMaterial = 'all'; store.filtroTalle = 'all'; store.busca = '';
+  const s = $('#search'); if (s) s.value = '';
+  renderFilters(); renderToolbar(); renderGrid();
+}
+document.addEventListener('click', (e) => { if (e.target.closest('[data-clear-filters]')) limpiarFiltros(); });
 
 // Product modal interactions
 $('#pmodalInner').addEventListener('click', (e) => {
