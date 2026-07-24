@@ -463,6 +463,14 @@
   .card-transfer span { color: var(--muted); }
   .card-stock { font-size: 11px; color: #c0392b; font-weight: 600; margin-top: 3px; }
   .stock-hot { color: #c0392b; font-weight: 700; }
+  /* Entrega */
+  .card-envio { font-size: 11px; margin-top: 4px; font-weight: 600; }
+  .card-envio.rapida { color: var(--ok); }
+  .card-envio.pedido { color: var(--muted); font-weight: 500; }
+  .tag.rapida { background: #1a7a3f; }
+  .entrega-rapida { color: var(--ok); font-weight: 600; }
+  .entrega-pedido { color: var(--muted); }
+  .co-envio { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--leather); padding: 10px 12px; font-size: 12px; color: var(--ink); margin-bottom: 14px; }
   .pm-transfer { font-size: 14px; color: var(--leather); margin: 6px 0 2px; font-weight: 500; }
   .pm-transfer span { color: var(--muted); font-size: 12px; }
 
@@ -754,7 +762,7 @@ try {
 
 const store = {
   productos: [],
-  cfg: { whatsapp: '', instagram: '', anuncio: '', envio_texto: '', mp_activo: '0', nombre_tienda: 'MV Leather Studio', envio_gratis_desde: '0', cuotas_sin_interes: '3', cuotas_max: '12', descuento_transferencia: '0', stock_bajo_umbral: '3', google_login: '0' },
+  cfg: { whatsapp: '', instagram: '', anuncio: '', envio_texto: '', mp_activo: '0', nombre_tienda: 'MV Leather Studio', envio_gratis_desde: '0', cuotas_sin_interes: '3', cuotas_max: '12', descuento_transferencia: '0', stock_bajo_umbral: '3', google_login: '0', demora_dias: '15' },
   cart: [],
   wish: [],
   media: [],              // slides de portada (fotos/videos)
@@ -797,6 +805,22 @@ function stockBajoN(p) {
 }
 function stockBajoTexto(n) {
   return n === 1 ? '🔥 Última unidad' : `🔥 Últimas ${n} unidades`;
+}
+// Modelo: todas las prendas se hacen a pedido. Si el admin asigna stock (>0),
+// esa prenda tiene "entrega rápida"; si no, entrega estimada a ~N días del pago.
+function tieneStock(p) { return p.stock != null && p.stock > 0; }
+function demoraDias() { const d = parseInt(store.cfg.demora_dias, 10); return (isFinite(d) && d > 0) ? d : 15; }
+function entregaCardHtml(p) {
+  return tieneStock(p)
+    ? `<div class="card-envio rapida">⚡ Entrega rápida</div>`
+    : `<div class="card-envio pedido">A pedido · entrega ~${demoraDias()} días</div>`;
+}
+function entregaFichaHtml(p) {
+  if (tieneStock(p)) {
+    const bajo = stockBajoN(p);
+    return `<span class="entrega-rapida">⚡ Entrega rápida${bajo ? ` · ${bajo === 1 ? 'última unidad' : `últimas ${bajo} unidades`}` : ''}</span>`;
+  }
+  return `<span class="entrega-pedido">⏱️ Hecho a pedido · entrega estimada en ~${demoraDias()} días desde el pago</span>`;
 }
 function transferHtml(precio, moneda, cls = 'card-transfer') {
   const d = parseFloat(store.cfg.descuento_transferencia) || 0;
@@ -1090,18 +1114,17 @@ function renderGrid() {
     const off = p.precio_anterior && p.precio_anterior > p.precio
       ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
     const swatches = arr(p.colores).slice(0, 5).map(c => `<span class="sw" title="${esc(c)}" style="background:${colorDot(c)}"></span>`).join('');
-    const agotado = p.stock === 0;
     const wished = isWished(p.id);
     const rating = store.ratings[p.id];
     return `
-      <article class="card ${agotado ? 'is-out' : ''}" data-prod="${p.id}">
+      <article class="card" data-prod="${p.id}">
         <div class="card-media">
           ${img ? `<img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy">` : `<div class="ph">MV LEATHER</div>`}
           <button class="wish-btn ${wished ? 'on' : ''}" data-wish="${p.id}" aria-label="Favorito" title="Guardar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
           </button>
-          ${agotado ? `<span class="tag soldout">Agotado</span>` : (p.destacado ? `<span class="tag">Destacado</span>` : '')}
-          ${off && !agotado ? `<span class="tag off">-${off}%</span>` : ''}
+          ${tieneStock(p) ? `<span class="tag rapida">⚡ Entrega rápida</span>` : (p.destacado ? `<span class="tag">Destacado</span>` : '')}
+          ${off ? `<span class="tag off">-${off}%</span>` : ''}
         </div>
         <div class="card-body">
           <span class="card-cat">${esc(p.categoria || p.material || 'Cuero')}</span>
@@ -1111,7 +1134,7 @@ function renderGrid() {
           <span class="card-price">${money(p.precio, p.moneda)}${p.precio_anterior && p.precio_anterior > p.precio ? ` <s>${money(p.precio_anterior, p.moneda)}</s>` : ''}</span>
           ${transferHtml(p.precio, p.moneda)}
           ${cuotasHtml(p.precio, p.moneda)}
-          ${stockBajoN(p) ? `<div class="card-stock">${stockBajoTexto(stockBajoN(p))}</div>` : ''}
+          ${entregaCardHtml(p)}
         </div>
       </article>`;
   }).join('');
@@ -1124,7 +1147,6 @@ function openProduct(id, pushUrl = true) {
   const imgs = arr(p.imagenes);
   const colores = arr(p.colores);
   const talles = arr(p.talles);
-  const agotado = p.stock === 0;
   pmState = { p, img: imgs[0] || null, color: colores.length === 1 ? colores[0] : null, talle: talles.length === 1 ? talles[0] : null, qty: 1 };
   const off = p.precio_anterior && p.precio_anterior > p.precio ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
   const rating = store.ratings[p.id];
@@ -1147,7 +1169,7 @@ function openProduct(id, pushUrl = true) {
       ${p.descripcion ? `<p class="pm-desc">${esc(p.descripcion)}</p>` : ''}
       <div class="pm-meta">
         ${p.material ? `<span>🧵 ${esc(p.material)}</span>` : ''}
-        ${p.stock != null ? `<span${stockBajoN(p) ? ' class="stock-hot"' : ''}>${agotado ? '⏳ Agotado' : (stockBajoN(p) ? stockBajoTexto(stockBajoN(p)) : (p.stock > 0 ? '✓ Disponible' : 'Bajo pedido'))}</span>` : ''}
+        ${entregaFichaHtml(p)}
       </div>
       ${colores.length ? `<div class="opt-label">Color${pmState.color ? `: <span style="text-transform:none;letter-spacing:0;color:var(--ink)" id="pmColorLbl">${esc(pmState.color)}</span>` : ''}</div>
         <div class="opt-row" id="pmColors">${colores.map(c => `<button class="opt color ${pmState.color===c?'active':''}" data-color="${esc(c)}"><span class="dot" style="background:${colorDot(c)}"></span>${esc(c)}</button>`).join('')}</div>` : ''}
@@ -1164,10 +1186,8 @@ function openProduct(id, pushUrl = true) {
         </button>
       </div>
       <div style="margin-top:20px;">
-        ${agotado
-          ? `<button class="btn btn-dark btn-block" id="pmNotify">Avisame cuando vuelva</button>`
-          : `<button class="btn btn-primary btn-block" id="pmAdd">Agregar al carrito</button>
-             <button class="btn btn-dark btn-block" id="pmBuyNow" style="margin-top:8px;">Comprar ahora</button>`}
+        <button class="btn btn-primary btn-block" id="pmAdd">Agregar al carrito</button>
+        <button class="btn btn-dark btn-block" id="pmBuyNow" style="margin-top:8px;">Comprar ahora</button>
       </div>
       <p class="pay-note">${esc(store.cfg.envio_texto || 'Coordinamos envío o retiro al confirmar tu pedido.')}</p>
     </div>
@@ -1225,7 +1245,7 @@ function addToCart(p, color, talle, qty = 1) {
   const key = `${p.id}|${color||''}|${talle||''}`;
   const found = store.cart.find(i => i.key === key);
   if (found) found.qty += qty;
-  else store.cart.push({ key, id: p.id, nombre: p.nombre, precio: parseFloat(p.precio) || 0, moneda: p.moneda || 'ARS', color: color || '', talle: talle || '', img: arr(p.imagenes)[0] || '', qty });
+  else store.cart.push({ key, id: p.id, nombre: p.nombre, precio: parseFloat(p.precio) || 0, moneda: p.moneda || 'ARS', color: color || '', talle: talle || '', img: arr(p.imagenes)[0] || '', qty, rapida: tieneStock(p) });
   saveCart();
 }
 function shipBarHtml() {
@@ -1301,6 +1321,9 @@ function coHeadHtml() {
       <div class="tot"><span>Total</span><span>${money(total, mon)}</span></div>
       ${dt > 0 ? `<div class="row" style="color:var(--ok); margin-top:6px;"><span>Pagando por transferencia</span><span><b>${money(Math.round(total * (1 - dt/100)), mon)}</b> (−${dt}%)</span></div>` : ''}
     </div>
+    ${store.cart.every(i => i.rapida)
+      ? `<div class="co-envio">⚡ Entrega rápida: coordinamos el envío apenas confirmes.</div>`
+      : `<div class="co-envio">⏱️ Se hace a pedido: entrega estimada en ~${demoraDias()} días desde la acreditación del pago.</div>`}
     <div class="coupon-row">
       <input id="cuponInput" placeholder="Código de cupón" value="${esc(store.cupon?.codigo || '')}">
       <button type="button" id="cuponBtn">Aplicar</button>
@@ -1618,20 +1641,8 @@ $('#pmodalInner').addEventListener('click', (e) => {
     return;
   }
   if (e.target.id === 'pmTalleGuide') { openInfo('talles'); return; }
-  if (e.target.id === 'pmNotify') {
-    const p = pmState.p;
-    const wa = (store.cfg.whatsapp || '').replace(/[^\d]/g, '');
-    const det = [pmState.color, pmState.talle].filter(Boolean).join(' / ');
-    const txt = encodeURIComponent(`Hola! Quiero que me avisen cuando vuelva la *${p.nombre}*${det ? ` (${det})` : ''} 🧥`);
-    window.open(wa ? `https://wa.me/${wa}?text=${txt}` : `https://wa.me/?text=${txt}`, '_blank');
-    return;
-  }
   if (e.target.closest('[data-qminus]')) { pmState.qty = Math.max(1, pmState.qty - 1); $('#pmQty').textContent = pmState.qty; return; }
-  if (e.target.closest('[data-qplus]')) {
-    const max = (pmState.p.stock != null) ? pmState.p.stock : Infinity;
-    if (pmState.qty >= max) { toast(`Solo quedan ${max} en stock`); return; }
-    pmState.qty++; $('#pmQty').textContent = pmState.qty; return;
-  }
+  if (e.target.closest('[data-qplus]')) { pmState.qty++; $('#pmQty').textContent = pmState.qty; return; }
   const wb = e.target.closest('#pmWish');
   if (wb) { toggleWish(wb.dataset.wish); wb.classList.toggle('on', isWished(wb.dataset.wish)); return; }
   if (e.target.closest('#pmShare')) { compartirProducto(pmState.p); return; }
