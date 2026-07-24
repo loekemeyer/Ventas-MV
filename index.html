@@ -762,6 +762,7 @@ const store = {
   filtro: 'all',
   filtroMaterial: 'all',
   filtroTalle: 'all',
+  filtroColor: 'all',
   orden: 'destacados',
   busca: '',
   sociaId: null,
@@ -1003,18 +1004,30 @@ function talles() {
     return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b);
   });
 }
+function colores() {
+  const m = new Map();
+  store.productos.forEach(p => arr(p.colores).forEach(c => {
+    const t = (c || '').trim(); if (t) { const k = t.toLowerCase(); if (!m.has(k)) m.set(k, t); }
+  }));
+  return [...m.values()].sort((a, b) => a.localeCompare(b, 'es'));
+}
 function renderToolbar() {
   const mats = materiales();
   const tls = talles();
+  const cols = colores();
   const matSel = mats.length ? `<select id="matSel">
       <option value="all">Todos los materiales</option>
       ${mats.map(m => `<option value="${esc(m)}" ${m===store.filtroMaterial?'selected':''}>${esc(m)}</option>`).join('')}
+    </select>` : '';
+  const colorSel = cols.length ? `<select id="colorSel">
+      <option value="all">Todos los colores</option>
+      ${cols.map(c => `<option value="${esc(c)}" ${c===store.filtroColor?'selected':''}>${esc(c)}</option>`).join('')}
     </select>` : '';
   const talleSel = tls.length ? `<select id="talleSel">
       <option value="all">Todos los talles</option>
       ${tls.map(t => `<option value="${esc(t)}" ${t===store.filtroTalle?'selected':''}>Talle ${esc(t)}</option>`).join('')}
     </select>` : '';
-  $('#toolbar').innerHTML = `${matSel}${talleSel}
+  $('#toolbar').innerHTML = `${matSel}${colorSel}${talleSel}
     <select id="ordenSel">
       <option value="destacados" ${store.orden==='destacados'?'selected':''}>Destacados</option>
       <option value="nuevos" ${store.orden==='nuevos'?'selected':''}>Novedades</option>
@@ -1028,6 +1041,7 @@ function filtered() {
     if (store.filtro !== 'all' && p.categoria !== store.filtro) return false;
     if (store.filtroMaterial !== 'all' && p.material !== store.filtroMaterial) return false;
     if (store.filtroTalle !== 'all' && !arr(p.talles).includes(store.filtroTalle)) return false;
+    if (store.filtroColor !== 'all' && !arr(p.colores).some(c => (c || '').trim().toLowerCase() === store.filtroColor.toLowerCase())) return false;
     if (!q) return true;
     const hay = [p.nombre, p.material, p.categoria, ...(arr(p.colores))].join(' ').toLowerCase();
     return hay.includes(q);
@@ -1052,7 +1066,7 @@ function renderGridSkeleton(n = 8) {
     </article>`).join('');
 }
 function filtrosActivos() {
-  return store.filtro !== 'all' || store.filtroMaterial !== 'all' || store.filtroTalle !== 'all' || (store.busca || '').trim() !== '';
+  return store.filtro !== 'all' || store.filtroMaterial !== 'all' || store.filtroTalle !== 'all' || store.filtroColor !== 'all' || (store.busca || '').trim() !== '';
 }
 function renderGrid() {
   const grid = $('#grid');
@@ -1538,6 +1552,7 @@ $('#grid').addEventListener('click', (e) => {
 $('#toolbar').addEventListener('change', (e) => {
   if (e.target.id === 'matSel') store.filtroMaterial = e.target.value;
   if (e.target.id === 'talleSel') store.filtroTalle = e.target.value;
+  if (e.target.id === 'colorSel') store.filtroColor = e.target.value;
   if (e.target.id === 'ordenSel') store.orden = e.target.value;
   renderGrid();
 });
@@ -1568,7 +1583,7 @@ $('#filters').addEventListener('click', (e) => {
 });
 $('#search').addEventListener('input', (e) => { store.busca = e.target.value; renderGrid(); });
 function limpiarFiltros() {
-  store.filtro = 'all'; store.filtroMaterial = 'all'; store.filtroTalle = 'all'; store.busca = '';
+  store.filtro = 'all'; store.filtroMaterial = 'all'; store.filtroTalle = 'all'; store.filtroColor = 'all'; store.busca = '';
   const s = $('#search'); if (s) s.value = '';
   renderFilters(); renderToolbar(); renderGrid();
 }
