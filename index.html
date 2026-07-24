@@ -1627,7 +1627,11 @@ $('#pmodalInner').addEventListener('click', (e) => {
     return;
   }
   if (e.target.closest('[data-qminus]')) { pmState.qty = Math.max(1, pmState.qty - 1); $('#pmQty').textContent = pmState.qty; return; }
-  if (e.target.closest('[data-qplus]')) { pmState.qty++; $('#pmQty').textContent = pmState.qty; return; }
+  if (e.target.closest('[data-qplus]')) {
+    const max = (pmState.p.stock != null) ? pmState.p.stock : Infinity;
+    if (pmState.qty >= max) { toast(`Solo quedan ${max} en stock`); return; }
+    pmState.qty++; $('#pmQty').textContent = pmState.qty; return;
+  }
   const wb = e.target.closest('#pmWish');
   if (wb) { toggleWish(wb.dataset.wish); wb.classList.toggle('on', isWished(wb.dataset.wish)); return; }
   if (e.target.closest('#pmShare')) { compartirProducto(pmState.p); return; }
