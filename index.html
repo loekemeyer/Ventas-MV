@@ -155,26 +155,35 @@
   .search-row input:focus { outline: none; border-color: var(--leather); }
 
   /* ===== Product grid ===== */
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px 24px; }
-  .card {
-    background: var(--surface); border: 1px solid var(--line); overflow: hidden;
-    display: flex; flex-direction: column; transition: transform .25s, box-shadow .25s; cursor: pointer;
+  /* Grilla editorial, foto-first (estética tipo Lovely Denim) */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 16px; }
+  .grid.view-1 { grid-template-columns: 1fr; }
+  .grid.view-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 760px) {
+    .grid.view-1 { grid-template-columns: repeat(2, 1fr); }
+    .grid.view-2 { grid-template-columns: repeat(3, 1fr); }
   }
-  .card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
-  .card-media { position: relative; aspect-ratio: 4/5; background: #eae1d4; overflow: hidden; }
-  .card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
-  .card:hover .card-media img { transform: scale(1.05); }
+  .card { overflow: hidden; display: flex; flex-direction: column; cursor: pointer; }
+  .card-media { position: relative; aspect-ratio: 3/4; background: #eae1d4; overflow: hidden; }
+  .card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .55s ease; }
+  .card:hover .card-media img { transform: scale(1.04); }
   .card-media .ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#b6a894; font-family: var(--serif); font-size: 15px; letter-spacing: 2px; }
   .tag {
-    position: absolute; top: 12px; left: 12px; background: var(--ink); color: #fff;
-    font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 5px 10px; text-transform: uppercase;
+    position: absolute; top: 10px; left: 10px; background: rgba(28,20,14,0.82); color: #fff;
+    font-size: 9px; font-weight: 700; letter-spacing: 1px; padding: 4px 8px; text-transform: uppercase; backdrop-filter: blur(2px);
   }
-  .tag.off { background: var(--danger); left: auto; right: 12px; }
-  .card-body { padding: 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
-  .card-cat { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); font-weight: 600; }
-  .card-title { font-family: var(--serif); font-size: 21px; font-weight: 600; line-height: 1.1; }
-  .card-price { margin-top: auto; padding-top: 8px; font-size: 16px; font-weight: 600; }
-  .card-price s { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 6px; }
+  .tag.off { background: var(--danger); left: auto; right: 10px; }
+  .card-body { padding: 10px 2px 6px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .card-cat { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .card-title { font-family: var(--serif); font-size: 17px; font-weight: 600; line-height: 1.12; }
+  .card-price { margin-top: 3px; font-size: 15px; font-weight: 600; }
+  .card-price s { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+  /* Selector de vista (columnas) */
+  .grid-right { display: flex; align-items: center; gap: 12px; }
+  .view-toggle { display: flex; gap: 2px; }
+  .vt { background: none; border: none; padding: 4px; color: #bdb3a4; line-height: 0; cursor: pointer; border-radius: 4px; }
+  .vt.on { color: var(--ink); }
+  .vt svg { display: block; fill: currentColor; }
   .card-swatches { display: flex; gap: 5px; margin-top: 4px; }
   .sw { width: 15px; height: 15px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); }
 
@@ -354,9 +363,9 @@
     .nav-links { display: none; }
     .menu-toggle { display: inline-flex; }
     .trust-grid { grid-template-columns: repeat(2, 1fr); gap: 18px 6px; }
-    .grid { grid-template-columns: repeat(2, 1fr); gap: 16px 12px; }
-    .card-title { font-size: 17px; }
-    .card-body { padding: 12px; }
+    .grid { gap: 10px 8px; }
+    .card-title { font-size: 15px; }
+    .card-body { padding: 8px 2px 6px; }
     .section { padding: 46px 0; }
     .foot-grid { grid-template-columns: 1fr; }
     .pm-info { padding: 22px; }
@@ -482,17 +491,13 @@
   .rail::-webkit-scrollbar { height: 5px; }
   .rail::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
   .rail-track { display: flex; gap: 16px; }
-  .rail-card2 {
-    flex: 0 0 auto; width: 220px; scroll-snap-align: start; cursor: pointer;
-    background: var(--surface); border: 1px solid var(--line); transition: transform .25s, box-shadow .25s;
-  }
-  .rail-card2:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
-  .rail-media { aspect-ratio: 4/5; background: #eae1d4; position: relative; overflow: hidden; }
-  .rail-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
-  .rail-card2:hover .rail-media img { transform: scale(1.05); }
-  .rail-body { padding: 12px 14px; }
-  .rail-cat { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); font-weight: 600; }
-  .rail-name { font-family: var(--serif); font-size: 18px; margin-top: 2px; line-height: 1.1; }
+  .rail-card2 { flex: 0 0 auto; width: 210px; scroll-snap-align: start; cursor: pointer; }
+  .rail-media { aspect-ratio: 3/4; background: #eae1d4; position: relative; overflow: hidden; }
+  .rail-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+  .rail-card2:hover .rail-media img { transform: scale(1.04); }
+  .rail-body { padding: 10px 2px; }
+  .rail-cat { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .rail-name { font-family: var(--serif); font-size: 17px; margin-top: 2px; line-height: 1.12; }
   .rail-price { font-size: 14px; font-weight: 600; margin-top: 3px; }
   .rail-price s { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 4px; }
   @media (max-width: 640px) { .rail-card2 { width: 158px; } .rail-name { font-size: 16px; } }
@@ -771,6 +776,7 @@ const store = {
   filtroMaterial: 'all',
   filtroTalle: 'all',
   filtroColor: 'all',
+  gridView: (typeof localStorage !== 'undefined' && localStorage.getItem('mv_gridview')) || '2',
   orden: 'destacados',
   busca: '',
   sociaId: null,
@@ -1092,10 +1098,18 @@ function renderGridSkeleton(n = 8) {
 function filtrosActivos() {
   return store.filtro !== 'all' || store.filtroMaterial !== 'all' || store.filtroTalle !== 'all' || store.filtroColor !== 'all' || (store.busca || '').trim() !== '';
 }
+function viewToggleHtml() {
+  const v = store.gridView || '2';
+  return `<div class="view-toggle">
+    <button class="vt ${v==='2'?'on':''}" data-view="2" aria-label="Ver en dos columnas"><svg viewBox="0 0 20 20" width="16" height="16"><rect x="2" y="2" width="7" height="16" rx="1"/><rect x="11" y="2" width="7" height="16" rx="1"/></svg></button>
+    <button class="vt ${v==='1'?'on':''}" data-view="1" aria-label="Ver en una columna"><svg viewBox="0 0 20 20" width="16" height="16"><rect x="4" y="2" width="12" height="16" rx="1"/></svg></button>
+  </div>`;
+}
 function renderGrid() {
   const grid = $('#grid');
   const info = $('#gridInfo');
   const list = filtered();
+  grid.className = 'grid view-' + (store.gridView || '2');
   if (info) info.innerHTML = '';
   if (!store.productos.length) {
     grid.innerHTML = `<div class="empty-store"><p style="font-family:var(--serif); font-size:22px;">Muy pronto, nuevas piezas</p><p>Estamos preparando la colección. Escribinos por WhatsApp y te avisamos.</p></div>`;
@@ -1103,7 +1117,7 @@ function renderGrid() {
   }
   if (info) {
     const clear = filtrosActivos() ? `<button class="link-u" data-clear-filters style="background:none;border:none;">Limpiar filtros</button>` : '';
-    info.innerHTML = `<span>${list.length} ${list.length === 1 ? 'pieza' : 'piezas'}</span>${clear}`;
+    info.innerHTML = `<span>${list.length} ${list.length === 1 ? 'pieza' : 'piezas'}</span><div class="grid-right">${clear}${viewToggleHtml()}</div>`;
   }
   if (!list.length) {
     grid.innerHTML = `<div class="empty-store"><p style="font-family:var(--serif); font-size:20px;">No encontramos prendas con ese filtro.</p><button class="btn btn-dark" data-clear-filters style="margin-top:14px;">Limpiar filtros</button></div>`;
@@ -1611,6 +1625,13 @@ function limpiarFiltros() {
   renderFilters(); renderToolbar(); renderGrid();
 }
 document.addEventListener('click', (e) => { if (e.target.closest('[data-clear-filters]')) limpiarFiltros(); });
+$('#gridInfo').addEventListener('click', (e) => {
+  const vb = e.target.closest('[data-view]');
+  if (!vb) return;
+  store.gridView = vb.dataset.view;
+  try { localStorage.setItem('mv_gridview', store.gridView); } catch {}
+  renderGrid();
+});
 
 // Product modal interactions
 $('#pmodalInner').addEventListener('click', (e) => {
