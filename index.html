@@ -50,7 +50,7 @@
   button { font-family: inherit; cursor: pointer; }
   h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: -0.2px; margin: 0; }
   .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
-  .eyebrow { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); font-weight: 600; font-family: var(--sans); }
+  .eyebrow { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 600; font-family: var(--sans); }
 
   /* ===== Announcement ===== */
   .announce {
@@ -109,7 +109,7 @@
   }
   .hero h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.02; color: #fbf3e6; }
   .hero p { font-size: 17px; color: #e2d3bf; margin: 20px 0 30px; max-width: 480px; }
-  .hero .eyebrow { color: var(--gold); }
+  .hero .eyebrow { color: rgba(244,234,217,0.55); }
 
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -131,7 +131,7 @@
   .trust-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; padding: 22px 0; }
   .trust-item { text-align: center; padding: 0 8px; }
   .trust-item .t-ico { font-size: 20px; }
-  .trust-item h4 { font-family: var(--sans); font-size: 13px; font-weight: 700; margin: 6px 0 2px; }
+  .trust-item h4 { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; margin: 0 0 4px; }
   .trust-item p { font-size: 12px; color: var(--muted); margin: 0; }
 
   /* ===== Section headings ===== */
@@ -203,7 +203,7 @@
   }
   .story-img::after { content:""; position:absolute; inset:0; background-image:url("logo.jpg"); background-size: cover; background-position:center; opacity:.9; mix-blend-mode: luminosity; }
   .story-stats { display: flex; gap: 30px; margin-top: 28px; }
-  .story-stats .n { font-family: var(--serif); font-size: 34px; color: var(--gold); }
+  .story-stats .n { font-family: var(--serif); font-size: 34px; color: #e7d9c4; }
   .story-stats .l { font-size: 12px; color: #9c8f7c; letter-spacing: .5px; }
 
   /* ===== Care / band ===== */
@@ -292,7 +292,7 @@
   .pm-thumbs img { width: 54px; height: 54px; object-fit: cover; border: 2px solid transparent; cursor: pointer; }
   .pm-thumbs img.active { border-color: var(--leather); }
   .pm-info { padding: 30px; }
-  .pm-info .card-cat { color: var(--gold); }
+  .pm-info .card-cat { color: var(--muted); }
   .pm-info h2 { font-size: 32px; margin: 6px 0 10px; }
   .pm-price { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
   .pm-price s { color: var(--muted); font-weight: 400; font-size: 16px; margin-left: 8px; }
@@ -444,6 +444,7 @@
   /* ===== Account ===== */
   .acc-hero { text-align: center; padding: 20px 0 24px; }
   .acc-hero img { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 10px; object-fit: cover; }
+  .acc-ph { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; background: var(--line); color: var(--muted); }
   .acc-hero .nm { font-family: var(--serif); font-size: 22px; }
   .acc-hero .em { color: var(--muted); font-size: 13px; }
   .google-btn {
@@ -460,12 +461,12 @@
   .newsletter { background: var(--surface); border-top: 1px solid var(--line); }
 
   /* ===== Cuotas sin interés ===== */
-  .card-cuotas { font-size: 11px; color: var(--ok); margin-top: 3px; line-height: 1.3; }
-  .card-cuotas b { font-weight: 600; }
+  .card-cuotas { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.3; }
+  .card-cuotas b { font-weight: 600; color: var(--ink); }
   .pm-cuotas {
-    display: inline-block; font-size: 13px; color: var(--ok); margin: 8px 0 2px;
-    background: rgba(46,125,70,0.08); border: 1px solid rgba(46,125,70,0.25);
-    padding: 5px 12px; border-radius: 3px;
+    display: inline-block; font-size: 13px; color: var(--ink); margin: 8px 0 2px;
+    background: transparent; border: 1px solid var(--line);
+    padding: 5px 12px; border-radius: 2px;
   }
   .pm-cuotas b { font-weight: 700; }
   .card-transfer { font-size: 11px; color: var(--leather); margin-top: 3px; line-height: 1.3; }
@@ -474,10 +475,10 @@
   .stock-hot { color: #c0392b; font-weight: 700; }
   /* Entrega */
   .card-envio { font-size: 11px; margin-top: 4px; font-weight: 600; }
-  .card-envio.rapida { color: var(--ok); }
+  .card-envio.rapida { color: var(--ink); }
   .card-envio.pedido { color: var(--muted); font-weight: 500; }
-  .tag.rapida { background: #1a7a3f; }
-  .entrega-rapida { color: var(--ok); font-weight: 600; }
+  .tag.rapida { background: rgba(28,20,14,0.82); }
+  .entrega-rapida { color: var(--ink); font-weight: 600; }
   .entrega-pedido { color: var(--muted); }
   .co-envio { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--leather); padding: 10px 12px; font-size: 12px; color: var(--ink); margin-bottom: 14px; }
   .pm-transfer { font-size: 14px; color: var(--leather); margin: 6px 0 2px; font-weight: 500; }
@@ -590,10 +591,10 @@
 <!-- ===== TRUST ===== -->
 <section class="trust">
   <div class="wrap trust-grid">
-    <div class="trust-item"><div class="t-ico">✦</div><h4>Cuero genuino</h4><p>Oveja, vaca y gamuza seleccionados</p></div>
-    <div class="trust-item"><div class="t-ico">✂</div><h4>Hecho a mano</h4><p>Confección artesanal, pieza por pieza</p></div>
-    <div class="trust-item"><div class="t-ico">↺</div><h4>Cambios ágiles</h4><p>Coordinamos talle y color sin vueltas</p></div>
-    <div class="trust-item"><div class="t-ico">✈</div><h4>Envíos al país</h4><p id="trustEnvio">A todo el país · Retiro en taller</p></div>
+    <div class="trust-item"><h4>Cuero genuino</h4><p>Oveja, vaca y gamuza seleccionados</p></div>
+    <div class="trust-item"><h4>Hecho a mano</h4><p>Confección artesanal, pieza por pieza</p></div>
+    <div class="trust-item"><h4>Cambios ágiles</h4><p>Coordinamos talle y color sin vueltas</p></div>
+    <div class="trust-item"><h4>Envíos al país</h4><p id="trustEnvio">A todo el país · Retiro en taller</p></div>
   </div>
 </section>
 
@@ -810,7 +811,7 @@ function stockBajoN(p) {
   return (s != null && s > 0 && s <= u) ? s : 0;
 }
 function stockBajoTexto(n) {
-  return n === 1 ? '🔥 Última unidad' : `🔥 Últimas ${n} unidades`;
+  return n === 1 ? 'Última unidad' : `Últimas ${n} unidades`;
 }
 // Modelo: todas las prendas se hacen a pedido. Si el admin asigna stock (>0),
 // esa prenda tiene "entrega rápida"; si no, entrega estimada a ~N días del pago.
@@ -818,15 +819,15 @@ function tieneStock(p) { return p.stock != null && p.stock > 0; }
 function demoraDias() { const d = parseInt(store.cfg.demora_dias, 10); return (isFinite(d) && d > 0) ? d : 15; }
 function entregaCardHtml(p) {
   return tieneStock(p)
-    ? `<div class="card-envio rapida">⚡ Entrega rápida</div>`
+    ? `<div class="card-envio rapida">Entrega rápida</div>`
     : `<div class="card-envio pedido">A pedido · entrega ~${demoraDias()} días</div>`;
 }
 function entregaFichaHtml(p) {
   if (tieneStock(p)) {
     const bajo = stockBajoN(p);
-    return `<span class="entrega-rapida">⚡ Entrega rápida${bajo ? ` · ${bajo === 1 ? 'última unidad' : `últimas ${bajo} unidades`}` : ''}</span>`;
+    return `<span class="entrega-rapida">Entrega rápida${bajo ? ` · ${bajo === 1 ? 'última unidad' : `últimas ${bajo} unidades`}` : ''}</span>`;
   }
-  return `<span class="entrega-pedido">⏱️ Hecho a pedido · entrega estimada en ~${demoraDias()} días desde el pago</span>`;
+  return `<span class="entrega-pedido">Hecho a pedido · entrega estimada en ~${demoraDias()} días desde el pago</span>`;
 }
 function transferHtml(precio, moneda, cls = 'card-transfer') {
   const d = parseFloat(store.cfg.descuento_transferencia) || 0;
@@ -898,7 +899,7 @@ function applyConfig() {
     $('#footBrand').textContent = c.nombre_tienda;
   }
   const wa = (c.whatsapp || '').replace(/[^\d]/g, '');
-  const waUrl = wa ? `https://wa.me/${wa}?text=${encodeURIComponent('Hola! Quería consultar por las camperas de cuero 🧥')}` : '#';
+  const waUrl = wa ? `https://wa.me/${wa}?text=${encodeURIComponent('Hola! Quería consultar por las camperas de cuero')}` : '#';
   $('#waFloat').href = waUrl;
   $('#footWa').href = waUrl;
   const ig = (c.instagram || '').replace(/^@/, '');
@@ -1137,7 +1138,7 @@ function renderGrid() {
           <button class="wish-btn ${wished ? 'on' : ''}" data-wish="${p.id}" aria-label="Favorito" title="Guardar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
           </button>
-          ${tieneStock(p) ? `<span class="tag rapida">⚡ Entrega rápida</span>` : (p.destacado ? `<span class="tag">Destacado</span>` : '')}
+          ${tieneStock(p) ? `<span class="tag rapida">Entrega rápida</span>` : (p.destacado ? `<span class="tag">Destacado</span>` : '')}
           ${off ? `<span class="tag off">-${off}%</span>` : ''}
         </div>
         <div class="card-body">
@@ -1169,7 +1170,7 @@ function openProduct(id, pushUrl = true) {
   $('#pmodalInner').innerHTML = `
     <button class="close-x" data-close-pmodal>&times;</button>
     <div class="pm-gallery">
-      <div class="pm-main ${pmState.img ? 'zoomable' : ''}" id="pmMain">${pmState.img ? `<img src="${esc(pmState.img)}" alt="${esc(p.nombre)}"><span class="pm-zoom-hint">🔍 Ampliar</span>` : `<div class="ph">MV LEATHER</div>`}</div>
+      <div class="pm-main ${pmState.img ? 'zoomable' : ''}" id="pmMain">${pmState.img ? `<img src="${esc(pmState.img)}" alt="${esc(p.nombre)}"><span class="pm-zoom-hint">Ampliar</span>` : `<div class="ph">MV LEATHER</div>`}</div>
       ${imgs.length > 1 ? `<div class="pm-thumbs">${imgs.map((im,i) => `<img src="${esc(im)}" data-thumb="${esc(im)}" class="${i===0?'active':''}" alt="">`).join('')}</div>` : ''}
     </div>
     <div class="pm-info">
@@ -1182,7 +1183,7 @@ function openProduct(id, pushUrl = true) {
       ${cuotasHtml(p.precio, p.moneda, 'pm-cuotas')}
       ${p.descripcion ? `<p class="pm-desc">${esc(p.descripcion)}</p>` : ''}
       <div class="pm-meta">
-        ${p.material ? `<span>🧵 ${esc(p.material)}</span>` : ''}
+        ${p.material ? `<span>${esc(p.material)}</span>` : ''}
         ${entregaFichaHtml(p)}
       </div>
       ${colores.length ? `<div class="opt-label">Color${pmState.color ? `: <span style="text-transform:none;letter-spacing:0;color:var(--ink)" id="pmColorLbl">${esc(pmState.color)}</span>` : ''}</div>
@@ -1266,7 +1267,7 @@ function shipBarHtml() {
   const umbral = parseFloat(store.cfg.envio_gratis_desde) || 0;
   if (umbral <= 0) return '';
   const t = cartTotal();
-  if (t >= umbral) return `<div class="ship-bar" style="color:var(--ok);">🎉 ¡Tenés envío gratis!</div>`;
+  if (t >= umbral) return `<div class="ship-bar" style="color:var(--ok);">¡Tenés envío gratis!</div>`;
   const falta = umbral - t;
   const pct = Math.min(100, Math.round(t / umbral * 100));
   return `<div class="ship-bar">Te faltan <b>${money(falta, 'ARS')}</b> para envío gratis<div class="track"><div class="fill" style="width:${pct}%"></div></div></div>`;
@@ -1336,8 +1337,8 @@ function coHeadHtml() {
       ${dt > 0 ? `<div class="row" style="color:var(--ok); margin-top:6px;"><span>Pagando por transferencia</span><span><b>${money(Math.round(total * (1 - dt/100)), mon)}</b> (−${dt}%)</span></div>` : ''}
     </div>
     ${store.cart.every(i => i.rapida)
-      ? `<div class="co-envio">⚡ Entrega rápida: coordinamos el envío apenas confirmes.</div>`
-      : `<div class="co-envio">⏱️ Se hace a pedido: entrega estimada en ~${demoraDias()} días desde la acreditación del pago.</div>`}
+      ? `<div class="co-envio">Entrega rápida: coordinamos el envío apenas confirmes.</div>`
+      : `<div class="co-envio">Se hace a pedido: entrega estimada en ~${demoraDias()} días desde la acreditación del pago.</div>`}
     <div class="coupon-row">
       <input id="cuponInput" placeholder="Código de cupón" value="${esc(store.cupon?.codigo || '')}">
       <button type="button" id="cuponBtn">Aplicar</button>
@@ -1491,7 +1492,7 @@ async function pagarConMP(ventaId, items, payer) {
 function abrirWhatsappPedido(o, ventaId) {
   const wa = (store.cfg.whatsapp || '').replace(/[^\d]/g, '');
   const L = [];
-  L.push('*Nuevo pedido — MV Leather Studio* 🧥');
+  L.push('*Nuevo pedido — MV Leather Studio*');
   L.push('');
   L.push(`*Cliente:* ${o.nombre}`);
   L.push(`*WhatsApp:* ${o.telefono}`);
@@ -1513,7 +1514,7 @@ function abrirWhatsappPedido(o, ventaId) {
 function finalizarUI() {
   store.cart = []; saveCart();
   closeAll();
-  showThanks('¡Pedido enviado! 🧥', 'Te vamos a contactar por WhatsApp para coordinar el pago y la entrega. ¡Gracias por elegir cuero hecho a mano!');
+  showThanks('¡Pedido enviado!', 'Te vamos a contactar por WhatsApp para coordinar el pago y la entrega. ¡Gracias por elegir cuero hecho a mano!');
 }
 
 function showThanks(title, sub) {
@@ -1533,7 +1534,7 @@ function handlePaymentReturn() {
   const pago = params.get('pago');
   if (!pago) return;
   history.replaceState(null, '', location.pathname);
-  if (pago === 'ok') { store.cart = []; saveCart(); showThanks('¡Pago confirmado! 🎉', 'Recibimos tu pedido y ya lo estamos preparando. Te escribimos por WhatsApp con los detalles del envío.'); }
+  if (pago === 'ok') { store.cart = []; saveCart(); showThanks('¡Pago confirmado!', 'Recibimos tu pedido y ya lo estamos preparando. Te escribimos por WhatsApp con los detalles del envío.'); }
   else if (pago === 'pendiente') { showThanks('Pago pendiente', 'Tu pago está siendo procesado. Cuando se acredite, coordinamos la entrega.'); }
   else if (pago === 'error') { toast('El pago no se completó. Podés reintentar o escribirnos por WhatsApp.'); }
 }
@@ -1639,7 +1640,7 @@ $('#pmodalInner').addEventListener('click', (e) => {
   const thumb = e.target.closest('[data-thumb]');
   if (thumb) {
     pmState.img = thumb.dataset.thumb;
-    $('#pmMain').innerHTML = `<img src="${esc(pmState.img)}" alt=""><span class="pm-zoom-hint">🔍 Ampliar</span>`;
+    $('#pmMain').innerHTML = `<img src="${esc(pmState.img)}" alt=""><span class="pm-zoom-hint">Ampliar</span>`;
     $$('.pm-thumbs img').forEach(t => t.classList.toggle('active', t === thumb));
     return;
   }
@@ -1797,7 +1798,7 @@ async function renderAccount() {
     const googleOn = store.cfg.google_login === '1' || store.cfg.google_login === 'true';
     body.innerHTML = `
       <div class="acc-hero">
-        <div style="font-size:40px;">🧥</div>
+        
         <div class="nm">Tu cuenta</div>
         <div class="em">${googleOn ? 'Entrá con tu Gmail para ver tus pedidos y comprar más rápido.' : 'Comprá tranquila como invitada. Muy pronto vas a poder crear tu cuenta.'}</div>
       </div>
@@ -1812,7 +1813,7 @@ async function renderAccount() {
   }
   body.innerHTML = `
     <div class="acc-hero">
-      ${store.user.avatar ? `<img src="${esc(store.user.avatar)}" alt="">` : `<div style="font-size:40px;">👤</div>`}
+      ${store.user.avatar ? `<img src="${esc(store.user.avatar)}" alt="">` : `<div class="acc-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" width="34" height="34"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`}
       <div class="nm">${esc(store.user.name)}</div>
       <div class="em">${esc(store.user.email)}</div>
     </div>
