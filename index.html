@@ -789,6 +789,7 @@ const store = {
   wish: [],
   media: [],              // slides de portada (fotos/videos)
   ratings: {},            // { productoId: { avg, count } }
+  recientes: [],          // ids de productos vistos recientemente (localStorage)
   filtro: 'all',
   filtroMaterial: 'all',
   filtroTalle: 'all',
@@ -801,6 +802,8 @@ const store = {
   cupon: null,            // { codigo, tipo, valor, minimo }
 };
 const WISH_KEY = 'mv_wish_v1';
+const RECIENTES_KEY = 'mv_recientes_v1';
+const RECIENTES_MAX = 8;
 
 // ---------- helpers ----------
 const $ = (s, r = document) => r.querySelector(s);
@@ -866,6 +869,7 @@ function toast(msg) {
 async function init() {
   loadCart();
   loadWish();
+  loadRecientes();
   $('#year').textContent = new Date().getFullYear();
   // config + productos + socia + reseñas en paralelo (si hay conexión a Supabase)
   if (sb) {
@@ -1017,12 +1021,21 @@ function railHtml(titulo, list) {
     <div class="rail"><div class="rail-track">${list.map(railCard).join('')}</div></div>
   </div>`;
 }
+function productosRecientes() {
+  // Mapea los ids guardados a productos que aún existen, respetando el orden (más reciente primero).
+  return store.recientes
+    .map(id => store.productos.find(p => p.id === id))
+    .filter(Boolean)
+    .slice(0, RECIENTES_MAX);
+}
 function renderColecciones() {
   const el = $('#colecciones'); if (!el) return;
   if (store.productos.length < 4) { el.innerHTML = ''; return; }
   const nuevos = [...store.productos].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')).slice(0, 10);
   const ofertas = store.productos.filter(p => p.precio_anterior && p.precio_anterior > p.precio).slice(0, 10);
-  el.innerHTML = railHtml('Nuevos ingresos', nuevos) + railHtml('Ofertas', ofertas);
+  el.innerHTML = railHtml('Vistos recientemente', productosRecientes())
+    + railHtml('Nuevos ingresos', nuevos)
+    + railHtml('Ofertas', ofertas);
 }
 
 // ---------- filtros + grid ----------
@@ -1173,9 +1186,17 @@ function renderGrid() {
 }
 
 // ---------- product modal ----------
+function pushReciente(id) {
+  // Guarda el producto visto al frente de la lista (sin duplicados), acotado a RECIENTES_MAX.
+  store.recientes = [id, ...store.recientes.filter(x => x !== id)].slice(0, RECIENTES_MAX);
+  try { localStorage.setItem(RECIENTES_KEY, JSON.stringify(store.recientes)); } catch (e) {}
+}
+
 let pmState = null;
 function openProduct(id, pushUrl = true) {
   const p = store.productos.find(x => x.id === id); if (!p) return;
+  pushReciente(id);
+  renderColecciones();   // refresca el rail "Vistos recientemente" en la home
   const imgs = arr(p.imagenes);
   const colores = arr(p.colores);
   const talles = arr(p.talles);
@@ -1856,6 +1877,7 @@ async function renderAccount() {
 //  Favoritos (wishlist)
 // ============================================================================
 function loadWish() { try { store.wish = JSON.parse(localStorage.getItem(WISH_KEY)) || []; } catch { store.wish = []; } updateWishBadge(); }
+function loadRecientes() { try { store.recientes = JSON.parse(localStorage.getItem(RECIENTES_KEY)) || []; } catch { store.recientes = []; } }
 function saveWish() { localStorage.setItem(WISH_KEY, JSON.stringify(store.wish)); updateWishBadge(); }
 function isWished(id) { return store.wish.includes(id); }
 function toggleWish(id) {
