@@ -486,7 +486,7 @@
   .pm-cuotas b { font-weight: 700; }
   .card-transfer { font-size: 11px; color: var(--leather); margin-top: 3px; line-height: 1.3; }
   .card-transfer span { color: var(--muted); }
-  .card-stock { font-size: 11px; color: #c0392b; font-weight: 600; margin-top: 3px; }
+  .card-stock { font-size: 11px; color: var(--danger); font-weight: 600; margin-top: 3px; letter-spacing: .02em; }
   .stock-hot { color: #c0392b; font-weight: 700; }
   /* Entrega */
   .card-envio { font-size: 11px; margin-top: 4px; font-weight: 600; }
@@ -1201,6 +1201,7 @@ function renderGrid() {
           ${transferHtml(p.precio, p.moneda)}
           ${cuotasHtml(p.precio, p.moneda)}
           ${entregaCardHtml(p)}
+          ${stockBajoN(p) ? `<div class="card-stock">${stockBajoTexto(stockBajoN(p))}</div>` : ''}
         </div>
       </article>`;
   }).join('');
