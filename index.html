@@ -199,6 +199,10 @@
   .empty-store { text-align: center; color: var(--muted); padding: 60px 20px; grid-column: 1/-1; }
   .grid-info { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; font-size: 13px; color: var(--muted); min-height: 20px; }
   .grid-info button.link-u { padding: 0; }
+  .freeship-strip { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 13px; color: var(--ink); letter-spacing: .01em; }
+  .freeship-strip[hidden] { display: none; }
+  .freeship-strip svg { width: 16px; height: 16px; flex: none; stroke: var(--muted); }
+  .freeship-strip b { font-weight: 600; }
 
   /* ===== Story ===== */
   .story { background: var(--ink); color: #f0e6d8; }
@@ -626,6 +630,7 @@
     <div class="filters" id="filters"></div>
     <div class="search-row"><input type="search" id="search" placeholder="Buscar por nombre, color o material…"></div>
     <div class="toolbar" id="toolbar"></div>
+    <div class="freeship-strip" id="freeShipStrip" hidden></div>
     <div class="grid-info" id="gridInfo"></div>
     <div class="grid" id="grid"></div>
   </div>
@@ -914,7 +919,23 @@ async function init() {
 function applyConfig() {
   const c = store.cfg;
   if (c.anuncio) $('#announce').textContent = c.anuncio;
-  if (c.envio_texto) { $('#trustEnvio').textContent = c.envio_texto; }
+  const umbralEnvio = parseFloat(c.envio_gratis_desde) || 0;
+  // Trust-strip de envíos: texto base + (si hay umbral) la promesa de envío gratis.
+  const baseEnvio = c.envio_texto || 'A todo el país · Retiro en taller';
+  $('#trustEnvio').textContent = umbralEnvio > 0
+    ? `${baseEnvio} · Envío gratis desde ${money(umbralEnvio, 'ARS')}`
+    : baseEnvio;
+  // Línea sobria arriba de la grilla, para anunciar el envío gratis antes del carrito.
+  const strip = $('#freeShipStrip');
+  if (strip) {
+    if (umbralEnvio > 0) {
+      strip.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h13v10H1z"/><path d="M14 6h4l3 3v4h-7z"/><circle cx="5.5" cy="17.5" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/></svg><span>Envío gratis en compras desde <b>${money(umbralEnvio, 'ARS')}</b></span>`;
+      strip.hidden = false;
+    } else {
+      strip.hidden = true;
+      strip.innerHTML = '';
+    }
+  }
   if (c.nombre_tienda) {
     $('#brandName').textContent = c.nombre_tienda;
     $('#footBrand').textContent = c.nombre_tienda;
