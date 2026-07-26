@@ -301,6 +301,16 @@
   .lb-arrow.prev { left: 16px; } .lb-arrow.next { right: 16px; }
   @media (max-width: 640px) { .lb-arrow { width: 44px; height: 44px; font-size: 26px; } }
   .pm-main .ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b6a894; font-family:var(--serif); letter-spacing:2px; }
+  /* Barra de compra fija al pie en mobile: aparece cuando el CTA principal queda fuera de vista */
+  .pm-sticky-buy { position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; display: none; align-items: center; gap: 12px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -6px 24px rgba(0,0,0,0.14); transform: translateY(100%); transition: transform .22s ease; }
+  .pm-sticky-buy .psb-info { flex: 1; min-width: 0; }
+  .pm-sticky-buy .psb-name { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pm-sticky-buy .psb-price { font-family: var(--serif); font-size: 18px; color: var(--ink); }
+  .pm-sticky-buy .btn { flex: none; width: auto; padding: 12px 20px; }
+  @media (max-width: 640px) {
+    .pmodal.show .pm-sticky-buy:not([hidden]) { display: flex; }
+    .pmodal.show .pm-sticky-buy.show { transform: translateY(0); }
+  }
   .pm-thumbs { display: flex; gap: 8px; padding: 10px; flex-wrap: wrap; }
   .pm-thumbs img { width: 54px; height: 54px; object-fit: cover; border: 2px solid transparent; cursor: pointer; }
   .pm-thumbs img.active { border-color: var(--leather); }
@@ -730,7 +740,7 @@
 </aside>
 
 <!-- ===== PRODUCT MODAL ===== -->
-<div class="pmodal" id="pmodal"><div class="pmodal-inner" id="pmodalInner"></div></div>
+<div class="pmodal" id="pmodal"><div class="pmodal-inner" id="pmodalInner"></div><div class="pm-sticky-buy" id="pmStickyBuy" hidden></div></div>
 
 <!-- ===== LIGHTBOX (zoom de foto de producto) ===== -->
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
@@ -1285,6 +1295,30 @@ function openProduct(id, pushUrl = true) {
     history.pushState({ producto: ref }, '', '?producto=' + encodeURIComponent(ref));
   }
   loadProductReviews(p.id);
+  setupStickyBuy(p);
+}
+
+// Barra de compra fija (mobile): se muestra cuando el botón principal sale de vista.
+let pmStickyObserver = null;
+function setupStickyBuy(p) {
+  const bar = document.getElementById('pmStickyBuy');
+  const add = document.getElementById('pmAdd');
+  if (pmStickyObserver) { pmStickyObserver.disconnect(); pmStickyObserver = null; }
+  if (!bar || !add) return;
+  bar.innerHTML = `<div class="psb-info"><div class="psb-name">${esc(p.nombre)}</div><div class="psb-price">${money(p.precio, p.moneda)}</div></div><button class="btn btn-primary" id="pmStickyAdd">Agregar</button>`;
+  // El botón dispara el CTA principal para reusar su validación de color/talle.
+  const stickyAdd = bar.querySelector('#pmStickyAdd');
+  if (stickyAdd) stickyAdd.addEventListener('click', () => { const a = document.getElementById('pmAdd'); if (a) a.click(); });
+  bar.hidden = false;
+  bar.classList.remove('show');
+  if ('IntersectionObserver' in window) {
+    pmStickyObserver = new IntersectionObserver((entries) => {
+      // Si el CTA principal no está visible y el modal sigue abierto, mostrar la barra.
+      const visible = entries[0] && entries[0].isIntersecting;
+      bar.classList.toggle('show', !visible && $('#pmodal').classList.contains('show'));
+    }, { root: null, threshold: 0 });
+    pmStickyObserver.observe(add);
+  }
 }
 
 function relatedHtml(p) {
@@ -1374,6 +1408,10 @@ function closeAll() {
   $('#lightbox').classList.remove('show');
   $('#overlay').classList.remove('show');
   $('#mnav').classList.remove('show');
+  // teardown de la barra de compra fija del modal de producto
+  if (pmStickyObserver) { pmStickyObserver.disconnect(); pmStickyObserver = null; }
+  const stickyBar = document.getElementById('pmStickyBuy');
+  if (stickyBar) { stickyBar.classList.remove('show'); stickyBar.hidden = true; }
   document.body.style.overflow = '';
   // limpiar deep-link del producto al cerrar el modal
   if (location.search.includes('producto=')) history.replaceState(null, '', location.pathname);
