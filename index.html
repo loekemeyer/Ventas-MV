@@ -812,6 +812,7 @@ const store = {
   filtroMaterial: 'all',
   filtroTalle: 'all',
   filtroColor: 'all',
+  filtroPrecio: 'all',    // rango de precio: 'all' | 'lo-hi' (hi vacío = sin tope)
   gridView: (typeof localStorage !== 'undefined' && localStorage.getItem('mv_gridview')) || '2',
   orden: 'destacados',
   busca: '',
@@ -1106,10 +1107,27 @@ function colores() {
   }));
   return [...m.values()].sort((a, b) => a.localeCompare(b, 'es'));
 }
+// Bandas de precio derivadas del catálogo (numérico, como el orden por precio ya existente).
+function rangosPrecios() {
+  const precios = store.productos.map(p => parseFloat(p.precio)).filter(n => isFinite(n) && n > 0);
+  if (precios.length < 4) return [];
+  const min = Math.min(...precios), max = Math.max(...precios);
+  if (max - min < 1) return [];
+  const round = (n) => Math.round(n / 10000) * 10000 || Math.round(n);
+  const t1 = round(min + (max - min) / 3);
+  const t2 = round(min + (max - min) * 2 / 3);
+  if (!(t1 > 0 && t1 < t2)) return [];   // evitar bandas degeneradas
+  return [
+    { label: `Hasta ${money(t1, 'ARS')}`, value: `0-${t1}` },
+    { label: `${money(t1, 'ARS')} a ${money(t2, 'ARS')}`, value: `${t1}-${t2}` },
+    { label: `Más de ${money(t2, 'ARS')}`, value: `${t2}-` },
+  ];
+}
 function renderToolbar() {
   const mats = materiales();
   const tls = talles();
   const cols = colores();
+  const rangos = rangosPrecios();
   const matSel = mats.length ? `<select id="matSel">
       <option value="all">Todos los materiales</option>
       ${mats.map(m => `<option value="${esc(m)}" ${m===store.filtroMaterial?'selected':''}>${esc(m)}</option>`).join('')}
@@ -1122,7 +1140,11 @@ function renderToolbar() {
       <option value="all">Todos los talles</option>
       ${tls.map(t => `<option value="${esc(t)}" ${t===store.filtroTalle?'selected':''}>Talle ${esc(t)}</option>`).join('')}
     </select>` : '';
-  $('#toolbar').innerHTML = `${matSel}${colorSel}${talleSel}
+  const precioSel = rangos.length ? `<select id="precioSel">
+      <option value="all">Cualquier precio</option>
+      ${rangos.map(r => `<option value="${esc(r.value)}" ${r.value===store.filtroPrecio?'selected':''}>${esc(r.label)}</option>`).join('')}
+    </select>` : '';
+  $('#toolbar').innerHTML = `${matSel}${colorSel}${talleSel}${precioSel}
     <select id="ordenSel">
       <option value="destacados" ${store.orden==='destacados'?'selected':''}>Destacados</option>
       <option value="nuevos" ${store.orden==='nuevos'?'selected':''}>Novedades</option>
@@ -1137,6 +1159,13 @@ function filtered() {
     if (store.filtroMaterial !== 'all' && p.material !== store.filtroMaterial) return false;
     if (store.filtroTalle !== 'all' && !arr(p.talles).includes(store.filtroTalle)) return false;
     if (store.filtroColor !== 'all' && !arr(p.colores).some(c => (c || '').trim().toLowerCase() === store.filtroColor.toLowerCase())) return false;
+    if (store.filtroPrecio && store.filtroPrecio !== 'all') {
+      const [lo, hi] = store.filtroPrecio.split('-');
+      const price = parseFloat(p.precio) || 0;
+      const loN = parseFloat(lo) || 0;
+      const hiN = hi === '' || hi == null ? Infinity : parseFloat(hi);
+      if (price < loN || price > hiN) return false;
+    }
     if (!q) return true;
     const hay = [p.nombre, p.material, p.categoria, ...(arr(p.colores))].join(' ').toLowerCase();
     return hay.includes(q);
@@ -1161,7 +1190,7 @@ function renderGridSkeleton(n = 8) {
     </article>`).join('');
 }
 function filtrosActivos() {
-  return store.filtro !== 'all' || store.filtroMaterial !== 'all' || store.filtroTalle !== 'all' || store.filtroColor !== 'all' || (store.busca || '').trim() !== '';
+  return store.filtro !== 'all' || store.filtroMaterial !== 'all' || store.filtroTalle !== 'all' || store.filtroColor !== 'all' || store.filtroPrecio !== 'all' || (store.busca || '').trim() !== '';
 }
 function viewToggleHtml() {
   const v = store.gridView || '2';
@@ -1696,6 +1725,7 @@ $('#toolbar').addEventListener('change', (e) => {
   if (e.target.id === 'matSel') store.filtroMaterial = e.target.value;
   if (e.target.id === 'talleSel') store.filtroTalle = e.target.value;
   if (e.target.id === 'colorSel') store.filtroColor = e.target.value;
+  if (e.target.id === 'precioSel') store.filtroPrecio = e.target.value;
   if (e.target.id === 'ordenSel') store.orden = e.target.value;
   renderGrid();
 });
@@ -1726,7 +1756,7 @@ $('#filters').addEventListener('click', (e) => {
 });
 $('#search').addEventListener('input', (e) => { store.busca = e.target.value; renderGrid(); });
 function limpiarFiltros() {
-  store.filtro = 'all'; store.filtroMaterial = 'all'; store.filtroTalle = 'all'; store.filtroColor = 'all'; store.busca = '';
+  store.filtro = 'all'; store.filtroMaterial = 'all'; store.filtroTalle = 'all'; store.filtroColor = 'all'; store.filtroPrecio = 'all'; store.busca = '';
   const s = $('#search'); if (s) s.value = '';
   renderFilters(); renderToolbar(); renderGrid();
 }
