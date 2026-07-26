@@ -339,6 +339,9 @@
   .co-summary .row { display: flex; justify-content: space-between; padding: 3px 0; color: var(--muted); }
   .co-summary .tot { display: flex; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; font-weight: 700; color: var(--ink); font-size: 16px; }
   .pay-note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 10px; }
+  .pm-consulta { width: 100%; margin-top: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: transparent; border: 1px solid var(--line); color: var(--ink); font-family: var(--sans); font-size: 13px; letter-spacing: .01em; padding: 11px 14px; cursor: pointer; transition: border-color .15s, background .15s; }
+  .pm-consulta:hover { border-color: var(--ink); background: var(--surface); }
+  .pm-consulta svg { width: 16px; height: 16px; flex: none; }
 
   /* ===== Toast ===== */
   .toast {
@@ -1264,6 +1267,10 @@ function openProduct(id, pushUrl = true) {
         <button class="btn btn-primary btn-block" id="pmAdd">Agregar al carrito</button>
         <button class="btn btn-dark btn-block" id="pmBuyNow" style="margin-top:8px;">Comprar ahora</button>
       </div>
+      ${(store.cfg.whatsapp || '').replace(/[^\d]/g, '') ? `<button class="pm-consulta" id="pmConsulta" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.2-5.5A8.4 8.4 0 1 1 21 11.5z"/></svg>
+        ¿Dudas con esta prenda? Consultanos
+      </button>` : ''}
       <p class="pay-note">${esc(store.cfg.envio_texto || 'Coordinamos envío o retiro al confirmar tu pedido.')}</p>
     </div>
     ${relatedHtml(p)}
@@ -1728,6 +1735,7 @@ $('#pmodalInner').addEventListener('click', (e) => {
   const wb = e.target.closest('#pmWish');
   if (wb) { toggleWish(wb.dataset.wish); wb.classList.toggle('on', isWished(wb.dataset.wish)); return; }
   if (e.target.closest('#pmShare')) { compartirProducto(pmState.p); return; }
+  if (e.target.closest('#pmConsulta')) { consultarProductoWhatsapp(pmState.p, pmState.color, pmState.talle); return; }
   const rel = e.target.closest('.rel-card[data-prod]');
   if (rel) { openProduct(rel.dataset.prod); return; }
   const star = e.target.closest('#revStars [data-star]');
@@ -2023,6 +2031,19 @@ function findProductByRef(ref) {
 }
 function productUrl(p) {
   return location.origin + location.pathname + '?producto=' + encodeURIComponent(p.slug || p.id);
+}
+// Consulta de pre-venta por WhatsApp desde la ficha, con el producto (y color/talle elegidos) precargados.
+function consultarProductoWhatsapp(p, color, talle) {
+  if (!p) return;
+  const wa = (store.cfg.whatsapp || '').replace(/[^\d]/g, '');
+  const opts = [color, talle].filter(Boolean).join(' / ');
+  const L = [
+    `Hola! Quería consultar por *${p.nombre}*${opts ? ` (${opts})` : ''}.`,
+    productUrl(p),
+  ];
+  const text = encodeURIComponent(L.join('\n'));
+  const url = wa ? `https://wa.me/${wa}?text=${text}` : `https://wa.me/?text=${text}`;
+  window.open(url, '_blank');
 }
 async function compartirProducto(p) {
   const url = productUrl(p);
