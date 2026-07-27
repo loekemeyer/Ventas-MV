@@ -991,8 +991,18 @@ function renderStat() {
 }
 
 // ---------- Instagram (posts embebidos con el widget oficial) ----------
+// Handle por defecto (si el admin no cargó `instagram` en la config).
+const DEFAULT_IG_HANDLE = 'mv.leather.studio';
 // Links por defecto: si el admin no cargó `instagram_posts`, se usan estos.
-const DEFAULT_IG_POSTS = [];
+const DEFAULT_IG_POSTS = [
+  'https://www.instagram.com/p/DbLu6J2RB5M/',
+  'https://www.instagram.com/p/DbLuchkRMEW/',
+  'https://www.instagram.com/p/DbLuFOfRKsI/',
+  'https://www.instagram.com/p/DbB541vhj1R/',
+  'https://www.instagram.com/p/DbB4-29B-Kt/',
+  'https://www.instagram.com/p/DbB47J5hA9X/',
+  'https://www.instagram.com/p/Da6iIWRgz2v/',
+];
 // Extrae permalinks válidos de posts/reels de un texto libre (separados por coma, espacio o salto de línea).
 function parseIgPosts(raw) {
   return (raw || '').split(/[\s,]+/).map(s => s.trim())
@@ -1017,7 +1027,7 @@ function loadInstagramEmbed() {
 }
 function renderInstagram() {
   const sec = $('#instagram'); if (!sec) return;
-  const handle = (store.cfg.instagram || '').replace(/^@/, '').trim();
+  const handle = (store.cfg.instagram || DEFAULT_IG_HANDLE || '').replace(/^@/, '').trim();
   let posts = parseIgPosts(store.cfg.instagram_posts);
   if (!posts.length) posts = parseIgPosts(DEFAULT_IG_POSTS.join('\n'));
   if (!handle && !posts.length) { sec.hidden = true; return; }
