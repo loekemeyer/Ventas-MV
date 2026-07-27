@@ -1389,6 +1389,8 @@
             <input type="tel" id="cfgWhatsapp" inputmode="tel" placeholder="5491112345678"></label>
           <label><span>Usuario de Instagram (sin @)</span>
             <input type="text" id="cfgInstagram" autocapitalize="none" placeholder="mvleatherstudio"></label>
+          <label><span>Posts de Instagram para mostrar en la tienda (pegá los links, uno por línea)</span>
+            <textarea id="cfgInstagramPosts" rows="4" autocapitalize="none" placeholder="https://www.instagram.com/p/XXXXXXXXX/&#10;https://www.instagram.com/reel/YYYYYYYYY/" style="resize:vertical; font-family:inherit;"></textarea></label>
           <label><span>Frase de anuncio (barra superior)</span>
             <input type="text" id="cfgAnuncio" placeholder="Cuero genuino argentino · Hecho a mano"></label>
           <label><span>Texto de envíos</span>
@@ -4342,6 +4344,7 @@ function fillTiendaCfgForm() {
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
   set('cfgWhatsapp', c.whatsapp);
   set('cfgInstagram', c.instagram);
+  set('cfgInstagramPosts', c.instagram_posts);
   set('cfgAnuncio', c.anuncio);
   set('cfgEnvio', c.envio_texto);
   set('cfgEnvioGratis', c.envio_gratis_desde);
@@ -4356,6 +4359,7 @@ async function guardarTiendaCfg() {
   const rows = [
     { clave: 'whatsapp',  valor: (document.getElementById('cfgWhatsapp').value || '').replace(/[^\d]/g, '') },
     { clave: 'instagram', valor: (document.getElementById('cfgInstagram').value || '').replace(/^@/, '').trim() },
+    { clave: 'instagram_posts', valor: (document.getElementById('cfgInstagramPosts').value || '').trim() },
     { clave: 'anuncio',   valor: document.getElementById('cfgAnuncio').value.trim() },
     { clave: 'envio_texto', valor: document.getElementById('cfgEnvio').value.trim() },
     { clave: 'envio_gratis_desde', valor: (document.getElementById('cfgEnvioGratis').value || '0').replace(/[^\d.]/g, '') || '0' },
