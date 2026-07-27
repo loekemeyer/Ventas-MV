@@ -1445,6 +1445,19 @@ function closeAll() {
   // limpiar deep-link del producto al cerrar el modal
   if (location.search.includes('producto=')) history.replaceState(null, '', location.pathname);
 }
+// ¿Queda algún panel abierto además del infoModal? (para no soltar overlay/scroll-lock de más)
+function anyPanelOpen() {
+  return ['#cartDrawer', '#checkoutDrawer', '#accountDrawer', '#wishDrawer', '#pmodal', '#mnav']
+    .some(sel => $(sel).classList.contains('show'));
+}
+// Cierra SOLO la guía/info; si hay una ficha (u otro panel) detrás, la conserva.
+function closeInfo() {
+  $('#infoModal').classList.remove('show');
+  if (!anyPanelOpen()) {
+    $('#overlay').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+}
 
 // ---------- checkout ----------
 function discountAmount(subtotal) {
@@ -1859,7 +1872,10 @@ $('#accountBody').addEventListener('click', (e) => {
 $('#nlForm').addEventListener('submit', suscribirNewsletter);
 $('#menuToggle').addEventListener('click', () => { $('#mnav').classList.toggle('show'); $('#overlay').classList.toggle('show'); });
 document.body.addEventListener('click', (e) => {
-  if (e.target.closest('[data-close-cart],[data-close-checkout],[data-close-info],[data-close-mnav],[data-close-account],[data-close-wish]')) closeAll();
+  // El infoModal (guía de talles/cambios) puede abrirse ENCIMA de la ficha: cerrarlo
+  // no debe cerrar la ficha ni borrar el deep-link, así que va por su propia función.
+  if (e.target.closest('[data-close-info]')) { closeInfo(); return; }
+  if (e.target.closest('[data-close-cart],[data-close-checkout],[data-close-mnav],[data-close-account],[data-close-wish]')) closeAll();
 });
 $('#overlay').addEventListener('click', closeAll);
 $('#lightbox').addEventListener('click', (e) => {
@@ -1870,7 +1886,11 @@ $('#lightbox').addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   const lbOpen = $('#lightbox').classList.contains('show');
-  if (e.key === 'Escape') { lbOpen ? closeLightbox() : closeAll(); }
+  if (e.key === 'Escape') {
+    if (lbOpen) closeLightbox();
+    else if ($('#infoModal').classList.contains('show')) closeInfo();  // cerrar guía sin perder la ficha
+    else closeAll();
+  }
   else if (lbOpen && e.key === 'ArrowLeft') lbGo(lbIndex - 1);
   else if (lbOpen && e.key === 'ArrowRight') lbGo(lbIndex + 1);
 });
