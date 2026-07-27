@@ -397,6 +397,9 @@
     .section { padding: 46px 0; }
     .foot-grid { grid-template-columns: 1fr; }
     .pm-info { padding: 22px; }
+    /* Con la ficha abierta, el flotante de WhatsApp taparía la barra de compra fija:
+       lo ocultamos en mobile (dentro de la ficha ya está el botón "Consultanos"). */
+    body.pm-open .wa-float { display: none; }
   }
   @media (max-width: 380px) {
     .grid { grid-template-columns: 1fr; }
@@ -981,7 +984,9 @@ function applyConfig() {
   $('#footWa').href = waUrl;
   const ig = (c.instagram || '').replace(/^@/, '');
   $('#footIg').href = ig ? `https://instagram.com/${ig}` : '#';
-  if (!wa) $('#waFloat').style.display = 'none';
+  // Determinístico: sin inline cuando hay WhatsApp (deja que la CSS gobierne, p.ej.
+  // ocultarlo con la ficha abierta en mobile); 'none' cuando no hay número.
+  $('#waFloat').style.display = wa ? '' : 'none';
 }
 
 function renderStat() {
@@ -1390,6 +1395,7 @@ function openProduct(id, pushUrl = true) {
     ${reviewsHtml(p)}`;
   $('#pmodal').classList.add('show');
   $('#overlay').classList.add('show');
+  document.body.classList.add('pm-open');
   document.body.style.overflow = 'hidden';
   document.getElementById('pmodal').scrollTop = 0;
   injectProductJsonLd(p);
@@ -1511,6 +1517,7 @@ function closeAll() {
   $('#lightbox').classList.remove('show');
   $('#overlay').classList.remove('show');
   $('#mnav').classList.remove('show');
+  document.body.classList.remove('pm-open');
   // teardown de la barra de compra fija del modal de producto
   if (pmStickyObserver) { pmStickyObserver.disconnect(); pmStickyObserver = null; }
   const stickyBar = document.getElementById('pmStickyBuy');
