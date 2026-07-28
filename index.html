@@ -340,6 +340,8 @@
     font-size: 16px; font-family: inherit; border-radius: 2px; color: var(--ink);
   }
   .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--leather); }
+  /* Foco visible por teclado (no aparece al hacer click con mouse) para navegación accesible. */
+  [data-prod]:focus-visible, a:focus-visible, button:focus-visible, [role="button"]:focus-visible { outline: 2px solid var(--leather); outline-offset: 2px; border-radius: 2px; }
   .seg { display: flex; gap: 8px; }
   .seg label { flex: 1; text-transform: none; letter-spacing: 0; margin: 0; }
   .seg .segbox { display: block; width: 100%; border: 1px solid var(--line); padding: 13px; text-align: center; border-radius: 2px; font-size: 14px; font-weight: 500; cursor: pointer; background: var(--surface); transition: all .15s; }
@@ -1123,7 +1125,7 @@ function closeLightbox() { $('#lightbox').classList.remove('show'); }
 function railCard(p) {
   const img = arr(p.imagenes)[0];
   const off = p.precio_anterior && p.precio_anterior > p.precio ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
-  return `<article class="rail-card2" data-prod="${p.id}">
+  return `<article class="rail-card2" data-prod="${p.id}" tabindex="0" role="button" aria-label="Ver ${esc(p.nombre)}">
     <div class="rail-media">
       ${img ? `<img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy" decoding="async">` : `<div class="rel-ph">MV LEATHER</div>`}
       ${off ? `<span class="tag off">-${off}%</span>` : ''}
@@ -1311,7 +1313,7 @@ function renderGrid() {
     const wished = isWished(p.id);
     const rating = store.ratings[p.id];
     return `
-      <article class="card" data-prod="${p.id}">
+      <article class="card" data-prod="${p.id}" tabindex="0" role="button" aria-label="Ver ${esc(p.nombre)}">
         <div class="card-media">
           ${img ? `<img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy" decoding="async">` : `<div class="ph">MV LEATHER</div>`}
           <button class="wish-btn ${wished ? 'on' : ''}" data-wish="${p.id}" aria-label="Favorito" title="Guardar">
@@ -1442,7 +1444,7 @@ function relatedHtml(p) {
   if (!rel.length) return '';
   return `<div class="related"><h3>También te puede gustar</h3><div class="related-grid">${rel.map(r => {
     const img = arr(r.imagenes)[0];
-    return `<div class="rel-card" data-prod="${r.id}">
+    return `<div class="rel-card" data-prod="${r.id}" tabindex="0" role="button" aria-label="Ver ${esc(r.nombre)}">
       <div class="rel-media">${img ? `<img src="${esc(img)}" alt="${esc(r.nombre)}" loading="lazy" decoding="async">` : `<div class="rel-ph">MV LEATHER</div>`}</div>
       <div class="rel-n">${esc(r.nombre)}</div><div class="rel-p">${money(r.precio, r.moneda)}</div>
     </div>`;
@@ -1835,6 +1837,17 @@ $('#colecciones').addEventListener('click', (e) => {
   const card = e.target.closest('[data-prod]');
   if (card) openProduct(card.dataset.prod);
 });
+// Accesibilidad por teclado: Enter/Espacio sobre una card (grilla, rails, relacionados,
+// favoritos) abre la ficha. Solo actúa si la card en sí tiene el foco, no un botón interno
+// (ej. el corazón de favoritos), que ya es un <button> nativo y maneja su propio Enter.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+  const t = e.target;
+  if (t && t.matches && t.matches('[data-prod]')) {
+    e.preventDefault();
+    openProduct(t.dataset.prod);
+  }
+});
 $('#heroCarousel').addEventListener('click', (e) => {
   if (e.target.closest('[data-hero-prev]')) heroManual(heroIndex - 1);
   else if (e.target.closest('[data-hero-next]')) heroManual(heroIndex + 1);
@@ -2116,7 +2129,7 @@ function renderWish() {
   }
   body.innerHTML = items.map(p => {
     const img = arr(p.imagenes)[0];
-    return `<div class="cart-item" data-prod="${p.id}" style="cursor:pointer;">
+    return `<div class="cart-item" data-prod="${p.id}" style="cursor:pointer;" tabindex="0" role="button" aria-label="Ver ${esc(p.nombre)}">
       ${img ? `<img src="${esc(img)}" alt="">` : `<div class="ci-ph">MV</div>`}
       <div class="ci-info"><div class="n">${esc(p.nombre)}</div><div class="o">${esc(p.categoria || p.material || '')}</div>
       <div class="ci-price" style="text-align:left;">${money(p.precio, p.moneda)}</div></div>
