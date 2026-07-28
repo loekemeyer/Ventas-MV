@@ -306,6 +306,8 @@
   .pm-sticky-buy .psb-info { flex: 1; min-width: 0; }
   .pm-sticky-buy .psb-name { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pm-sticky-buy .psb-price { font-family: var(--serif); font-size: 18px; color: var(--ink); }
+  .pm-sticky-buy .psb-cuotas { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pm-sticky-buy .psb-cuotas b { font-weight: 600; color: var(--ok); }
   .pm-sticky-buy .btn { flex: none; width: auto; padding: 12px 20px; }
   @media (max-width: 640px) {
     .pmodal.show .pm-sticky-buy:not([hidden]) { display: flex; }
@@ -1425,7 +1427,9 @@ function setupStickyBuy(p) {
   const add = document.getElementById('pmAdd');
   if (pmStickyObserver) { pmStickyObserver.disconnect(); pmStickyObserver = null; }
   if (!bar || !add) return;
-  bar.innerHTML = `<div class="psb-info"><div class="psb-name">${esc(p.nombre)}</div><div class="psb-price">${money(p.precio, p.moneda)}</div></div><button class="btn btn-primary" id="pmStickyAdd">Agregar</button>`;
+  // Repite el driver de conversión (cuotas sin interés) en el CTA fijo mobile; si no
+  // hay cuotas configuradas, cuotasHtml devuelve '' y la línea simplemente no aparece.
+  bar.innerHTML = `<div class="psb-info"><div class="psb-name">${esc(p.nombre)}</div><div class="psb-price">${money(p.precio, p.moneda)}</div>${cuotasHtml(p.precio, p.moneda, 'psb-cuotas')}</div><button class="btn btn-primary" id="pmStickyAdd">Agregar</button>`;
   // El botón dispara el CTA principal para reusar su validación de color/talle.
   const stickyAdd = bar.querySelector('#pmStickyAdd');
   if (stickyAdd) stickyAdd.addEventListener('click', () => { const a = document.getElementById('pmAdd'); if (a) a.click(); });
