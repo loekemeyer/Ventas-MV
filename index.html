@@ -446,7 +446,9 @@
   .coupon-row { display: flex; gap: 8px; margin-bottom: 14px; }
   .coupon-row input { flex: 1; padding: 11px 14px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; font-family: inherit; text-transform: uppercase; border-radius: 2px; }
   .coupon-row button { padding: 0 18px; border: 1px solid var(--ink); background: var(--surface); font-weight: 600; font-size: 13px; border-radius: 2px; }
-  .coupon-ok { color: var(--ok); font-size: 12px; font-weight: 600; margin: -6px 0 12px; }
+  .coupon-ok { color: var(--ok); font-size: 12px; font-weight: 600; margin: -6px 0 12px; display: flex; align-items: center; gap: 8px; }
+  .coupon-quitar { background: none; border: none; padding: 0; color: var(--muted); font-size: 12px; font-weight: 600; text-decoration: underline; cursor: pointer; font-family: inherit; }
+  .coupon-quitar:hover { color: var(--ink); }
 
   /* ===== Quantity in modal ===== */
   .pm-qty { display: inline-flex; align-items: center; gap: 14px; border: 1px solid var(--line); border-radius: 2px; padding: 6px 10px; }
@@ -1581,11 +1583,13 @@ function coHeadHtml() {
       <input id="cuponInput" placeholder="Código de cupón" value="${esc(store.cupon?.codigo || '')}">
       <button type="button" id="cuponBtn">Aplicar</button>
     </div>
-    ${store.cupon ? `<div class="coupon-ok">✓ Cupón ${esc(store.cupon.codigo)} aplicado</div>` : ''}`;
+    ${store.cupon ? `<div class="coupon-ok"><span>✓ Cupón ${esc(store.cupon.codigo)} aplicado</span><button type="button" id="cuponQuitar" class="coupon-quitar">Quitar</button></div>` : ''}`;
 }
 function wireCoHead() {
   const btn = $('#cuponBtn');
   if (btn) btn.onclick = () => aplicarCupon($('#cuponInput').value);
+  const quitar = $('#cuponQuitar');
+  if (quitar) quitar.onclick = () => { store.cupon = null; toast('Cupón quitado'); refreshCoHead(); };
 }
 function refreshCoHead() {
   const el = $('#coHead');
