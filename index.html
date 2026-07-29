@@ -1349,8 +1349,18 @@ function pushReciente(id) {
 }
 
 let pmState = null;
+// Título/OG de la pestaña: por defecto el genérico de la tienda; al abrir una ficha
+// pasa a "Producto · MV Leather Studio" (mejor SEO de deep-links y previa al compartir).
+const TITULO_DEFAULT = document.title;
+const OG_DEFAULT = document.querySelector('meta[property="og:title"]')?.getAttribute('content') || TITULO_DEFAULT;
+function setMetaTitulo(t) {
+  document.title = t;
+  const og = document.querySelector('meta[property="og:title"]');
+  if (og) og.setAttribute('content', t);
+}
 function openProduct(id, pushUrl = true) {
   const p = store.productos.find(x => x.id === id); if (!p) return;
+  setMetaTitulo(p.nombre + ' · MV Leather Studio');
   pushReciente(id);
   renderColecciones();   // refresca el rail "Vistos recientemente" en la home
   const imgs = arr(p.imagenes);
@@ -1539,6 +1549,10 @@ function closeAll() {
   const stickyBar = document.getElementById('pmStickyBuy');
   if (stickyBar) { stickyBar.classList.remove('show'); stickyBar.hidden = true; }
   document.body.style.overflow = '';
+  // restaurar título/OG genérico de la tienda al salir de la ficha
+  setMetaTitulo(TITULO_DEFAULT);
+  const og = document.querySelector('meta[property="og:title"]');
+  if (og) og.setAttribute('content', OG_DEFAULT);
   // limpiar deep-link del producto al cerrar el modal
   if (location.search.includes('producto=')) history.replaceState(null, '', location.pathname);
 }
