@@ -1349,18 +1349,53 @@ function pushReciente(id) {
 }
 
 let pmState = null;
-// Título/OG de la pestaña: por defecto el genérico de la tienda; al abrir una ficha
-// pasa a "Producto · MV Leather Studio" (mejor SEO de deep-links y previa al compartir).
+// Meta tags dinámicos: por defecto reflejan la tienda; al abrir una ficha pasan a
+// describir el producto (título, descripción, imagen, canonical) para mejor SEO de los
+// deep-links ?producto= y previa más rica al compartir. Se restauran al cerrar la ficha.
+const SITE_BASE = 'https://loekemeyer.github.io/Ventas-MV/';
 const TITULO_DEFAULT = document.title;
-const OG_DEFAULT = document.querySelector('meta[property="og:title"]')?.getAttribute('content') || TITULO_DEFAULT;
-function setMetaTitulo(t) {
-  document.title = t;
-  const og = document.querySelector('meta[property="og:title"]');
-  if (og) og.setAttribute('content', t);
+function _metaGet(sel, attr) { const el = document.querySelector(sel); return el ? el.getAttribute(attr) : null; }
+function _metaSet(sel, attr, val) { const el = document.querySelector(sel); if (el && val != null) el.setAttribute(attr, val); }
+const META_DEFAULT = {
+  ogTitle: _metaGet('meta[property="og:title"]', 'content'),
+  ogDesc: _metaGet('meta[property="og:description"]', 'content'),
+  ogImage: _metaGet('meta[property="og:image"]', 'content'),
+  twTitle: _metaGet('meta[name="twitter:title"]', 'content'),
+  twDesc: _metaGet('meta[name="twitter:description"]', 'content'),
+  twImage: _metaGet('meta[name="twitter:image"]', 'content'),
+  desc: _metaGet('meta[name="description"]', 'content'),
+  canonical: _metaGet('link[rel="canonical"]', 'href'),
+};
+function _urlAbs(u) { return (!u || /^https?:\/\//i.test(u)) ? u : SITE_BASE + u.replace(/^\.?\//, ''); }
+function setMetaProducto(p) {
+  const titulo = p.nombre + ' · MV Leather Studio';
+  const img = _urlAbs(arr(p.imagenes)[0]) || META_DEFAULT.ogImage;
+  const desc = p.descripcion ? String(p.descripcion).replace(/\s+/g, ' ').trim().slice(0, 160) : META_DEFAULT.desc;
+  const canon = SITE_BASE + '?producto=' + encodeURIComponent(p.slug || p.id);
+  document.title = titulo;
+  _metaSet('meta[property="og:title"]', 'content', titulo);
+  _metaSet('meta[name="twitter:title"]', 'content', titulo);
+  _metaSet('meta[property="og:description"]', 'content', desc);
+  _metaSet('meta[name="twitter:description"]', 'content', desc);
+  _metaSet('meta[name="description"]', 'content', desc);
+  _metaSet('meta[property="og:image"]', 'content', img);
+  _metaSet('meta[name="twitter:image"]', 'content', img);
+  _metaSet('link[rel="canonical"]', 'href', canon);
+}
+function restaurarMeta() {
+  document.title = TITULO_DEFAULT;
+  _metaSet('meta[property="og:title"]', 'content', META_DEFAULT.ogTitle);
+  _metaSet('meta[name="twitter:title"]', 'content', META_DEFAULT.twTitle);
+  _metaSet('meta[property="og:description"]', 'content', META_DEFAULT.ogDesc);
+  _metaSet('meta[name="twitter:description"]', 'content', META_DEFAULT.twDesc);
+  _metaSet('meta[name="description"]', 'content', META_DEFAULT.desc);
+  _metaSet('meta[property="og:image"]', 'content', META_DEFAULT.ogImage);
+  _metaSet('meta[name="twitter:image"]', 'content', META_DEFAULT.twImage);
+  _metaSet('link[rel="canonical"]', 'href', META_DEFAULT.canonical);
 }
 function openProduct(id, pushUrl = true) {
   const p = store.productos.find(x => x.id === id); if (!p) return;
-  setMetaTitulo(p.nombre + ' · MV Leather Studio');
+  setMetaProducto(p);
   pushReciente(id);
   renderColecciones();   // refresca el rail "Vistos recientemente" en la home
   const imgs = arr(p.imagenes);
@@ -1549,10 +1584,8 @@ function closeAll() {
   const stickyBar = document.getElementById('pmStickyBuy');
   if (stickyBar) { stickyBar.classList.remove('show'); stickyBar.hidden = true; }
   document.body.style.overflow = '';
-  // restaurar título/OG genérico de la tienda al salir de la ficha
-  setMetaTitulo(TITULO_DEFAULT);
-  const og = document.querySelector('meta[property="og:title"]');
-  if (og) og.setAttribute('content', OG_DEFAULT);
+  // restaurar meta tags genéricos de la tienda al salir de la ficha
+  restaurarMeta();
   // limpiar deep-link del producto al cerrar el modal
   if (location.search.includes('producto=')) history.replaceState(null, '', location.pathname);
 }
