@@ -378,10 +378,10 @@
   :root[data-theme="dark"] .skeleton { background: linear-gradient(90deg,#241d16 25%,#2e251b 50%,#241d16 75%); background-size:200% 100%; }
   @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .skeleton { background: linear-gradient(90deg,#241d16 25%,#2e251b 50%,#241d16 75%); background-size:200% 100%; } }
   @keyframes sk { to { background-position: -200% 0; } }
-  .sk-card { aspect-ratio: 4/5; }
   .card.sk { cursor: default; }
   .card.sk:hover { transform: none; box-shadow: none; }
-  .card.sk .card-media { aspect-ratio: 4/5; }
+  /* Debe coincidir con .card-media real (3/4) para no generar salto de layout (CLS) al pasar del skeleton a la grilla. */
+  .card.sk .card-media { aspect-ratio: 3/4; }
   .sk-line { border-radius: 4px; }
 
   /* ===== Responsive ===== */
