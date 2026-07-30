@@ -176,6 +176,9 @@
   .card-media { position: relative; aspect-ratio: 3/4; background: var(--media-bg); overflow: hidden; }
   .card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .55s ease; }
   .card:hover .card-media img { transform: scale(1.04); }
+  /* 2da foto: aparece al pasar el mouse (solo en dispositivos con hover) para dar aire editorial. */
+  .card-media .card-media-2 { position: absolute; inset: 0; opacity: 0; transition: opacity .45s ease, transform .55s ease; }
+  @media (hover: hover) { .card:hover .card-media-2 { opacity: 1; transform: scale(1.04); } }
   .card-media .ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#b6a894; font-family: var(--serif); font-size: 15px; letter-spacing: 2px; }
   .tag {
     position: absolute; top: 10px; left: 10px; background: rgba(28,20,14,0.82); color: #fff;
@@ -1333,6 +1336,7 @@ function renderGrid() {
       <article class="card" data-prod="${p.id}" tabindex="0" role="button" aria-label="Ver ${esc(p.nombre)}">
         <div class="card-media">
           ${img ? `<img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy" decoding="async">` : `<div class="ph">MV LEATHER</div>`}
+          ${arr(p.imagenes)[1] ? `<img class="card-media-2" src="${esc(arr(p.imagenes)[1])}" alt="" loading="lazy" decoding="async">` : ''}
           <button class="wish-btn ${wished ? 'on' : ''}" data-wish="${p.id}" aria-label="Favorito" title="Guardar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
           </button>
