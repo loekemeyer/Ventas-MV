@@ -423,6 +423,19 @@
   .wish-btn.on { color: #c0392b; }
   .wish-btn.on svg { fill: #c0392b; stroke: #c0392b; }
 
+  /* ===== Quick-add (agregar rápido) en la card ===== */
+  .qadd-btn {
+    position: absolute; bottom: 10px; right: 10px; z-index: 2; height: 34px; padding: 0 13px;
+    border-radius: 17px; background: var(--ink); color: var(--surface); border: none;
+    display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-size: 12px;
+    font-weight: 600; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.18); white-space: nowrap;
+  }
+  .qadd-btn svg { width: 15px; height: 15px; }
+  @media (hover: hover) {
+    .qadd-btn { opacity: 0; transform: translateY(6px); transition: opacity .18s ease, transform .18s ease; }
+    .card:hover .qadd-btn, .card:focus-within .qadd-btn { opacity: 1; transform: none; }
+  }
+
   /* ===== Rating stars ===== */
   .stars { color: #d9a441; font-size: 13px; letter-spacing: 1px; }
   .stars .empty { color: #d8cdbb; }
@@ -1325,6 +1338,10 @@ function renderGrid() {
           </button>
           ${tieneStock(p) ? `<span class="tag rapida">Entrega rápida</span>` : (p.destacado ? `<span class="tag">Destacado</span>` : '')}
           ${off ? `<span class="tag off">-${off}%</span>` : ''}
+          <button class="qadd-btn" data-quickadd="${p.id}" aria-label="Agregar ${esc(p.nombre)} al carrito" title="Agregar al carrito">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            Agregar
+          </button>
         </div>
         <div class="card-body">
           <span class="card-cat">${esc(p.categoria || p.material || 'Cuero')}</span>
@@ -1533,6 +1550,16 @@ function addToCart(p, color, talle, qty = 1) {
   if (found) found.qty = Math.min(found.qty + qty, cap);
   else store.cart.push({ key, id: p.id, nombre: p.nombre, precio: parseFloat(p.precio) || 0, moneda: p.moneda || 'ARS', color: color || '', talle: talle || '', img: arr(p.imagenes)[0] || '', qty: Math.min(qty, cap), rapida: tieneStock(p) });
   saveCart();
+}
+// Quick-add desde la grilla: si el producto exige elegir entre 2+ colores o talles,
+// abre la ficha para no adivinar la variante; si no, agrega 1 unidad directo (una
+// opción única se autoselecciona, igual que en la ficha) y respeta el tope de stock.
+function quickAddDesdeCard(id) {
+  const p = store.productos.find(x => x.id === id); if (!p) return;
+  const colores = arr(p.colores), talles = arr(p.talles);
+  if (colores.length > 1 || talles.length > 1) { openProduct(id); return; }
+  addToCart(p, colores[0] || '', talles[0] || '', 1);
+  toast('Agregado al carrito ✓');
 }
 function shipBarHtml() {
   const umbral = parseFloat(store.cfg.envio_gratis_desde) || 0;
@@ -1877,6 +1904,8 @@ function openInfo(tipo) {
 $('#grid').addEventListener('click', (e) => {
   const wb = e.target.closest('[data-wish]');
   if (wb) { e.stopPropagation(); toggleWish(wb.dataset.wish); return; }
+  const qa = e.target.closest('[data-quickadd]');
+  if (qa) { e.stopPropagation(); quickAddDesdeCard(qa.dataset.quickadd); return; }
   const card = e.target.closest('[data-prod]');
   if (card) openProduct(card.dataset.prod);
 });
