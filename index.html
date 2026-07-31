@@ -991,6 +991,7 @@ async function init() {
   renderStoreRating();
   renderInstagram();
   injectStoreJsonLd();
+  injectOrgJsonLd();
   handlePaymentReturn();
   openDeepLinkProduct();
 }
@@ -2380,6 +2381,26 @@ function injectStoreJsonLd() {
     url: location.origin + location.pathname,
   };
   putJsonLd('ld-store', ld);
+}
+// Organization + WebSite en el home: ayuda a Google a vincular la marca con sus redes
+// (sameAs) para el knowledge panel. Usa datos que ya están en store.cfg.
+function injectOrgJsonLd() {
+  const base = location.origin + location.pathname.replace(/index\.html$/, '');
+  const nombre = store.cfg.nombre_tienda || 'MV Leather Studio';
+  const sameAs = [];
+  const ig = (store.cfg.instagram || '').replace(/^@/, '').trim();
+  if (ig) sameAs.push('https://instagram.com/' + ig);
+  const wa = (store.cfg.whatsapp || '').replace(/[^\d]/g, '');
+  if (wa) sameAs.push('https://wa.me/' + wa);
+  const org = {
+    '@context': 'https://schema.org', '@type': 'Organization',
+    name: nombre, url: base, logo: base + 'logo.jpg',
+  };
+  if (sameAs.length) org.sameAs = sameAs;
+  putJsonLd('ld-org', org);
+  putJsonLd('ld-website', {
+    '@context': 'https://schema.org', '@type': 'WebSite', name: nombre, url: base,
+  });
 }
 function injectProductJsonLd(p) {
   const rating = store.ratings[p.id];
