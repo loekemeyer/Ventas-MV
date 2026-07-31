@@ -60,6 +60,11 @@
   .skip-link { position: absolute; left: 12px; top: -60px; z-index: 100; background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 4px; font-size: 14px; font-weight: 600; transition: top .15s ease; }
   .skip-link:focus { top: 12px; outline: 2px solid var(--leather); outline-offset: 2px; }
   #contenido:focus { outline: none; }
+  /* Respetar la preferencia de movimiento reducido del sistema (accesibilidad). */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+  }
   .eyebrow { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 600; font-family: var(--sans); }
 
   /* ===== Announcement ===== */
@@ -1120,15 +1125,23 @@ function renderHero() {
       <button class="hero-arrow next" data-hero-next aria-label="Siguiente">›</button>
       <div class="hero-dots">${slides.map((_, i) => `<button class="hero-dot ${i === 0 ? 'active' : ''}" data-hero-dot="${i}" aria-label="Slide ${i + 1}"></button>`).join('')}</div>` : '');
   heroIndex = 0;
-  if (slides.length > 1) heroTimer = setInterval(() => heroGo(heroIndex + 1), 6500);
+  startHeroTimer();
 }
+// Autoplay solo si hay varios slides, el usuario no pidió menos movimiento y la pestaña está visible.
+function heroAutoplayOK() {
+  const slides = $$('#heroCarousel .hero-slide');
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return slides.length > 1 && !reduce && !document.hidden;
+}
+function startHeroTimer() { clearInterval(heroTimer); if (heroAutoplayOK()) heroTimer = setInterval(() => heroGo(heroIndex + 1), 6500); }
+function stopHeroTimer() { clearInterval(heroTimer); heroTimer = null; }
 function heroGo(i) {
   const slides = $$('#heroCarousel .hero-slide'); if (!slides.length) return;
   heroIndex = (i + slides.length) % slides.length;
   slides.forEach((s, k) => s.classList.toggle('active', k === heroIndex));
   $$('#heroCarousel .hero-dot').forEach((d, k) => d.classList.toggle('active', k === heroIndex));
 }
-function heroManual(i) { clearInterval(heroTimer); heroGo(i); heroTimer = setInterval(() => heroGo(heroIndex + 1), 6500); }
+function heroManual(i) { heroGo(i); startHeroTimer(); }
 
 // ---------- lightbox (zoom de foto de producto) ----------
 let lbImages = [], lbIndex = 0;
@@ -1959,7 +1972,14 @@ $('#heroCarousel').addEventListener('click', (e) => {
     if (Math.abs(dx) > 50) heroManual(heroIndex + (dx < 0 ? 1 : -1));
     x0 = null;
   }, { passive: true });
+  // Pausar el autoplay mientras se lee (hover/foco) y reanudar al salir.
+  el.addEventListener('mouseenter', stopHeroTimer);
+  el.addEventListener('mouseleave', startHeroTimer);
+  el.addEventListener('focusin', stopHeroTimer);
+  el.addEventListener('focusout', startHeroTimer);
 })();
+// Pausar cuando la pestaña no está visible (ahorra recursos y no cambia slides de fondo).
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopHeroTimer(); else startHeroTimer(); });
 $('#filters').addEventListener('click', (e) => {
   const b = e.target.closest('[data-cat]'); if (!b) return;
   store.filtro = b.dataset.cat; renderFilters(); renderGrid();
