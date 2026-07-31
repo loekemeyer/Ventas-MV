@@ -56,6 +56,10 @@
   button { font-family: inherit; cursor: pointer; }
   h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: -0.2px; margin: 0; }
   .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+  /* Skip-link: oculto hasta recibir foco por teclado (accesibilidad). */
+  .skip-link { position: absolute; left: 12px; top: -60px; z-index: 100; background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 4px; font-size: 14px; font-weight: 600; transition: top .15s ease; }
+  .skip-link:focus { top: 12px; outline: 2px solid var(--leather); outline-offset: 2px; }
+  #contenido:focus { outline: none; }
   .eyebrow { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 600; font-family: var(--sans); }
 
   /* ===== Announcement ===== */
@@ -588,6 +592,7 @@
 </style>
 </head>
 <body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 
 <div class="announce" id="announce">Cuero genuino argentino · Hecho a mano</div>
 
@@ -636,6 +641,7 @@
 
 <a id="top"></a>
 
+<main id="contenido" tabindex="-1">
 <!-- ===== HERO ===== -->
 <section class="hero" id="hero">
   <div class="hero-carousel" id="heroCarousel"></div>
@@ -738,6 +744,7 @@
     </form>
   </div>
 </section>
+</main>
 
 <!-- ===== FOOTER ===== -->
 <footer id="contacto">
