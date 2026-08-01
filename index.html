@@ -501,7 +501,9 @@
   .rev-item p { color: var(--muted); font-size: 14px; margin: 4px 0 0; }
   .rev-form { margin-top: 16px; background: var(--bg); padding: 16px; border-radius: 4px; }
   .star-pick { font-size: 26px; color: #d8cdbb; cursor: pointer; }
+  .star-pick .s { background: none; border: none; padding: 0 2px; font-size: inherit; color: inherit; cursor: pointer; line-height: 1; font-family: inherit; }
   .star-pick .s.on { color: #d9a441; }
+  .star-pick .s:focus-visible { outline: 2px solid var(--leather); outline-offset: 2px; border-radius: 3px; }
 
   /* ===== Account ===== */
   .acc-hero { text-align: center; padding: 20px 0 24px; }
@@ -1551,7 +1553,7 @@ function reviewsHtml(p) {
     <div id="pmReviewList" style="margin-top:10px; color:var(--muted); font-size:14px;">Cargando…</div>
     <div class="rev-form">
       <div class="opt-label" style="margin-top:0;">Dejá tu reseña</div>
-      <div class="star-pick" id="revStars" data-val="5">${[1,2,3,4,5].map(n => `<span class="s on" data-star="${n}">★</span>`).join('')}</div>
+      <div class="star-pick" id="revStars" data-val="5" role="radiogroup" aria-label="Tu puntuación">${[1,2,3,4,5].map(n => `<button type="button" class="s on" data-star="${n}" role="radio" aria-checked="${n===5}" aria-label="${n} ${n===1?'estrella':'estrellas'}" tabindex="${n===5?0:-1}">★</button>`).join('')}</div>
       <div class="field" style="margin-top:8px;"><input id="revNombre" placeholder="Tu nombre" value="${esc(store.user?.name || '')}"></div>
       <div class="field"><textarea id="revTexto" rows="2" placeholder="Contanos qué te pareció"></textarea></div>
       <button class="btn btn-dark" id="revSubmit" style="padding:10px 22px;">Enviar reseña</button>
@@ -2042,12 +2044,7 @@ $('#pmodalInner').addEventListener('click', (e) => {
   const rel = e.target.closest('.rel-card[data-prod]');
   if (rel) { openProduct(rel.dataset.prod); return; }
   const star = e.target.closest('#revStars [data-star]');
-  if (star) {
-    const val = parseInt(star.dataset.star, 10);
-    $('#revStars').dataset.val = val;
-    $$('#revStars .s').forEach((s, i) => s.classList.toggle('on', i < val));
-    return;
-  }
+  if (star) { setRevRating(parseInt(star.dataset.star, 10)); return; }
   if (e.target.id === 'revSubmit') { enviarResena(pmState.p.id); return; }
   if (e.target.id === 'pmAdd' || e.target.id === 'pmBuyNow') {
     const p = pmState.p;
@@ -2059,6 +2056,35 @@ $('#pmodalInner').addEventListener('click', (e) => {
     if (comprarAhora) { setTimeout(openCheckout, 350); }
     else { toast('Agregado al carrito ✓'); setTimeout(openCart, 350); }
   }
+});
+// Puntuación de reseña: actualiza relleno visual, estado ARIA y roving tabindex.
+function setRevRating(val) {
+  const cont = $('#revStars'); if (!cont) return;
+  val = Math.max(1, Math.min(5, val | 0));
+  cont.dataset.val = val;
+  $$('#revStars .s').forEach((s, i) => {
+    const n = i + 1;
+    s.classList.toggle('on', n <= val);
+    s.setAttribute('aria-checked', n === val);
+    s.tabIndex = n === val ? 0 : -1;
+  });
+}
+// Teclado en el selector de estrellas: flechas / Home / End / Enter / Espacio.
+$('#pmodalInner').addEventListener('keydown', (e) => {
+  const star = e.target.closest('#revStars [data-star]');
+  if (!star) return;
+  const cur = parseInt($('#revStars').dataset.val, 10) || 5;
+  let val = null;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') val = cur + 1;
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') val = cur - 1;
+  else if (e.key === 'Home') val = 1;
+  else if (e.key === 'End') val = 5;
+  else if (e.key === ' ' || e.key === 'Enter') val = parseInt(star.dataset.star, 10);
+  else return;
+  e.preventDefault();
+  setRevRating(val);
+  const sel = $(`#revStars [data-star="${$('#revStars').dataset.val}"]`);
+  if (sel) sel.focus();
 });
 
 // Cart interactions
