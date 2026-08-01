@@ -687,7 +687,7 @@
     <div class="search-row"><input type="search" id="search" placeholder="Buscar por nombre, color o material…" aria-label="Buscar productos"></div>
     <div class="toolbar" id="toolbar"></div>
     <div class="freeship-strip" id="freeShipStrip" hidden></div>
-    <div class="grid-info" id="gridInfo"></div>
+    <div class="grid-info" id="gridInfo" aria-live="polite"></div>
     <div class="grid" id="grid"></div>
   </div>
 </section>
@@ -1987,7 +1987,12 @@ $('#filters').addEventListener('click', (e) => {
   const b = e.target.closest('[data-cat]'); if (!b) return;
   store.filtro = b.dataset.cat; renderFilters(); renderGrid();
 });
-$('#search').addEventListener('input', (e) => { store.busca = e.target.value; renderGrid(); });
+let _searchTimer = null;
+$('#search').addEventListener('input', (e) => {
+  store.busca = e.target.value;
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(renderGrid, 250);   // evita re-renderizar toda la grilla en cada tecla
+});
 function limpiarFiltros() {
   store.filtro = 'all'; store.filtroMaterial = 'all'; store.filtroTalle = 'all'; store.filtroColor = 'all'; store.filtroPrecio = 'all'; store.busca = '';
   const s = $('#search'); if (s) s.value = '';
