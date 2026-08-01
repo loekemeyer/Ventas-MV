@@ -8,11 +8,14 @@
 <meta property="og:title" content="MV Leather Studio · Cuero genuino hecho a mano">
 <meta property="og:description" content="Camperas de cuero genuino argentino. Diseño atemporal, confección artesanal.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="logo.jpg">
+<meta property="og:site_name" content="MV Leather Studio">
+<meta property="og:locale" content="es_AR">
+<meta property="og:url" content="https://loekemeyer.github.io/Ventas-MV/">
+<meta property="og:image" content="https://loekemeyer.github.io/Ventas-MV/logo.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="MV Leather Studio">
 <meta name="twitter:description" content="Camperas de cuero genuino argentino, hechas a mano.">
-<meta name="twitter:image" content="logo.jpg">
+<meta name="twitter:image" content="https://loekemeyer.github.io/Ventas-MV/logo.jpg">
 <link rel="canonical" href="https://loekemeyer.github.io/Ventas-MV/">
 <link rel="preload" as="image" href="assets/hero-1.jpg">
 <link rel="manifest" href="manifest.json">
@@ -1409,6 +1412,7 @@ const META_DEFAULT = {
   twImage: _metaGet('meta[name="twitter:image"]', 'content'),
   desc: _metaGet('meta[name="description"]', 'content'),
   canonical: _metaGet('link[rel="canonical"]', 'href'),
+  ogUrl: _metaGet('meta[property="og:url"]', 'content'),
 };
 function _urlAbs(u) { return (!u || /^https?:\/\//i.test(u)) ? u : SITE_BASE + u.replace(/^\.?\//, ''); }
 function setMetaProducto(p) {
@@ -1425,6 +1429,7 @@ function setMetaProducto(p) {
   _metaSet('meta[property="og:image"]', 'content', img);
   _metaSet('meta[name="twitter:image"]', 'content', img);
   _metaSet('link[rel="canonical"]', 'href', canon);
+  _metaSet('meta[property="og:url"]', 'content', canon);
 }
 function restaurarMeta() {
   document.title = TITULO_DEFAULT;
@@ -1436,6 +1441,7 @@ function restaurarMeta() {
   _metaSet('meta[property="og:image"]', 'content', META_DEFAULT.ogImage);
   _metaSet('meta[name="twitter:image"]', 'content', META_DEFAULT.twImage);
   _metaSet('link[rel="canonical"]', 'href', META_DEFAULT.canonical);
+  _metaSet('meta[property="og:url"]', 'content', META_DEFAULT.ogUrl);
 }
 function openProduct(id, pushUrl = true) {
   const p = store.productos.find(x => x.id === id); if (!p) return;
