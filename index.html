@@ -78,6 +78,20 @@
   }
   .announce-ver { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; letter-spacing: 1px; opacity: .5; }
 
+  /* ===== Cartel de cookies ===== */
+  .cookie-banner {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; display: none;
+    gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap;
+    background: var(--ink); color: #f3e9dc; padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+    box-shadow: 0 -6px 24px rgba(0,0,0,.22); font-size: 13px;
+  }
+  .cookie-banner.show { display: flex; }
+  .cookie-banner p { margin: 0; max-width: 720px; line-height: 1.5; }
+  .cookie-banner .cookie-actions { display: flex; gap: 8px; flex: none; }
+  .cookie-banner button { padding: 9px 18px; border-radius: 3px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; }
+  .cookie-banner [data-cookie-reject] { background: transparent; color: #f3e9dc; border: 1px solid rgba(255,255,255,.4); }
+  .cookie-banner [data-cookie-accept] { background: #f3e9dc; color: var(--ink); }
+
   /* ===== Header ===== */
   header {
     position: sticky; top: 0; z-index: 40;
@@ -846,6 +860,14 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<div class="cookie-banner" id="cookieBanner" role="region" aria-label="Aviso de cookies">
+  <p>Usamos cookies para mejorar tu experiencia y mostrarte publicidad relevante. Podés aceptarlas o rechazarlas.</p>
+  <div class="cookie-actions">
+    <button type="button" data-cookie-reject>Rechazar</button>
+    <button type="button" data-cookie-accept>Aceptar</button>
+  </div>
+</div>
+
 <script>
 // ============================================================================
 //  MV Leather Studio — Tienda pública
@@ -960,6 +982,44 @@ function toast(msg) {
 }
 
 // ---------- carga inicial ----------
+// ============================================================================
+//  Cookies + tracking (retargeting). El pixel/analytics carga SOLO si el
+//  visitante aceptó y si hay un ID configurado en la tienda (store.cfg).
+// ============================================================================
+const COOKIE_KEY = 'mv_cookie_consent';   // 'accepted' | 'rejected'
+function cookieConsent() { try { return localStorage.getItem(COOKIE_KEY); } catch (e) { return null; } }
+function setCookieConsent(v) { try { localStorage.setItem(COOKIE_KEY, v); } catch (e) {} }
+function initCookieBanner() {
+  const el = $('#cookieBanner'); if (!el) return;
+  if (cookieConsent()) return;   // ya eligió antes
+  el.classList.add('show');
+  el.querySelector('[data-cookie-accept]').addEventListener('click', () => {
+    setCookieConsent('accepted'); el.classList.remove('show'); initTracking();
+  });
+  el.querySelector('[data-cookie-reject]').addEventListener('click', () => {
+    setCookieConsent('rejected'); el.classList.remove('show');
+  });
+}
+let _trackingLoaded = false;
+function initTracking() {
+  if (_trackingLoaded || cookieConsent() !== 'accepted') return;
+  const pixel = (store.cfg.meta_pixel_id || '').trim();
+  const ga = (store.cfg.ga_id || '').trim();
+  if (!pixel && !ga) return;   // todavía no cargaste ningún ID: no hace nada
+  _trackingLoaded = true;
+  if (pixel) {
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    try { fbq('init', pixel); fbq('track', 'PageView'); } catch (e) {}
+  }
+  if (ga) {
+    const s = document.createElement('script'); s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(ga);
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function(){ dataLayer.push(arguments); };
+    gtag('js', new Date()); gtag('config', ga);
+  }
+}
 async function init() {
   loadCart();
   loadWish();
@@ -993,6 +1053,8 @@ async function init() {
     initAuth();
   }
   applyConfig();
+  initCookieBanner();   // muestra el cartel si aún no eligió
+  initTracking();       // si ya había aceptado antes y hay ID, carga el pixel/GA
   renderHero();
   renderFilters();
   renderToolbar();
