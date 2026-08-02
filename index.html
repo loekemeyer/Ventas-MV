@@ -79,6 +79,7 @@
     font-size: 10.5px; letter-spacing: 2px; padding: 9px 16px; text-transform: uppercase; font-weight: 500;
     border-bottom: 1px solid var(--line);
   }
+  .announce:empty { display: none; }
   .announce-ver { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; letter-spacing: 1px; opacity: .5; }
   .header-ver { align-self: center; margin-left: 6px; font-size: 10px; letter-spacing: .5px; color: var(--muted); opacity: .7; white-space: nowrap; }
 
@@ -781,7 +782,7 @@
 <body>
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
-<div class="announce" id="announce">Cuero genuino argentino · Hecho a mano</div>
+<div class="announce" id="announce"></div>
 
 <header>
   <div class="wrap header-inner">
@@ -1068,7 +1069,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v2.2';
+const STORE_VERSION = 'v2.3';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
