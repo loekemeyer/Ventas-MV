@@ -1220,6 +1220,13 @@
   #productoSheet textarea, #productoSheet input, #productoSheet select {
     font-size: 16px;
   }
+  /* El modal de producto usa 2 columnas (no 3) para que el precio no quede aplastado. */
+  #productoSheet .grid { grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+  @media (max-width: 520px) { #productoSheet .grid { grid-template-columns: 1fr; } }
+  #productoSheet h3 { font-size: 19px; margin: 0 0 14px; letter-spacing: -.3px; }
+  #productoSheet .precio-row { display: flex; gap: 6px; }
+  #productoSheet .precio-row select { width: 62px; flex: none; padding: 9px 4px; text-align: center; }
+  #productoSheet .precio-row input { flex: 1; min-width: 0; font-weight: 700; }
   /* Grilla de fotos del producto (subir + arrastrar para ordenar) */
   .fotos-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
   .foto-item { position: relative; width: 74px; height: 92px; border-radius: 6px; overflow: hidden; border: 1px solid #e0e0e0; cursor: grab; background: #f2f2f2; }
@@ -4447,9 +4454,9 @@ function openProductoModal(id) {
         <label><span>Material</span>
           <select name="material"><option value="">Elegir</option>${TIENDA_MATERIALES.map(m => opt(m, p.material)).join('')}</select></label>
         <label><span>Precio *</span>
-          <div style="display:flex; gap:6px;">
-            <select name="moneda" style="width:auto; padding:9px 6px; flex-shrink:0;">${opt('ARS', p.moneda)}${opt('USD', p.moneda)}</select>
-            <input type="number" step="0.01" name="precio" inputmode="decimal" value="${p.precio}" style="flex:1;" required></div></label>
+          <div class="precio-row">
+            <select name="moneda">${opt('ARS', p.moneda)}${opt('USD', p.moneda)}</select>
+            <input type="number" step="0.01" name="precio" inputmode="decimal" value="${p.precio}" required></div></label>
         <label><span>Precio anterior (opcional)</span>
           <input type="number" step="0.01" name="precio_anterior" inputmode="decimal" value="${p.precio_anterior ?? ''}" placeholder="para mostrar % off"></label>
         <label><span>Stock listo (opcional) — con stock = "Entrega rápida"</span>
