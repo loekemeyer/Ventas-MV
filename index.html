@@ -197,8 +197,9 @@
   .hf-dot.active { background: #fff; width: 22px; border-radius: 5px; }
   @media (max-width: 860px) {
     .hero-editorial { grid-template-columns: 1fr; min-height: 0; }
-    /* Recuadro con la MISMA proporción que las fotos (933x1400) → se ve la foto entera, sin recortar */
-    .hero-figure { order: -1; min-height: 0; aspect-ratio: 933 / 1400; }
+    /* Altura FIJA proporcional a la foto (933x1400 → 150vw) para que la imagen se vea
+       ENTERA y NUNCA desaparezca (no dependemos de aspect-ratio, que fallaba en Safari). */
+    .hero-figure { order: -1; height: 150vw; max-height: 86vh; min-height: 380px; }
     .hero-figure img, .hf-slide { object-position: center !important; }
     .hero-copy { margin: 0; padding: clamp(34px, 8vw, 56px) 24px clamp(40px, 9vw, 64px); max-width: none; }
     .hero.is-editorial h1 { font-size: clamp(42px, 12vw, 62px); }
@@ -1087,7 +1088,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v3.6';
+const STORE_VERSION = 'v3.7';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
