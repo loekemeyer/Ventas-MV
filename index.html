@@ -114,7 +114,7 @@
   .brand img { height: 40px; width: auto; }
   /* Lockup: monograma + wordmark */
   .brand-logo { flex-direction: column; align-items: center; gap: 8px; padding: 4px 0 10px; }
-  .brand-mono { height: clamp(42px, 4.6vw, 58px); width: auto; display: block; }
+  .brand-mono { height: clamp(54px, 5.6vw, 74px); width: auto; display: block; }
   .brand-wordmark { font-family: var(--sans); font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--ink); text-indent: 5px; }
   .brand-name { font-family: var(--serif); font-size: 24px; font-weight: 600; letter-spacing: 1.2px; white-space: nowrap; text-transform: uppercase; }
   .nav-links { display: flex; gap: 38px; justify-content: center; align-items: center; padding: 2px 0 14px; }
@@ -789,8 +789,6 @@
 <body>
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
-<div class="announce" id="announce"></div>
-
 <header>
   <div class="wrap header-inner">
    <div class="header-top">
@@ -1074,7 +1072,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v2.8';
+const STORE_VERSION = 'v2.9';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1276,7 +1274,6 @@ async function init() {
 
 function applyConfig() {
   const c = store.cfg;
-  if (c.anuncio) $('#announce').textContent = c.anuncio;
   const umbralEnvio = parseFloat(c.envio_gratis_desde) || 0;
   // Trust-strip de envíos: texto base + (si hay umbral) la promesa de envío gratis.
   const baseEnvio = c.envio_texto || 'A todo el país · Retiro en taller';
