@@ -1203,6 +1203,12 @@
   <div class="login-card">
     <h2>MV Leather · Admin <span class="version-tag" id="loginVersionTag">v3.2</span></h2>
     <p>Panel de control — ingresá la contraseña</p>
+    <button type="button" id="googleLoginBtn" class="btn-secondary" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:6px;">
+      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Entrar con Google
+    </button>
+    <div class="login-error" id="googleLoginError"></div>
+    <div style="font-size:12px; color:#8e8e93; margin:6px 0;">o con contraseña</div>
     <form id="loginForm" autocomplete="off">
       <input type="password" id="pwdInput" inputmode="text" autocomplete="off" placeholder="Contraseña" required>
       <div class="login-error" id="loginError"></div>
@@ -1594,6 +1600,11 @@
 // ====== LOGIN ======
 const APP_PWD = 'MV123';
 const AUTH_KEY = 'ventas_mv_auth';
+// Mails de Google autorizados a entrar al panel. Editá esta lista para dar/quitar acceso.
+const ALLOWED_EMAILS = [
+  'studio.leather.mv@gmail.com',
+  'loekemeyer.n8n@gmail.com',
+].map(e => e.trim().toLowerCase());
 const loginScreen = document.getElementById('loginScreen');
 const loginForm = document.getElementById('loginForm');
 const pwdInput = document.getElementById('pwdInput');
@@ -1607,6 +1618,39 @@ function checkAuth() {
     setTimeout(() => pwdInput.focus(), 100);
   }
 }
+
+// ---- Login con Google (Supabase Auth) ----
+async function checkGoogleSession() {
+  try {
+    const { data } = await sb.auth.getSession();
+    const email = data && data.session && data.session.user && data.session.user.email;
+    if (!email) return false;
+    if (ALLOWED_EMAILS.includes(email.toLowerCase())) {
+      sessionStorage.setItem(AUTH_KEY, '1');
+      loginScreen.classList.add('hidden');
+      return true;
+    }
+    // Logueó con un mail que no está autorizado: cerramos la sesión.
+    await sb.auth.signOut();
+    const ge = document.getElementById('googleLoginError');
+    if (ge) ge.textContent = 'Ese mail no tiene acceso al panel.';
+    return false;
+  } catch (e) { return false; }
+}
+document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
+  const ge = document.getElementById('googleLoginError');
+  if (ge) ge.textContent = '';
+  try {
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: location.origin + location.pathname },
+    });
+    if (error) throw error;
+  } catch (e) {
+    if (ge) ge.textContent = 'No se pudo iniciar con Google. ¿Habilitaste el proveedor en Supabase?';
+  }
+});
+// La validación inicial de sesión de Google se dispara más abajo, una vez creado `sb`.
 loginForm.addEventListener('submit', (e) => {
   e.preventDefault();
   if (pwdInput.value === APP_PWD) {
@@ -1623,6 +1667,7 @@ loginForm.addEventListener('submit', (e) => {
 function logout() {
   if (!confirm('¿Cerrar sesión?')) return;
   sessionStorage.removeItem(AUTH_KEY);
+  try { sb.auth.signOut(); } catch (e) {}
   checkAuth();
 }
 checkAuth();
@@ -1641,7 +1686,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v3.2';
+const APP_VERSION = 'v3.3';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1655,8 +1700,14 @@ const CACHE_KEY = 'ventas_mv_cache_v2';
 const NOTIF_DISMISS_KEY = 'ventas_mv_notif_dismiss';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
-  auth: { persistSession: false },
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
+// Login con Google: al volver del redirect (o si hay sesión guardada), validar el mail.
+// Se hace acá, después de crear `sb`, para no usarlo antes de declararlo.
+if (typeof checkGoogleSession === 'function') {
+  sb.auth.onAuthStateChange((_evt, session) => { if (session) checkGoogleSession(); });
+  checkGoogleSession();
+}
 
 // ====== Estado global ======
 const state = { ventas: [], cajaMovs: [], stockIngresos: [], productos: [], tiendaCfg: {}, mySociaId: null };
