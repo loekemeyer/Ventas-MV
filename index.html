@@ -19,8 +19,9 @@
 <link rel="canonical" href="https://loekemeyer.github.io/Ventas-MV/">
 <link rel="preload" as="image" href="assets/productos/bomber/bomber-1.jpg">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="assets/favicon-mv-180.png?v=42">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-mv-32.png?v=42">
+<link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-mv-512.png?v=42">
 <title>MV Leather Studio · Camperas de cuero</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -115,8 +116,8 @@
   .brand img { height: 40px; width: auto; }
   /* Lockup: monograma + wordmark */
   .brand-logo { flex-direction: column; align-items: center; gap: 8px; padding: 4px 0 10px; }
-  .brand-mono { height: clamp(54px, 5.6vw, 74px); width: auto; display: block; }
-  .brand-wordmark { font-family: var(--sans); font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--ink); text-indent: 5px; }
+  .brand-mono { height: clamp(68px, 7.2vw, 98px); width: auto; display: block; }
+  .brand-wordmark { font-family: var(--sans); font-size: 12px; letter-spacing: 5.5px; text-transform: uppercase; color: var(--ink); text-indent: 6px; }
   .brand-name { font-family: var(--serif); font-size: 24px; font-weight: 600; letter-spacing: 1.2px; white-space: nowrap; text-transform: uppercase; }
   .nav-links { display: flex; gap: 38px; justify-content: center; align-items: center; padding: 2px 0 14px; }
   .nav-links > a, .nav-shop-trigger { text-transform: uppercase; }
@@ -397,15 +398,15 @@
   /* ===== Story (foto de las socias, borrosa, con el texto encima) ===== */
   .story { position: relative; overflow: hidden; background: var(--ink); color: #f0e6d8; }
   .story-photo { position: absolute; inset: 0; z-index: 0; }
-  .story-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: blur(6px) saturate(1.05) brightness(.62); transform: scale(1.1); }
-  .story::after { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, rgba(18,13,9,.88) 0%, rgba(18,13,9,.66) 50%, rgba(18,13,9,.4) 100%); }
+  .story-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 28%; filter: blur(3px) saturate(1.06) brightness(.9); transform: scale(1.08); }
+  .story::after { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, rgba(18,13,9,.8) 0%, rgba(18,13,9,.52) 50%, rgba(18,13,9,.24) 100%); }
   .story-inner { position: relative; z-index: 2; max-width: 640px; }
   .story .eyebrow { color: #cabca4; }
   .story h2 { color: #fbf3e6; font-size: clamp(28px, 4vw, 46px); }
   .story p { color: #e6dac8; margin-top: 16px; max-width: 52ch; line-height: 1.7; }
-  .story-lead { font-family: var(--serif); font-size: clamp(25px, 3.1vw, 40px); line-height: 1.16; color: #fbf3e6 !important; font-weight: 500; margin-top: 16px !important; max-width: 20ch !important; }
-  .story-accent { font-family: var(--serif); font-style: italic; font-size: clamp(19px, 2.1vw, 27px); color: #fbf3e6 !important; margin-top: 22px !important; }
-  .story-accent.big { font-style: normal; font-size: clamp(26px, 3.4vw, 42px); }
+  .story-lead { font-family: var(--sans); font-size: clamp(21px, 2.5vw, 32px); line-height: 1.32; color: #fbf3e6 !important; font-weight: 300; letter-spacing: .2px; margin-top: 18px !important; max-width: 24ch !important; }
+  .story-accent { font-family: var(--sans); font-style: normal; font-size: clamp(16px, 1.7vw, 21px); font-weight: 400; letter-spacing: .3px; color: #fbf3e6 !important; margin-top: 22px !important; }
+  .story-accent.big { font-weight: 300; font-size: clamp(24px, 3vw, 38px); letter-spacing: 1px; text-transform: uppercase; }
   .story-stats { display: flex; gap: 30px; margin-top: 30px; }
   .story-stats .n { font-family: var(--serif); font-size: 34px; color: #f0e2cc; }
   .story-stats .l { font-size: 12px; color: #c3b6a2; letter-spacing: .5px; }
@@ -1078,7 +1079,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v4.1';
+const STORE_VERSION = 'v4.2';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
