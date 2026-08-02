@@ -244,18 +244,17 @@
     .statement-inner { padding-bottom: clamp(40px, 8vw, 60px); }
   }
 
-  /* ===== Colección destacada ===== */
-  .featured .feat-eyebrow { text-align: center; margin-bottom: clamp(28px, 4vw, 46px); }
-  .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(16px, 3vw, 34px); }
+  /* ===== Nuestros favoritos (3 productos, tarjetas medianas) ===== */
+  .featured .feat-eyebrow { text-align: center; margin-bottom: clamp(28px, 4vw, 44px); }
+  .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(14px, 2.4vw, 28px); max-width: 940px; margin: 0 auto; }
   .feat-card { display: block; text-decoration: none; color: inherit; cursor: pointer; }
-  .feat-media { position: relative; aspect-ratio: 4/5; overflow: hidden; background: var(--media-bg); }
+  .feat-media { position: relative; aspect-ratio: 3/4; overflow: hidden; background: var(--media-bg); }
   .feat-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; }
   .feat-card:hover .feat-media img { transform: scale(1.03); }
-  .feat-info { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 16px 2px 0; }
-  .feat-name { font-family: var(--serif); font-size: clamp(18px, 2vw, 24px); font-weight: 500; letter-spacing: .3px; }
-  .feat-link { font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); white-space: nowrap; transition: color .2s; }
-  .feat-card:hover .feat-link { color: var(--ink); }
-  @media (max-width: 640px) { .feat-grid { grid-template-columns: 1fr; gap: 30px; } }
+  .feat-info-b { text-align: center; padding: 14px 4px 0; }
+  .feat-name { display: block; font-family: var(--serif); font-size: clamp(17px, 1.5vw, 21px); font-weight: 500; letter-spacing: .3px; }
+  .feat-price { display: block; margin-top: 4px; font-size: 14px; font-weight: 600; }
+  @media (max-width: 640px) { .feat-grid { gap: 10px; } .feat-name { font-size: 14px; } .feat-price { font-size: 12.5px; } }
 
   /* ===== Banda de materiales (cuero) ===== */
   .leather-band { position: relative; min-height: 58vh; display: flex; align-items: center; overflow: hidden; }
@@ -389,20 +388,21 @@
   .freeship-strip svg { width: 16px; height: 16px; flex: none; stroke: var(--muted); }
   .freeship-strip b { font-weight: 600; }
 
-  /* ===== Story ===== */
-  .story { background: var(--ink); color: #f0e6d8; }
-  .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
-  .story h2 { color: #fbf3e6; font-size: clamp(28px, 4vw, 42px); }
-  .story p { color: #cbbda9; margin-top: 16px; }
-  .story-img {
-    aspect-ratio: 1/1; border-radius: 4px; background:
-      radial-gradient(120% 120% at 30% 20%, #7c4a28 0%, #3a2413 70%);
-    position: relative; overflow: hidden; box-shadow: var(--shadow);
-  }
-  .story-img::after { content:""; position:absolute; inset:0; background-image:url("logo.jpg"); background-size: cover; background-position:center; opacity:.9; mix-blend-mode: luminosity; }
-  .story-stats { display: flex; gap: 30px; margin-top: 28px; }
-  .story-stats .n { font-family: var(--serif); font-size: 34px; color: #e7d9c4; }
-  .story-stats .l { font-size: 12px; color: #9c8f7c; letter-spacing: .5px; }
+  /* ===== Story (foto de las socias, borrosa, con el texto encima) ===== */
+  .story { position: relative; overflow: hidden; background: var(--ink); color: #f0e6d8; }
+  .story-photo { position: absolute; inset: 0; z-index: 0; }
+  .story-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: blur(6px) saturate(1.05) brightness(.62); transform: scale(1.1); }
+  .story::after { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, rgba(18,13,9,.88) 0%, rgba(18,13,9,.66) 50%, rgba(18,13,9,.4) 100%); }
+  .story-inner { position: relative; z-index: 2; max-width: 640px; }
+  .story .eyebrow { color: #cabca4; }
+  .story h2 { color: #fbf3e6; font-size: clamp(28px, 4vw, 46px); }
+  .story p { color: #e6dac8; margin-top: 16px; max-width: 52ch; line-height: 1.7; }
+  .story-lead { font-family: var(--serif); font-size: clamp(25px, 3.1vw, 40px); line-height: 1.16; color: #fbf3e6 !important; font-weight: 500; margin-top: 16px !important; max-width: 20ch !important; }
+  .story-accent { font-family: var(--serif); font-style: italic; font-size: clamp(19px, 2.1vw, 27px); color: #fbf3e6 !important; margin-top: 22px !important; }
+  .story-accent.big { font-style: normal; font-size: clamp(26px, 3.4vw, 42px); }
+  .story-stats { display: flex; gap: 30px; margin-top: 30px; }
+  .story-stats .n { font-family: var(--serif); font-size: 34px; color: #f0e2cc; }
+  .story-stats .l { font-size: 12px; color: #c3b6a2; letter-spacing: .5px; }
 
   /* ===== Care / band ===== */
   .band { background: linear-gradient(100deg, #6e4327, #3a2413); color: #f4ead9; text-align: center; }
@@ -573,7 +573,8 @@
   /* ===== Responsive ===== */
   @media (max-width: 900px) {
     .grid { grid-template-columns: repeat(2, 1fr); gap: 20px 16px; }
-    .story-grid { grid-template-columns: 1fr; gap: 30px; }
+    .story::after { background: linear-gradient(180deg, rgba(18,13,9,.7) 0%, rgba(18,13,9,.82) 100%); }
+    .story-photo img { object-position: center 26%; }
     .pmodal-inner { grid-template-columns: 1fr; }
     .foot-grid { grid-template-columns: 1fr 1fr; }
   }
@@ -870,7 +871,7 @@
 <!-- ===== COLECCIÓN DESTACADA ===== -->
 <section class="section featured" id="destacada" hidden>
   <div class="wrap">
-    <div class="feat-eyebrow"><span class="eyebrow">Colección destacada</span></div>
+    <div class="feat-eyebrow"><span class="eyebrow">Nuestros favoritos</span></div>
     <div class="feat-grid" id="featGrid"></div>
   </div>
 </section>
@@ -911,19 +912,17 @@
 
 <!-- ===== HISTORIA ===== -->
 <section class="story section" id="historia">
-  <div class="wrap story-grid">
-    <div>
-      <span class="eyebrow">El taller</span>
-      <h2>Un oficio que se hereda</h2>
-      <p>En MV Leather Studio trabajamos el cuero como se hacía antes: seleccionando cada cuero, cortando a mano y cosiendo con paciencia. No producimos en serie — hacemos prendas para que duren.</p>
-      <p>Nos especializamos en camperas de cuero de oveja, vaca y gamuza, con la posibilidad de ajustar talle y color. Lo que comprás no es solo una prenda: es una pieza pensada para acompañarte años.</p>
-      <div class="story-stats">
-        <div><div class="n" id="statPiezas">+</div><div class="l">Piezas entregadas</div></div>
-        <div><div class="n">100%</div><div class="l">Cuero genuino</div></div>
-        <div><div class="n">A mano</div><div class="l">Cada confección</div></div>
-      </div>
-    </div>
-    <div class="story-img" aria-hidden="true"></div>
+  <div class="story-photo" aria-hidden="true"><img src="assets/duenas.jpg" alt=""></div>
+  <div class="wrap story-inner">
+    <span class="eyebrow">Nuestra historia</span>
+    <p class="story-lead">El tiempo cambia las cosas. Algunas las transforma. Otras las devuelve a su origen.</p>
+    <p>MV Leather Studio nació hace décadas, cuando el cuero era un oficio que se aprendía en el taller, pieza por pieza. Lo que comenzó con una generación de artesanos fue creciendo con el tiempo, atravesando distintas etapas, cambios y pausas.</p>
+    <p class="story-accent">Hoy esa historia continúa.</p>
+    <p>No como una copia del pasado, sino como una nueva interpretación de aquello que siempre nos definió: el respeto por los materiales, el trabajo hecho a mano y la convicción de crear piezas que permanezcan.</p>
+    <p>MV Leather Studio representa un nuevo comienzo construido sobre una herencia real. Rescatamos el oficio, refinamos cada proceso y diseñamos una colección pensada para acompañar una vida entera, no una temporada.</p>
+    <p>Porque creemos que las mejores piezas no siguen tendencias.</p>
+    <p class="story-accent big">Se quedan.</p>
+    <span id="statPiezas" hidden></span>
   </div>
 </section>
 
@@ -1072,7 +1071,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v2.9';
+const STORE_VERSION = 'v3.0';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1485,19 +1484,31 @@ function renderColecciones() {
   el.innerHTML = railHtml('Nuevos ingresos', nuevos)
     + railHtml('Ofertas', ofertas);
 }
-// Colección destacada de la home: 2 piezas (marcadas como destacado, o las 2 primeras).
+// "Nuestros favoritos": 3 productos elegidos por nombre (Trench Classic, Blazer Classic, Pantalón Aurora).
+const FAVORITOS = ['trench classic', 'blazer classic', 'pantalon aurora'];
+function normNombre(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); }
 function renderDestacadas() {
   const el = $('#featGrid'), sec = $('#destacada'); if (!el || !sec) return;
   const list = store.productos || [];
-  const feats = list.filter(p => p.destacado);
-  const pick = (feats.length >= 2 ? feats : list).slice(0, 2);
-  if (pick.length < 2) { sec.hidden = true; el.innerHTML = ''; return; }
+  // Busca cada favorito por nombre (sin acentos, parcial); respeta el orden de FAVORITOS.
+  let pick = FAVORITOS.map(fav => list.find(p => normNombre(p.nombre).includes(fav))).filter(Boolean);
+  // Si algún favorito no está cargado, completa con destacados / primeros para llegar a 3.
+  if (pick.length < 3) {
+    const extra = list.filter(p => !pick.includes(p) && p.destacado)
+      .concat(list.filter(p => !pick.includes(p)));
+    pick = pick.concat(extra).slice(0, 3);
+  }
+  pick = pick.slice(0, 3);
+  if (pick.length < 3) { sec.hidden = true; el.innerHTML = ''; return; }
   sec.hidden = false;
   el.innerHTML = pick.map(p => {
     const img = arr(p.imagenes)[0] || '';
     return `<a class="feat-card" data-prod="${esc(p.id)}" href="#" tabindex="0" role="button" aria-label="Ver ${esc(p.nombre)}">
       <div class="feat-media">${img ? `<img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy">` : ''}</div>
-      <div class="feat-info"><span class="feat-name">${esc(p.nombre)}</span><span class="feat-link">Ver producto →</span></div>
+      <div class="feat-info-b">
+        <span class="feat-name">${esc(p.nombre)}</span>
+        <span class="feat-price">${money(p.precio, p.moneda)}</span>
+      </div>
     </a>`;
   }).join('');
 }
