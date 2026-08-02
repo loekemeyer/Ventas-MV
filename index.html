@@ -104,15 +104,19 @@
     -webkit-backdrop-filter: saturate(180%) blur(14px);
     border-bottom: 1px solid var(--line);
   }
-  /* Header centrado en dos filas: logo arriba, navegación debajo */
-  .header-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 12px; height: 62px; }
-  .header-top .menu-toggle { justify-self: start; }
-  .header-top .brand { justify-self: center; }
-  .header-top .nav-actions { justify-self: end; }
-  .brand { display: flex; align-items: center; gap: 11px; }
+  /* Header: navegación arriba, logo MV grande centrado debajo */
+  .header-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 12px; height: 54px; }
+  .header-top .menu-toggle { grid-column: 1; justify-self: start; }
+  .header-top .nav-links { grid-column: 2; justify-self: center; }
+  .header-top .nav-actions { grid-column: 3; justify-self: end; }
+  .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; }
   .brand img { height: 40px; width: auto; }
   .brand-name { font-family: var(--serif); font-size: 24px; font-weight: 600; letter-spacing: 1.2px; white-space: nowrap; text-transform: uppercase; }
-  .nav-links { display: flex; gap: 40px; justify-content: center; padding: 4px 0 15px; }
+  /* Lockup MV / LEATHER STUDIO */
+  .brand-lockup { flex-direction: column; align-items: center; gap: 3px; padding: 2px 0 14px; }
+  .lk-mono { font-family: var(--serif); font-weight: 500; font-size: clamp(30px, 3.6vw, 46px); letter-spacing: 6px; line-height: 1; color: var(--ink); text-indent: 6px; }
+  .lk-name { font-family: var(--sans); font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--muted); text-indent: 5px; }
+  .nav-links { display: flex; gap: 38px; justify-content: center; align-items: center; }
   .nav-links > a, .nav-shop-trigger { text-transform: uppercase; }
   .nav-links a { font-size: 13px; letter-spacing: 0.5px; color: var(--muted); font-weight: 500; transition: color .2s; }
   .nav-links a:hover { color: var(--ink); }
@@ -174,22 +178,22 @@
   /* ---- Hero editorial (campaña, composición asimétrica) ---- */
   .hero.is-editorial { background: var(--bg); color: var(--ink); min-height: 0; }
   .hero.is-editorial::after { display: none; }
-  /* Copy ~34% · Imagen ~66% — la foto es la protagonista. */
-  .hero-editorial { display: grid; grid-template-columns: minmax(290px, 0.82fr) 1.62fr; align-items: stretch; width: 100%; min-height: 92vh; }
-  .hero-copy { align-self: center; padding: clamp(40px, 5.5vw, 100px) clamp(28px, 3.6vw, 60px) clamp(40px, 5.5vw, 100px) clamp(24px, 5vw, 88px); max-width: 560px; position: relative; z-index: 3; }
-  .hero-wordmark { display: block; font-family: var(--sans); font-size: 10.5px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: clamp(26px, 4vw, 44px); }
-  .hero.is-editorial h1 { color: var(--ink); font-size: clamp(46px, 6.4vw, 90px); line-height: 1.02; font-weight: 500; letter-spacing: -0.5px; }
-  .hero-copy .hero-cta { display: flex; align-items: center; gap: 26px; margin-top: clamp(28px, 4vw, 46px); }
-  .hero-link { color: var(--ink); font-size: 12px; letter-spacing: 1.8px; text-transform: uppercase; font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--ink); padding-bottom: 4px; transition: opacity .3s ease, letter-spacing .3s ease; white-space: nowrap; }
+  /* Hero dividido: texto ~40% a la izquierda · foto ~60% a la derecha */
+  .hero-editorial { display: grid; grid-template-columns: minmax(300px, 0.92fr) 1.4fr; align-items: stretch; width: 100%; min-height: 82vh; }
+  .hero-copy { align-self: center; padding: clamp(40px, 5vw, 88px) clamp(30px, 3.6vw, 62px) clamp(40px, 5vw, 88px) clamp(24px, 5vw, 84px); max-width: 520px; position: relative; z-index: 3; }
+  .hero.is-editorial h1 { color: var(--ink); font-size: clamp(44px, 5.6vw, 80px); line-height: 1.02; font-weight: 500; letter-spacing: -0.5px; }
+  .hero.is-editorial p { color: var(--muted); font-size: 15.5px; line-height: 1.72; margin: 22px 0 34px; max-width: 340px; }
+  .hero-link { display: inline-block; color: var(--ink); font-size: 12px; letter-spacing: 1.8px; text-transform: uppercase; font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--ink); padding-bottom: 4px; transition: opacity .3s ease, letter-spacing .3s ease; white-space: nowrap; }
   .hero-link:hover { opacity: .6; letter-spacing: 2.2px; }
-  .hero-figure { position: relative; min-height: 92vh; overflow: hidden; background: var(--line); }
+  .hero-figure { position: relative; min-height: 82vh; overflow: hidden; background: var(--line); }
   .hero-figure img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 26%; }
   @media (max-width: 860px) {
     .hero-editorial { grid-template-columns: 1fr; min-height: 0; }
-    .hero-figure { order: -1; min-height: 64vh; }
+    .hero-figure { order: -1; min-height: 62vh; }
     .hero-figure img { object-position: center 22%; }
     .hero-copy { margin: 0; padding: clamp(34px, 8vw, 56px) 24px clamp(40px, 9vw, 64px); max-width: none; }
-    .hero.is-editorial h1 { font-size: clamp(42px, 12vw, 64px); }
+    .hero.is-editorial h1 { font-size: clamp(42px, 12vw, 62px); }
+    .hero.is-editorial p { max-width: none; }
   }
 
   /* ===== Interludios editoriales (ritmo tipo revista) ===== */
@@ -216,6 +220,42 @@
     .ed-split .ed-media, .ed-split.reverse .ed-media { min-height: 66vh; order: -1; }
     .ed-split .ed-text { padding: clamp(38px, 9vw, 60px) 24px; max-width: none; }
   }
+
+  /* ===== Filosofía (declaración) ===== */
+  .statement { background: var(--beige); }
+  .statement-inner { position: relative; text-align: center; padding: clamp(74px, 11vw, 140px) 20px; }
+  .statement h2 { font-size: clamp(30px, 4.6vw, 56px); line-height: 1.1; font-weight: 500; letter-spacing: -0.3px; max-width: 15ch; margin: 0 auto; }
+  .st-side { font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--muted); }
+  .statement .st-side { position: absolute; bottom: clamp(22px, 4vw, 44px); }
+  .st-left { left: max(20px, 4vw); }
+  .st-right { right: max(20px, 4vw); }
+  .st-link { border-bottom: 1px solid var(--ink); color: var(--ink); padding-bottom: 3px; text-decoration: none; transition: opacity .3s; }
+  .st-link:hover { opacity: .6; }
+  @media (max-width: 720px) {
+    .statement .st-side { position: static; display: inline-block; margin-top: 22px; }
+    .statement-inner { padding-bottom: clamp(40px, 8vw, 60px); }
+  }
+
+  /* ===== Colección destacada ===== */
+  .featured .feat-eyebrow { text-align: center; margin-bottom: clamp(28px, 4vw, 46px); }
+  .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(16px, 3vw, 34px); }
+  .feat-card { display: block; text-decoration: none; color: inherit; cursor: pointer; }
+  .feat-media { position: relative; aspect-ratio: 4/5; overflow: hidden; background: var(--media-bg); }
+  .feat-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; }
+  .feat-card:hover .feat-media img { transform: scale(1.03); }
+  .feat-info { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 16px 2px 0; }
+  .feat-name { font-family: var(--serif); font-size: clamp(18px, 2vw, 24px); font-weight: 500; letter-spacing: .3px; }
+  .feat-link { font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); white-space: nowrap; transition: color .2s; }
+  .feat-card:hover .feat-link { color: var(--ink); }
+  @media (max-width: 640px) { .feat-grid { grid-template-columns: 1fr; gap: 30px; } }
+
+  /* ===== Banda de materiales (cuero) ===== */
+  .leather-band { position: relative; min-height: 58vh; display: flex; align-items: center; overflow: hidden; }
+  .leather-band img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .leather-band::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(20,13,8,0.74) 0%, rgba(20,13,8,0.46) 46%, rgba(20,13,8,0.12) 100%); }
+  .lb-copy { position: relative; z-index: 2; padding: clamp(44px, 7vw, 100px) 20px; }
+  .leather-band h2 { color: #fbf3e6; font-size: clamp(28px, 4vw, 50px); line-height: 1.14; font-weight: 500; }
+  .lb-link { color: #f4ead9; border-bottom-color: rgba(244,234,217,.6); margin-top: 26px; display: inline-block; }
 
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -532,8 +572,8 @@
   @media (max-width: 640px) {
     .nav-links { display: none; }
     .menu-toggle { display: inline-flex; }
-    .brand-name { display: none; }   /* el monograma ya incluye el nombre */
-    .brand img { height: 38px; }
+    .lk-mono { font-size: 34px; letter-spacing: 5px; }
+    .brand-lockup { padding-bottom: 12px; }
     .trust-grid { grid-template-columns: repeat(2, 1fr); gap: 18px 6px; }
     .grid { gap: 10px 8px; }
     .card-title { font-size: 17px; }
@@ -749,10 +789,16 @@
     <button class="icon-btn menu-toggle" id="menuToggle" aria-label="Menú" aria-expanded="false" aria-controls="mnav">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <a class="brand" href="#top">
-      <img src="logo.jpg" alt="MV Leather Studio">
-      <span class="brand-name" id="brandName">MV Leather</span>
-    </a>
+    <nav class="nav-links">
+      <div class="nav-shop" id="navShop">
+        <a href="#tienda" class="nav-shop-trigger" data-shop-all aria-haspopup="true" aria-expanded="false">Shop All <span class="nav-caret" aria-hidden="true">›</span></a>
+        <div class="nav-shop-menu" id="navShopMenu"></div>
+      </div>
+      <a href="#tienda" class="lnk-ofertas" data-ofertas style="display:none">Ofertas</a>
+      <a href="#historia">Nosotros</a>
+      <a href="#talles">Guía de talles</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
     <div class="nav-actions">
       <button class="icon-btn" id="openAccount" aria-label="Mi cuenta">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -765,16 +811,10 @@
       <span class="header-ver" id="storeVer" title="Versión de la tienda"></span>
     </div>
    </div>
-   <nav class="nav-links">
-      <div class="nav-shop" id="navShop">
-        <a href="#tienda" class="nav-shop-trigger" data-shop-all aria-haspopup="true" aria-expanded="false">Shop All <span class="nav-caret" aria-hidden="true">›</span></a>
-        <div class="nav-shop-menu" id="navShopMenu"></div>
-      </div>
-      <a href="#tienda" class="lnk-ofertas" data-ofertas style="display:none">Ofertas</a>
-      <a href="#historia">Nosotros</a>
-      <a href="#talles">Guía de talles</a>
-      <a href="#contacto">Contacto</a>
-   </nav>
+   <a class="brand brand-lockup" href="#top" data-exit-shop aria-label="MV Leather Studio">
+     <span class="lk-mono">MV</span>
+     <span class="lk-name">Leather Studio</span>
+   </a>
   </div>
 </header>
 
@@ -793,28 +833,41 @@
 <!-- ===== HERO ===== -->
 <section class="hero" id="hero">
   <div class="hero-carousel" id="heroCarousel"></div>
-  <div id="heroDefault" hidden></div>
-</section>
-
-<!-- ===== EDITORIAL · campaña a sangre ===== -->
-<section class="ed-full" aria-label="Campaña MV Leather Studio">
-  <img src="assets/productos/trench/trench-3.jpg" alt="Campaña editorial — abrigo largo de cuero, MV Leather Studio" loading="lazy">
-  <div class="ed-caption">
-    <span class="ed-k">La casa</span>
-    <h2>La elegancia permanece.</h2>
+  <div class="hero-editorial" id="heroDefault" hidden>
+    <div class="hero-copy">
+      <h1>Hecho para durar.</h1>
+      <p>Cuero genuino argentino. Piezas hechas para acompañarte toda la vida.</p>
+      <a href="#tienda" class="hero-link" data-shop-all>Descubrir colección →</a>
+    </div>
+    <div class="hero-figure">
+      <img src="assets/productos/trench/trench-1.jpg" alt="Campaña MV Leather Studio — cuero genuino argentino" loading="eager">
+    </div>
   </div>
 </section>
 
-<!-- ===== EDITORIAL · declaración + foto ===== -->
-<section class="ed-split reverse" aria-label="Nuestro oficio">
-  <div class="ed-media">
-    <img src="assets/productos/conjunto-reptil/conjunto-reptil-3.jpg" alt="Editorial de cuero — MV Leather Studio" loading="lazy">
+<!-- ===== FILOSOFÍA ===== -->
+<section class="statement">
+  <div class="wrap statement-inner">
+    <span class="st-side st-left">Nuestra filosofía</span>
+    <h2>El lujo está en el tiempo que toma hacerlo.</h2>
+    <a class="st-side st-right st-link" href="#historia">Saber más →</a>
   </div>
-  <div class="ed-text">
-    <span class="ed-k">El oficio</span>
-    <h2>Cuero para siempre.</h2>
-    <p>Cuero genuino argentino, cortado y cosido a mano, pieza por pieza. Nada de producción en serie: prendas pensadas para acompañarte durante años.</p>
-    <div class="hero-cta" style="margin-top:30px;"><a href="#historia" class="hero-link">Nuestra historia →</a></div>
+</section>
+
+<!-- ===== COLECCIÓN DESTACADA ===== -->
+<section class="section featured" id="destacada" hidden>
+  <div class="wrap">
+    <div class="feat-eyebrow"><span class="eyebrow">Colección destacada</span></div>
+    <div class="feat-grid" id="featGrid"></div>
+  </div>
+</section>
+
+<!-- ===== MATERIALES · banda de cuero ===== -->
+<section class="leather-band" aria-label="Materiales">
+  <img src="assets/hero-2.jpg" alt="Detalle de cuero — MV Leather Studio" loading="lazy">
+  <div class="wrap lb-copy">
+    <h2>Materiales nobles.<br>Proceso artesanal.<br>Resultado atemporal.</h2>
+    <a class="hero-link lb-link" href="#historia">Conocer más →</a>
   </div>
 </section>
 
@@ -1015,7 +1068,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v2.0';
+const STORE_VERSION = 'v2.1';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1202,6 +1255,7 @@ async function init() {
   renderFilters();
   renderToolbar();
   renderColecciones();
+  renderDestacadas();
   renderGrid();
   renderStat();
   renderStoreRating();
@@ -1235,8 +1289,8 @@ function applyConfig() {
     }
   }
   if (c.nombre_tienda) {
-    $('#brandName').textContent = c.nombre_tienda;
-    $('#footBrand').textContent = c.nombre_tienda;
+    const bn = $('#brandName'); if (bn) bn.textContent = c.nombre_tienda;
+    const fb = $('#footBrand'); if (fb) fb.textContent = c.nombre_tienda;
   }
   const wa = (c.whatsapp || '').replace(/[^\d]/g, '');
   const waUrl = wa ? `https://wa.me/${wa}?text=${encodeURIComponent('Hola! Quería consultar por las camperas de cuero')}` : '#';
@@ -1334,28 +1388,17 @@ function heroSlideHtml(m, i) {
   </div>`;
 }
 function renderHero() {
-  const car = $('#heroCarousel'), hero = $('#hero');
+  const car = $('#heroCarousel'), def = $('#heroDefault'), hero = $('#hero');
   clearInterval(heroTimer);
-  // Sin media propia configurada → carrusel de campaña a pantalla completa (fotos editoriales).
+  // Sin media propia configurada → hero editorial dividido (texto + foto de campaña).
   if (!(store.media && store.media.length)) {
-    const cs = DEFAULT_HERO_SLIDES;
-    hero.classList.remove('is-editorial');
-    hero.classList.add('has-media', 'is-campaign');
-    car.innerHTML = cs.map((m, i) => `<div class="hero-slide ${i === 0 ? 'active' : ''}" data-hero-i="${i}">
-        <div class="hero-media"><div class="hero-img" style="background-image:url('${esc((m.url || '').replace(/'/g, '%27'))}')"></div></div>
-      </div>`).join('')
-      + `<div class="hero-campaign-copy"><div class="wrap">
-          <h1>Hecho para durar.</h1>
-          <a class="hero-link" href="#tienda" data-shop-all>Descubrir colección →</a>
-        </div></div>`
-      + (cs.length > 1 ? `
-        <button class="hero-arrow prev" data-hero-prev aria-label="Anterior">‹</button>
-        <button class="hero-arrow next" data-hero-next aria-label="Siguiente">›</button>
-        <div class="hero-dots">${cs.map((_, i) => `<button class="hero-dot ${i === 0 ? 'active' : ''}" data-hero-dot="${i}" aria-label="Slide ${i + 1}"></button>`).join('')}</div>` : '');
-    heroIndex = 0;
-    startHeroTimer();
+    car.innerHTML = '';
+    if (def) def.hidden = false;
+    hero.classList.remove('has-media', 'is-campaign');
+    hero.classList.add('is-editorial');
     return;
   }
+  if (def) def.hidden = true;
   const slides = store.media;
   hero.classList.remove('is-editorial', 'is-campaign');
   hero.classList.add('has-media');
@@ -1438,6 +1481,22 @@ function renderColecciones() {
   const ofertas = store.productos.filter(p => p.precio_anterior && p.precio_anterior > p.precio).slice(0, 10);
   el.innerHTML = railHtml('Nuevos ingresos', nuevos)
     + railHtml('Ofertas', ofertas);
+}
+// Colección destacada de la home: 2 piezas (marcadas como destacado, o las 2 primeras).
+function renderDestacadas() {
+  const el = $('#featGrid'), sec = $('#destacada'); if (!el || !sec) return;
+  const list = store.productos || [];
+  const feats = list.filter(p => p.destacado);
+  const pick = (feats.length >= 2 ? feats : list).slice(0, 2);
+  if (pick.length < 2) { sec.hidden = true; el.innerHTML = ''; return; }
+  sec.hidden = false;
+  el.innerHTML = pick.map(p => {
+    const img = arr(p.imagenes)[0] || '';
+    return `<a class="feat-card" data-prod="${esc(p.id)}" href="#" tabindex="0" role="button" aria-label="Ver ${esc(p.nombre)}">
+      <div class="feat-media">${img ? `<img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy">` : ''}</div>
+      <div class="feat-info"><span class="feat-name">${esc(p.nombre)}</span><span class="feat-link">Ver producto →</span></div>
+    </a>`;
+  }).join('');
 }
 
 // ---------- filtros + grid ----------
@@ -2262,6 +2321,10 @@ $('#toolbar').addEventListener('change', (e) => {
 $('#colecciones').addEventListener('click', (e) => {
   const card = e.target.closest('[data-prod]');
   if (card) openProduct(card.dataset.prod);
+});
+$('#featGrid').addEventListener('click', (e) => {
+  const card = e.target.closest('[data-prod]');
+  if (card) { e.preventDefault(); openProduct(card.dataset.prod); }
 });
 // Accesibilidad por teclado: Enter/Espacio sobre una card (grilla, rails, relacionados,
 // favoritos) abre la ficha. Solo actúa si la card en sí tiene el foco, no un botón interno
