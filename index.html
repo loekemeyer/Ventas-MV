@@ -997,6 +997,7 @@ async function init() {
   renderInstagram();
   injectStoreJsonLd();
   injectOrgJsonLd();
+  injectFaqJsonLd();
   handlePaymentReturn();
   openDeepLinkProduct();
 }
@@ -2442,6 +2443,29 @@ function injectOrgJsonLd() {
   putJsonLd('ld-org', org);
   putJsonLd('ld-website', {
     '@context': 'https://schema.org', '@type': 'WebSite', name: nombre, url: base,
+  });
+}
+// FAQ estructurada (rich snippets de Google). El texto es la versión plana de los
+// modales de openInfo() — si se edita uno, mantener el otro en sync.
+function injectFaqJsonLd() {
+  const qa = [
+    ['¿Cómo sé qué talle elegir?',
+     'Usá las medidas de referencia sobre el cuerpo (en cm): XS busto 80-84, S 85-89, M 90-94, L 95-100, XL 101-107, XXL 108-114. Ante la duda elegí el talle mayor o escribinos, hacemos ajustes. También confeccionamos a medida.'],
+    ['¿Cómo cuido las prendas de cuero?',
+     'Guardá la prenda en un lugar ventilado, lejos del sol directo y del calor, sin bolsas de plástico para que respire. Limpiá manchas con un paño apenas húmedo y secá al aire, nunca con secador ni estufa. Hidratá el cuero 1 o 2 veces al año con crema específica. La gamuza se cepilla en seco con cepillo suave.'],
+    ['¿Puedo cambiar o devolver una prenda?',
+     'Tenés 7 días desde que recibís el pedido para pedir un cambio. La prenda debe estar sin uso, con sus etiquetas y en buen estado. Los cambios de talle o color se coordinan según disponibilidad dentro de la misma colección. Escribinos por WhatsApp con tu número de pedido para coordinar el retiro o envío.'],
+    ['¿Hacen prendas a medida?',
+     'Sí, confeccionamos a medida. Consultanos por WhatsApp y coordinamos tus medidas exactas. Las prendas a medida, al ser personalizadas, no tienen cambio salvo falla de confección.'],
+    ['¿Cuánto tarda la entrega?',
+     'Las prendas con stock disponible salen como entrega rápida y coordinamos el envío apenas confirmás. Las demás se hacen a pedido, con entrega estimada en aproximadamente ' + demoraDias() + ' días desde la acreditación del pago.'],
+  ];
+  putJsonLd('ld-faq', {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: qa.map(([q, a]) => ({
+      '@type': 'Question', name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
   });
 }
 function injectProductJsonLd(p) {
