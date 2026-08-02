@@ -109,6 +109,23 @@
   .nav-links { display: flex; gap: 26px; }
   .nav-links a { font-size: 13px; letter-spacing: 0.5px; color: var(--muted); font-weight: 500; transition: color .2s; }
   .nav-links a:hover { color: var(--ink); }
+  /* Shop dropdown (colecciones) */
+  .nav-shop { position: relative; display: inline-flex; align-items: center; }
+  .nav-shop-trigger { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  .nav-caret { font-size: 14px; line-height: 1; transform: rotate(90deg); transition: transform .25s ease, color .2s; color: var(--muted); }
+  .nav-shop:hover .nav-caret, .nav-shop.open .nav-caret { transform: rotate(-90deg); color: var(--ink); }
+  .nav-shop-menu {
+    position: absolute; top: 100%; left: 0; margin-top: 9px; min-width: 216px;
+    background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+    padding: 8px; display: flex; flex-direction: column;
+    opacity: 0; visibility: hidden; transform: translateY(-6px);
+    transition: opacity .22s ease, transform .22s ease, visibility .22s; z-index: 60;
+  }
+  .nav-shop-menu::before { content: ""; position: absolute; top: -9px; left: 0; right: 0; height: 9px; }
+  .nav-shop:hover .nav-shop-menu, .nav-shop.open .nav-shop-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+  .nav-shop-menu a { padding: 10px 12px; font-size: 12.5px; letter-spacing: .4px; color: var(--muted); transition: background .2s, color .2s; }
+  .nav-shop-menu a:hover { background: var(--bg); color: var(--ink); }
+  .mnav-sub { padding-left: 22px !important; font-size: 18px !important; color: var(--muted) !important; }
   .nav-actions { display: flex; align-items: center; gap: 6px; }
   .icon-btn {
     background: none; border: none; padding: 8px; color: var(--ink); position: relative;
@@ -664,7 +681,10 @@
       <span class="brand-name" id="brandName">MV Leather</span>
     </a>
     <nav class="nav-links">
-      <a href="#tienda">Tienda</a>
+      <div class="nav-shop" id="navShop">
+        <a href="#tienda" class="nav-shop-trigger" data-shop-all aria-haspopup="true" aria-expanded="false">Shop <span class="nav-caret" aria-hidden="true">›</span></a>
+        <div class="nav-shop-menu" id="navShopMenu"></div>
+      </div>
       <a href="#tienda" class="lnk-ofertas" data-ofertas style="display:none">Ofertas</a>
       <a href="#historia">Historia</a>
       <a href="#talles">Guía de talles</a>
@@ -693,7 +713,8 @@
 </header>
 
 <div class="mnav" id="mnav">
-  <a href="#tienda" data-close-mnav>Tienda</a>
+  <a href="#tienda" data-shop-all data-close-mnav>Shop <span style="color:var(--muted); font-weight:400;">· Ver todo</span></a>
+  <div id="mnavShopSub"></div>
   <a href="#tienda" class="lnk-ofertas" data-ofertas data-close-mnav style="display:none">Ofertas</a>
   <a href="#historia" data-close-mnav>Historia</a>
   <a href="#talles" data-close-mnav>Guía de talles</a>
@@ -737,7 +758,7 @@
   <div class="wrap">
     <div id="colecciones"></div>
     <div class="section-head">
-      <span class="eyebrow">Colección</span>
+      <span class="eyebrow" id="colEyebrow">Colección</span>
       <h2>Nuestras piezas de cuero</h2>
       <p>Cada pieza se hace a mano, con cuero elegido y terminaciones prolijas. Elegí la tuya y la preparamos para vos.</p>
       <div id="storeRating" class="store-rating"></div>
@@ -914,7 +935,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v1.4';
+const STORE_VERSION = 'v1.5';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -939,6 +960,7 @@ const store = {
   ratings: {},            // { productoId: { avg, count } }
   recientes: [],          // ids de productos vistos recientemente (localStorage)
   filtro: 'all',
+  coleccion: null,        // colección activa (null = todas); ver COLECCIONES
   filtroMaterial: 'all',
   filtroTalle: 'all',
   filtroColor: 'all',
@@ -1096,6 +1118,7 @@ async function init() {
   initCookieBanner();   // muestra el cartel si aún no eligió
   initTracking();       // si ya había aceptado antes y hay ID, carga el pixel/GA
   renderHero();
+  renderShopMenu();
   renderFilters();
   renderToolbar();
   renderColecciones();
@@ -1331,6 +1354,43 @@ function categorias() {
   store.productos.forEach(p => { if (p.categoria) set.add(p.categoria); });
   return ['all', ...set];
 }
+// ---------- colecciones (Shop) ----------
+// Colección de un producto: si no tiene `coleccion` definida, cae en la actual (Foundations AW26).
+const COLECCION_DEFAULT = 'foundations-aw26';
+const COLECCIONES = [
+  { slug: 'foundations-aw26', label: 'Foundations · AW 26', nota: 'Colección actual' },
+  { slug: 'all-year', label: 'All Year · Básicas', nota: 'Piezas de todo el año' },
+];
+function colProd(p) {
+  const c = (p && p.coleccion ? String(p.coleccion) : '').trim().toLowerCase();
+  return c || COLECCION_DEFAULT;
+}
+function coleccionLabel(slug) { const c = COLECCIONES.find(x => x.slug === slug); return c ? c.label : slug; }
+// Solo devolvemos las colecciones que tienen al menos un producto (los sin etiqueta cuentan para la default).
+function coleccionesDisponibles() {
+  const counts = {};
+  store.productos.forEach(p => { const s = colProd(p); counts[s] = (counts[s] || 0) + 1; });
+  return COLECCIONES.filter(c => counts[c.slug]);
+}
+function renderShopMenu() {
+  const cols = coleccionesDisponibles();
+  // Escritorio: menú desplegable
+  const menu = $('#navShopMenu');
+  if (menu) {
+    menu.innerHTML = `<a href="#tienda" data-shop-all>Ver todo</a>`
+      + cols.map(c => `<a href="#tienda" data-coleccion="${esc(c.slug)}">${esc(c.label)}</a>`).join('');
+  }
+  // Mobile: sub-links dentro del menú hamburguesa
+  const msub = $('#mnavShopSub');
+  if (msub) {
+    msub.innerHTML = cols.map(c => `<a href="#tienda" data-coleccion="${esc(c.slug)}" data-close-mnav class="mnav-sub">${esc(c.label)}</a>`).join('');
+  }
+}
+function irAColeccion(slug) {
+  store.coleccion = slug || null;
+  if (store.filtro === '__ofertas__') store.filtro = 'all';
+  renderFilters(); renderGrid();
+}
 function hayOfertas() {
   return store.productos.some(p => (parseFloat(p.precio_anterior) || 0) > (parseFloat(p.precio) || 0));
 }
@@ -1420,6 +1480,7 @@ function renderToolbar() {
 function filtered() {
   const q = store.busca.toLowerCase().trim();
   let list = store.productos.filter(p => {
+    if (store.coleccion && colProd(p) !== store.coleccion) return false;
     if (store.filtro === '__ofertas__') {
       if (!((parseFloat(p.precio_anterior) || 0) > (parseFloat(p.precio) || 0))) return false;
     } else if (store.filtro !== 'all' && p.categoria !== store.filtro) return false;
@@ -1457,7 +1518,7 @@ function renderGridSkeleton(n = 8) {
     </article>`).join('');
 }
 function filtrosActivos() {
-  return store.filtro !== 'all' || store.filtroMaterial !== 'all' || store.filtroTalle !== 'all' || store.filtroColor !== 'all' || store.filtroPrecio !== 'all' || (store.busca || '').trim() !== '';
+  return !!store.coleccion || store.filtro !== 'all' || store.filtroMaterial !== 'all' || store.filtroTalle !== 'all' || store.filtroColor !== 'all' || store.filtroPrecio !== 'all' || (store.busca || '').trim() !== '';
 }
 function viewToggleHtml() {
   const v = store.gridView || '2';
@@ -1469,6 +1530,7 @@ function viewToggleHtml() {
 function renderGrid() {
   const grid = $('#grid');
   const info = $('#gridInfo');
+  const eb = $('#colEyebrow'); if (eb) eb.textContent = store.coleccion ? coleccionLabel(store.coleccion) : 'Colección';
   const list = filtered();
   grid.className = 'grid view-' + (store.gridView || '2');
   if (info) info.innerHTML = '';
@@ -2134,7 +2196,7 @@ $('#search').addEventListener('input', (e) => {
   _searchTimer = setTimeout(renderGrid, 250);   // evita re-renderizar toda la grilla en cada tecla
 });
 function limpiarFiltros() {
-  store.filtro = 'all'; store.filtroMaterial = 'all'; store.filtroTalle = 'all'; store.filtroColor = 'all'; store.filtroPrecio = 'all'; store.busca = '';
+  store.filtro = 'all'; store.coleccion = null; store.filtroMaterial = 'all'; store.filtroTalle = 'all'; store.filtroColor = 'all'; store.filtroPrecio = 'all'; store.busca = '';
   const s = $('#search'); if (s) s.value = '';
   renderFilters(); renderToolbar(); renderGrid();
 }
@@ -2142,6 +2204,24 @@ document.addEventListener('click', (e) => { if (e.target.closest('[data-clear-fi
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-ofertas]')) { store.filtro = '__ofertas__'; renderFilters(); renderGrid(); }
 });
+// Shop: "Ver todo" limpia la colección; cada ítem la aplica.
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-shop-all]')) { irAColeccion(null); const ns = $('#navShop'); if (ns) ns.classList.remove('open'); return; }
+  const c = e.target.closest('[data-coleccion]');
+  if (c) { irAColeccion(c.dataset.coleccion); const ns = $('#navShop'); if (ns) ns.classList.remove('open'); }
+});
+// En touch/click, alternar el desplegable de Shop (además del hover de escritorio).
+(function () {
+  const shop = $('#navShop'); if (!shop) return;
+  const trig = shop.querySelector('.nav-shop-trigger');
+  if (trig) trig.addEventListener('click', (e) => {
+    // En pantallas sin hover, el primer tap abre el menú en lugar de navegar.
+    if (window.matchMedia && matchMedia('(hover: none)').matches && !shop.classList.contains('open')) {
+      e.preventDefault(); shop.classList.add('open'); trig.setAttribute('aria-expanded', 'true');
+    }
+  });
+  document.addEventListener('click', (e) => { if (!e.target.closest('#navShop')) { shop.classList.remove('open'); if (trig) trig.setAttribute('aria-expanded', 'false'); } });
+})();
 $('#gridInfo').addEventListener('click', (e) => {
   const vb = e.target.closest('[data-view]');
   if (!vb) return;
