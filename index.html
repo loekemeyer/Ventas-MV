@@ -514,7 +514,7 @@
   .opt { min-width: 48px; text-align: center; padding: 10px 15px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 500; border-radius: 2px; transition: all .15s; }
   .opt.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   /* Swatches de color: solo círculos */
-  .swatches { gap: 11px; }
+  .swatches { gap: 16px; margin-top: 2px; }
   .sw { padding: 0; border: none; background: none; cursor: pointer; line-height: 0; border-radius: 50%; }
   .sw-dot { display: block; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(0,0,0,.18); transition: box-shadow .15s, transform .15s; }
   .sw:hover .sw-dot { transform: scale(1.08); }
@@ -1073,7 +1073,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v3.1';
+const STORE_VERSION = 'v3.2';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
