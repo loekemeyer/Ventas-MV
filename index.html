@@ -935,7 +935,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v1.5';
+const STORE_VERSION = 'v1.6';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1343,8 +1343,7 @@ function renderColecciones() {
   if (store.productos.length < 4) { el.innerHTML = ''; return; }
   const nuevos = [...store.productos].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')).slice(0, 10);
   const ofertas = store.productos.filter(p => p.precio_anterior && p.precio_anterior > p.precio).slice(0, 10);
-  el.innerHTML = railHtml('Vistos recientemente', productosRecientes())
-    + railHtml('Nuevos ingresos', nuevos)
+  el.innerHTML = railHtml('Nuevos ingresos', nuevos)
     + railHtml('Ofertas', ofertas);
 }
 
@@ -1642,7 +1641,6 @@ function openProduct(id, pushUrl = true) {
   const p = store.productos.find(x => x.id === id); if (!p) return;
   setMetaProducto(p);
   pushReciente(id);
-  renderColecciones();   // refresca el rail "Vistos recientemente" en la home
   const imgs = arr(p.imagenes);
   const colores = arr(p.colores);
   const talles = arr(p.talles);
