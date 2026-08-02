@@ -299,10 +299,22 @@
   .store-rating:empty { display: none; }
   .store-rating b { color: var(--ink); }
 
+  /* ===== Sistema de páginas: home limpia + secciones como páginas aparte ===== */
+  .page-sec { display: none; }                                  /* las páginas están ocultas por defecto */
+  body:not([data-route="home"]) .home-sec { display: none !important; }  /* fuera de la home, ocultar lo de home */
+  body[data-route="shop"] #tienda,
+  body[data-route="historia"] #historia,
+  body[data-route="talles"] #talles { display: block; }
+  /* Link "volver al inicio" arriba de cada página */
+  .page-back { display: none; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); font-weight: 500; padding: clamp(20px, 3vw, 34px) 0 0; }
+  .page-back:hover { color: var(--ink); }
+  body[data-route="historia"] #historia .page-back,
+  body[data-route="talles"] #talles .page-back { display: inline-flex; }
+  body[data-route="historia"] #historia .page-back { color: #cabca4; }
+
   /* ===== "Página" Shop: grilla limpia con filtros al costado ===== */
   .shop-back { display: none; }
   .tienda-controls, .tienda-results { display: contents; }   /* en el home no afectan el layout */
-  body.shop-mode main > *:not(#tienda) { display: none !important; }
   body.shop-mode #tienda { padding-top: clamp(24px, 4vw, 48px); }
   body.shop-mode .section-head { display: none; }            /* sin "Nuestras piezas de cuero" ni leyenda */
   body.shop-mode #colecciones, body.shop-mode .view-toggle { display: none; }  /* sin rieles horizontales */
@@ -790,7 +802,7 @@
   @media (max-width: 640px) { .hero-campaign-copy { padding-bottom: clamp(56px, 10vh, 96px); } .hero-campaign-copy h1 { font-size: clamp(46px, 15vw, 76px); } }
 </style>
 </head>
-<body>
+<body data-route="home">
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
 <header>
@@ -821,8 +833,8 @@
         <div class="nav-shop-menu" id="navShopMenu"></div>
       </div>
       <a href="#tienda" class="lnk-ofertas" data-ofertas style="display:none">Ofertas</a>
-      <a href="#historia">Nosotros</a>
-      <a href="#talles">Guía de talles</a>
+      <a href="#/historia">Nosotros</a>
+      <a href="#/talles">Guía de talles</a>
       <a href="#contacto">Contacto</a>
    </nav>
   </div>
@@ -832,8 +844,8 @@
   <a href="#tienda" data-shop-all data-close-mnav>Shop All</a>
   <div id="mnavShopSub"></div>
   <a href="#tienda" class="lnk-ofertas" data-ofertas data-close-mnav style="display:none">Ofertas</a>
-  <a href="#historia" data-close-mnav>Nosotros</a>
-  <a href="#talles" data-close-mnav>Guía de talles</a>
+  <a href="#/historia" data-close-mnav>Nosotros</a>
+  <a href="#/talles" data-close-mnav>Guía de talles</a>
   <a href="#contacto" data-close-mnav>Contacto</a>
 </div>
 
@@ -841,7 +853,7 @@
 
 <main id="contenido" tabindex="-1">
 <!-- ===== HERO ===== -->
-<section class="hero" id="hero">
+<section class="hero home-sec" id="hero">
   <div class="hero-carousel" id="heroCarousel"></div>
   <div class="hero-editorial" id="heroDefault" hidden>
     <div class="hero-copy">
@@ -863,16 +875,16 @@
 </section>
 
 <!-- ===== FILOSOFÍA ===== -->
-<section class="statement">
+<section class="statement home-sec">
   <div class="wrap statement-inner">
     <span class="st-side st-left">Nuestra filosofía</span>
     <h2>El lujo está en el tiempo que toma hacerlo.</h2>
-    <a class="st-side st-right st-link" href="#historia">Saber más →</a>
+    <a class="st-side st-right st-link" href="#/historia">Saber más →</a>
   </div>
 </section>
 
 <!-- ===== COLECCIÓN DESTACADA ===== -->
-<section class="section featured" id="destacada" hidden>
+<section class="section featured home-sec" id="destacada" hidden>
   <div class="wrap">
     <div class="feat-eyebrow"><span class="eyebrow">Nuestros favoritos</span></div>
     <div class="feat-grid" id="featGrid"></div>
@@ -880,7 +892,7 @@
 </section>
 
 <!-- ===== TRUST ===== -->
-<section class="trust">
+<section class="trust home-sec">
   <div class="wrap trust-grid">
     <div class="trust-item"><h4>Cuero genuino</h4><p>Oveja, vaca y gamuza seleccionados</p></div>
     <div class="trust-item"><h4>Hecho a mano</h4><p>Confección artesanal, pieza por pieza</p></div>
@@ -889,7 +901,7 @@
 </section>
 
 <!-- ===== TIENDA ===== -->
-<section class="section" id="tienda">
+<section class="section page-sec" id="tienda">
   <div class="wrap">
     <a class="shop-back" href="#top" data-exit-shop>← Volver al inicio</a>
     <div id="colecciones"></div>
@@ -913,9 +925,10 @@
 </section>
 
 <!-- ===== HISTORIA ===== -->
-<section class="story section" id="historia">
+<section class="story section page-sec" id="historia">
   <div class="story-photo" aria-hidden="true"><img src="assets/duenas.jpg" alt=""></div>
   <div class="wrap story-inner">
+    <a class="page-back" href="#top" data-exit-shop>← Volver al inicio</a>
     <span class="eyebrow">Nuestra historia</span>
     <p class="story-lead">El tiempo cambia las cosas. Algunas las transforma. Otras las devuelve a su origen.</p>
     <p>MV Leather Studio nació hace décadas, cuando el cuero era un oficio que se aprendía en el taller, pieza por pieza. Lo que comenzó con una generación de artesanos fue creciendo con el tiempo, atravesando distintas etapas, cambios y pausas.</p>
@@ -929,8 +942,9 @@
 </section>
 
 <!-- ===== GUÍA DE TALLES (band) ===== -->
-<section class="band" id="talles">
+<section class="band page-sec" id="talles">
   <div class="wrap">
+    <a class="page-back" href="#top" data-exit-shop style="color:rgba(244,234,217,.75)">← Volver al inicio</a>
     <span class="eyebrow" style="color:var(--gold)">Para elegir bien</span>
     <h2>Guía de talles &amp; cuidado del cuero</h2>
     <p>¿Dudas con el talle o cómo cuidar tu prenda? Tenemos una guía simple para que aciertes a la primera y tu cuero se mantenga impecable.</p>
@@ -943,7 +957,7 @@
 </section>
 
 <!-- ===== INSTAGRAM ===== -->
-<section class="section ig-section" id="instagram" hidden>
+<section class="section ig-section home-sec" id="instagram" hidden>
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow">Comunidad</span>
@@ -958,7 +972,7 @@
 </section>
 
 <!-- ===== NEWSLETTER ===== -->
-<section class="newsletter">
+<section class="newsletter home-sec">
   <div class="wrap" style="text-align:center; padding:52px 20px;">
     <span class="eyebrow" style="color:var(--gold)">Sumate al club</span>
     <h2 style="font-size:clamp(26px,4vw,36px); margin-top:8px; color:var(--ink);">Novedades y descuentos exclusivos</h2>
@@ -982,8 +996,8 @@
       <div>
         <h4>Tienda</h4>
         <a href="#tienda">Colección</a>
-        <a href="#talles">Guía de talles</a>
-        <a href="#historia">Nuestra historia</a>
+        <a href="#/talles">Guía de talles</a>
+        <a href="#/historia">Nuestra historia</a>
       </div>
       <div>
         <h4>Contacto</h4>
@@ -1073,7 +1087,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v3.5';
+const STORE_VERSION = 'v3.6';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1564,28 +1578,35 @@ function irAColeccion(slug) {
   if (store.filtro === '__ofertas__') store.filtro = 'all';
   renderFilters(); renderGrid();
 }
-// ----- "Página" Shop (ruta #/shop o #/shop/<coleccion>): muestra solo el catálogo -----
+// ----- Router de páginas: home / shop / historia / talles (cada una es una "página") -----
 function isShopHash() { return (location.hash || '').indexOf('#/shop') === 0; }
-function applyShopFromHash() {
-  if (isShopHash()) {
-    const m = (location.hash || '').match(/^#\/shop(?:\/([\w-]+))?/);
-    const slug = m && m[1] ? m[1] : null;
-    store.coleccion = slug;
-    if (store.filtro === '__ofertas__') store.filtro = 'all';
-    document.body.classList.add('shop-mode');
-    renderFilters(); renderGrid();
-  } else {
-    document.body.classList.remove('shop-mode');
-  }
+function currentPage() {
+  const h = location.hash || '';
+  if (h.indexOf('#/shop') === 0) return { page: 'shop', coleccion: (h.match(/^#\/shop\/([\w-]+)/) || [])[1] || null };
+  if (h.indexOf('#/historia') === 0) return { page: 'historia' };
+  if (h.indexOf('#/talles') === 0) return { page: 'talles' };
+  return { page: 'home' };
 }
-window.addEventListener('hashchange', () => {
-  applyShopFromHash();
-  if (isShopHash()) { window.scrollTo(0, 0); }
-  else {
-    const id = (location.hash || '').slice(1);
-    if (id && id !== 'top') { const el = document.getElementById(id); if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 0); }
+function applyRoute() {
+  const r = currentPage();
+  document.body.setAttribute('data-route', r.page);
+  document.body.classList.toggle('shop-mode', r.page === 'shop');
+  if (r.page === 'shop') {
+    store.coleccion = r.coleccion || null;
+    if (store.filtro === '__ofertas__') store.filtro = 'all';
+    renderFilters(); renderGrid();
   }
-});
+  // En una página → arriba. En la home, si el hash apunta a una sección (ej #contacto), ir a ella.
+  const h = location.hash || '';
+  if (r.page === 'home' && h && h !== '#' && h !== '#top' && h.indexOf('#/') !== 0) {
+    const el = document.getElementById(h.slice(1));
+    if (el) { setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 0); return; }
+  }
+  window.scrollTo(0, 0);
+}
+// Compat: algunas partes viejas llaman applyShopFromHash()
+function applyShopFromHash() { applyRoute(); }
+window.addEventListener('hashchange', applyRoute);
 function hayOfertas() {
   return store.productos.some(p => (parseFloat(p.precio_anterior) || 0) > (parseFloat(p.precio) || 0));
 }
@@ -2417,9 +2438,9 @@ document.addEventListener('click', (e) => {
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-exit-shop]')) {
     e.preventDefault();
-    // Volver a la página principal: salir de la vista Shop, limpiar la URL y subir al inicio.
-    document.body.classList.remove('shop-mode');
+    // Volver a la home: limpiar la URL, aplicar la ruta home y subir arriba.
     if (location.hash || location.search) { try { history.replaceState(null, '', location.pathname); } catch { location.hash = ''; } }
+    applyRoute();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 });
