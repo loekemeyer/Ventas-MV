@@ -252,7 +252,7 @@
   .feat-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; }
   .feat-card:hover .feat-media img { transform: scale(1.03); }
   .feat-info-b { text-align: center; padding: 14px 4px 0; }
-  .feat-name { display: block; font-family: var(--serif); font-size: clamp(17px, 1.5vw, 21px); font-weight: 500; letter-spacing: .3px; }
+  .feat-name { display: block; font-family: var(--sans); font-size: clamp(14px, 1.3vw, 16px); font-weight: 500; letter-spacing: .3px; }
   .feat-price { display: block; margin-top: 4px; font-size: 14px; font-weight: 600; }
   @media (max-width: 640px) { .feat-grid { gap: 10px; } .feat-name { font-size: 14px; } .feat-price { font-size: 12.5px; } }
 
@@ -368,7 +368,7 @@
   .tag.off { background: transparent; color: #f4ead9; left: auto; right: 12px; text-shadow: 0 1px 8px rgba(0,0,0,0.45); }
   .card-body { padding: 10px 2px 6px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
   .card-cat { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-  .card-title { font-family: var(--serif); font-size: 20px; font-weight: 600; line-height: 1.08; letter-spacing: .2px; }
+  .card-title { font-family: var(--sans); font-size: 14.5px; font-weight: 500; line-height: 1.25; letter-spacing: .2px; }
   .card-price { margin-top: 3px; font-size: 15px; font-weight: 600; }
   .card-price s { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
   /* Selector de vista (columnas) */
@@ -502,21 +502,23 @@
   .pm-thumbs { display: flex; gap: 8px; padding: 10px; flex-wrap: wrap; }
   .pm-thumbs img { width: 54px; height: 54px; object-fit: cover; border: 2px solid transparent; cursor: pointer; }
   .pm-thumbs img.active { border-color: var(--leather); }
-  .pm-info { padding: 30px; }
-  .pm-info .card-cat { color: var(--muted); }
-  .pm-info h2 { font-size: 32px; margin: 6px 0 10px; }
-  .pm-price { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
-  .pm-price s { color: var(--muted); font-weight: 400; font-size: 16px; margin-left: 8px; }
-  .pm-desc { color: var(--muted); font-size: 14px; margin: 14px 0; }
-  .opt-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 16px 0 8px; }
+  .pm-info { padding: clamp(28px, 3vw, 42px); }
+  .pm-info .card-cat { color: var(--muted); letter-spacing: 1.4px; }
+  .pm-info h2 { font-family: var(--sans); font-weight: 500; font-size: clamp(21px, 2.3vw, 26px); letter-spacing: -0.2px; margin: 8px 0 12px; }
+  .pm-price { font-family: var(--sans); font-size: 20px; font-weight: 600; margin-bottom: 4px; letter-spacing: .2px; }
+  .pm-price s { color: var(--muted); font-weight: 400; font-size: 15px; margin-left: 8px; }
+  .pm-desc { color: var(--muted); font-size: 14px; line-height: 1.7; margin: 16px 0; }
+  .opt-label { font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink); font-weight: 600; margin: 22px 0 10px; }
+  .opt-val { text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 500; margin-left: 4px; }
   .opt-row { display: flex; flex-wrap: wrap; gap: 8px; }
-  .opt {
-    padding: 9px 16px; border: 1px solid var(--line); background: var(--surface); font-size: 13px;
-    font-weight: 500; border-radius: 2px; transition: all .15s;
-  }
+  .opt { min-width: 48px; text-align: center; padding: 10px 15px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 500; border-radius: 2px; transition: all .15s; }
   .opt.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  .opt.color { display: inline-flex; align-items: center; gap: 7px; }
-  .opt .dot { width: 13px; height: 13px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
+  /* Swatches de color: solo círculos */
+  .swatches { gap: 11px; }
+  .sw { padding: 0; border: none; background: none; cursor: pointer; line-height: 0; border-radius: 50%; }
+  .sw-dot { display: block; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(0,0,0,.18); transition: box-shadow .15s, transform .15s; }
+  .sw:hover .sw-dot { transform: scale(1.08); }
+  .sw.active .sw-dot { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--ink); }
   .pm-meta { font-size: 12px; color: var(--muted); margin-top: 12px; display: flex; gap: 16px; flex-wrap: wrap; }
   .link-u { color: var(--leather); font-weight: 600; text-decoration: underline; cursor: pointer; font-size: 13px; }
 
@@ -744,7 +746,7 @@
   .rail-card2:hover .rail-media img { transform: scale(1.04); }
   .rail-body { padding: 10px 2px; }
   .rail-cat { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-  .rail-name { font-family: var(--serif); font-size: 17px; margin-top: 2px; line-height: 1.12; }
+  .rail-name { font-family: var(--sans); font-size: 14px; font-weight: 500; margin-top: 2px; line-height: 1.25; }
   .rail-price { font-size: 14px; font-weight: 600; margin-top: 3px; }
   .rail-price s { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 4px; }
   @media (max-width: 640px) { .rail-card2 { width: 158px; } .rail-name { font-size: 16px; } }
@@ -806,7 +808,7 @@
         <img id="accountAvatar" alt="" style="display:none; width:26px; height:26px; border-radius:50%; object-fit:cover;">
       </button>
       <button class="icon-btn" id="openCart" aria-label="Carrito">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1.4"/><circle cx="19" cy="21" r="1.4"/><path d="M2.5 3h2.2l2.2 12.2a1.6 1.6 0 0 0 1.6 1.3h9.1a1.6 1.6 0 0 0 1.6-1.2L22 7.5H6.2"/></svg>
         <span class="cart-count" id="cartCount">0</span>
       </button>
       <span class="header-ver" id="storeVer" title="Versión de la tienda"></span>
@@ -1071,7 +1073,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v3.0';
+const STORE_VERSION = 'v3.1';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1122,15 +1124,7 @@ function money(n, m) {
   const sym = m === 'USD' ? 'US$' : '$';
   return sym + num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
-function cuotasHtml(precio, moneda, cls = 'card-cuotas') {
-  const n = parseInt(store.cfg.cuotas_sin_interes, 10) || 0;
-  const p = parseFloat(precio);
-  if (!isFinite(p) || p <= 0 || n < 2) return '';
-  const cuota = p / n;
-  const max = parseInt(store.cfg.cuotas_max, 10) || 0;
-  const extra = max > n ? ` · hasta ${max} cuotas` : '';
-  return `<div class="${cls}"><b>${n} cuotas sin interés</b> de ${money(cuota, moneda)}${extra}</div>`;
-}
+function cuotasHtml() { return ''; }  // cuotas desactivadas por ahora (no se ofrecen)
 function stockBajoN(p) {
   const u = parseInt(store.cfg.stock_bajo_umbral, 10) || 3;
   const s = p.stock;
@@ -1169,6 +1163,16 @@ function transferHtml(precio, moneda, cls = 'card-transfer') {
   const eff = Math.round(p * (1 - d / 100));
   return `<div class="${cls}"><b>${money(eff, moneda)}</b> con transferencia <span>(−${d}%)</span></div>`;
 }
+// Colores customizables (mismos para todas las prendas) y talles estándar.
+const COLORES_CUSTOM = [
+  { name: 'Verde oliva', hex: '#5b5a35' },
+  { name: 'Blanco', hex: '#f2efe8' },
+  { name: 'Negro', hex: '#1a1a1a' },
+  { name: 'Chocolate', hex: '#3d2b1f' },
+  { name: 'Camel', hex: '#b58d5b' },
+  { name: 'Nude', hex: '#d9c3aa' },
+];
+const TALLES_STD = ['S', 'M', 'L', 'XL'];
 function colorDot(name) {
   const map = { negro:'#1c1712', marron:'#5a3620', 'marrón':'#5a3620', camel:'#c19a6b', cognac:'#7c4a28', suela:'#a9834b', bordo:'#5e1f28', bordó:'#5e1f28', verde:'#3d4a2f', azul:'#243b53', blanco:'#f4efe6', beige:'#d8c5a8', gris:'#8a8a8a', rojo:'#9c2b23', gamuza:'#b08558' };
   const k = (name||'').toLowerCase().trim();
@@ -1830,8 +1834,8 @@ function openProduct(id, pushUrl = true) {
   setMetaProducto(p);
   pushReciente(id);
   const imgs = arr(p.imagenes);
-  const colores = arr(p.colores);
-  const talles = arr(p.talles);
+  const colores = COLORES_CUSTOM.map(c => c.name);   // colores customizables (fijos)
+  const talles = TALLES_STD;                          // S · M · L · XL
   pmState = { p, img: imgs[0] || null, color: colores.length === 1 ? colores[0] : null, talle: talles.length === 1 ? talles[0] : null, qty: 1 };
   const off = p.precio_anterior && p.precio_anterior > p.precio ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
   const rating = store.ratings[p.id];
@@ -1856,8 +1860,8 @@ function openProduct(id, pushUrl = true) {
         ${p.material ? `<span>${esc(p.material)}</span>` : ''}
         ${entregaFichaHtml(p)}
       </div>
-      ${colores.length ? `<div class="opt-label">Color${pmState.color ? `: <span style="text-transform:none;letter-spacing:0;color:var(--ink)" id="pmColorLbl">${esc(pmState.color)}</span>` : ''}</div>
-        <div class="opt-row" id="pmColors" role="radiogroup" aria-label="Color">${colores.map(c => `<button class="opt color ${pmState.color===c?'active':''}" data-color="${esc(c)}" role="radio" aria-checked="${pmState.color===c}"><span class="dot" style="background:${colorDot(c)}"></span>${esc(c)}</button>`).join('')}</div>` : ''}
+      <div class="opt-label">Color <span class="opt-val" id="pmColorLbl">${pmState.color ? esc(pmState.color) : ''}</span></div>
+        <div class="opt-row swatches" id="pmColors" role="radiogroup" aria-label="Color">${COLORES_CUSTOM.map(c => `<button class="sw ${pmState.color===c.name?'active':''}" data-color="${esc(c.name)}" role="radio" aria-checked="${pmState.color===c.name}" title="${esc(c.name)}" aria-label="${esc(c.name)}"><span class="sw-dot" style="background:${c.hex}"></span></button>`).join('')}</div>
       ${talles.length ? `<div class="opt-label">Talle · <span class="link-u" id="pmTalleGuide">guía</span></div>
         <div class="opt-row" id="pmTalles" role="radiogroup" aria-label="Talle">${talles.map(t => `<button class="opt ${pmState.talle===t?'active':''}" data-talle="${esc(t)}" role="radio" aria-checked="${pmState.talle===t}">${esc(t)}</button>`).join('')}</div>` : ''}
       <div class="opt-label">Cantidad</div>
@@ -1870,9 +1874,9 @@ function openProduct(id, pushUrl = true) {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
         </button>
       </div>
-      <div style="margin-top:20px;">
+      <div style="margin-top:24px;">
         <button class="btn btn-primary btn-block" id="pmAdd">Agregar al carrito</button>
-        <button class="btn btn-dark btn-block" id="pmBuyNow" style="margin-top:8px;">Comprar ahora</button>
+        <button class="btn btn-outline btn-block" id="pmBuyNow" style="margin-top:10px;">Comprar ahora</button>
       </div>
       ${(store.cfg.whatsapp || '').replace(/[^\d]/g, '') ? `<button class="pm-consulta" id="pmConsulta" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.2-5.5A8.4 8.4 0 1 1 21 11.5z"/></svg>
@@ -1969,11 +1973,8 @@ function addToCart(p, color, talle, qty = 1) {
 // abre la ficha para no adivinar la variante; si no, agrega 1 unidad directo (una
 // opción única se autoselecciona, igual que en la ficha) y respeta el tope de stock.
 function quickAddDesdeCard(id) {
-  const p = store.productos.find(x => x.id === id); if (!p) return;
-  const colores = arr(p.colores), talles = arr(p.talles);
-  if (colores.length > 1 || talles.length > 1) { openProduct(id); return; }
-  addToCart(p, colores[0] || '', talles[0] || '', 1);
-  toast('Agregado al carrito ✓');
+  // Con colores customizables y talles S-XL, siempre abrimos la ficha para elegir variante.
+  openProduct(id);
 }
 function shipBarHtml() {
   const umbral = parseFloat(store.cfg.envio_gratis_desde) || 0;
@@ -2282,7 +2283,7 @@ function openInfo(tipo) {
     <div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:14px;">
       <thead><tr style="text-align:left; border-bottom:2px solid var(--line);"><th style="padding:8px 6px;">Talle</th><th>Busto</th><th>Cintura</th><th>Cadera</th></tr></thead>
       <tbody>
-        ${[['XS','80-84','62-66','86-90'],['S','85-89','67-71','91-95'],['M','90-94','72-76','96-100'],['L','95-100','77-82','101-106'],['XL','101-107','83-89','107-113'],['XXL','108-114','90-96','114-120']].map(r=>`<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 6px; font-weight:600;">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('')}
+        ${[['S','85-89','67-71','91-95'],['M','90-94','72-76','96-100'],['L','95-100','77-82','101-106'],['XL','101-107','83-89','107-113']].map(r=>`<tr style="border-bottom:1px solid var(--line);"><td style="padding:8px 6px; font-weight:600;">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('')}
       </tbody>
     </table></div>
     <p style="color:var(--muted); font-size:13px; margin-top:14px;">También confeccionamos <b>a medida</b>. Consultanos por WhatsApp y coordinamos tus medidas exactas.</p>`;
@@ -2461,7 +2462,7 @@ $('#pmodalInner').addEventListener('click', (e) => {
   const col = e.target.closest('[data-color]');
   if (col) {
     pmState.color = col.dataset.color;
-    $$('#pmColors .opt').forEach(o => { const on = o === col; o.classList.toggle('active', on); o.setAttribute('aria-checked', on); });
+    $$('#pmColors .sw').forEach(o => { const on = o === col; o.classList.toggle('active', on); o.setAttribute('aria-checked', on); });
     const lbl = $('#pmColorLbl'); if (lbl) lbl.textContent = pmState.color;
     return;
   }
