@@ -26,9 +26,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Epilogue:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script>try{var t=localStorage.getItem('mv_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<script>/* Tema fijo claro (la marca es siempre blanca; se ignora el modo oscuro del sistema) */document.documentElement.setAttribute('data-theme','light');try{localStorage.setItem('mv_theme','light');}catch(e){}</script>
 <style>
   :root {
+    color-scheme: light;    /* la tienda es siempre clara, igual que en desktop */
     --bg: #ffffff;          /* fondo blanco limpio */
     --beige: #f4efe6;       /* beige cálido para acentos editoriales */
     --surface: #ffffff;
@@ -1072,7 +1073,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v3.4';
+const STORE_VERSION = 'v3.5';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
