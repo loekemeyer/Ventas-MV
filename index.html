@@ -283,7 +283,7 @@
 
   /* ===== Trust strip ===== */
   .trust { background: var(--surface); border-bottom: 1px solid var(--line); }
-  .trust-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; padding: 22px 0; }
+  .trust-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; padding: 22px 0; }
   .trust-item { text-align: center; padding: 0 8px; }
   .trust-item .t-ico { font-size: 20px; }
   .trust-item h4 { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; margin: 0 0 4px; }
@@ -585,7 +585,7 @@
     .menu-toggle { display: inline-flex; }
     .lk-mono { font-size: 34px; letter-spacing: 5px; }
     .brand-lockup { padding-bottom: 12px; }
-    .trust-grid { grid-template-columns: repeat(2, 1fr); gap: 18px 6px; }
+    .trust-grid { grid-template-columns: repeat(3, 1fr); gap: 14px 6px; }
     .grid { gap: 10px 8px; }
     .card-title { font-size: 17px; }
     .card-body { padding: 8px 2px 6px; }
@@ -883,8 +883,7 @@
   <div class="wrap trust-grid">
     <div class="trust-item"><h4>Cuero genuino</h4><p>Oveja, vaca y gamuza seleccionados</p></div>
     <div class="trust-item"><h4>Hecho a mano</h4><p>Confección artesanal, pieza por pieza</p></div>
-    <div class="trust-item"><h4>Cambios ágiles</h4><p>Coordinamos talle y color sin vueltas</p></div>
-    <div class="trust-item"><h4>Envíos al país</h4><p id="trustEnvio">A todo el país · Retiro en taller</p></div>
+    <div class="trust-item"><h4>Envíos al país</h4><p id="trustEnvio">Envíos a todo el país</p></div>
   </div>
 </section>
 
@@ -1073,7 +1072,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v3.3';
+const STORE_VERSION = 'v3.4';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1278,8 +1277,12 @@ async function init() {
 function applyConfig() {
   const c = store.cfg;
   const umbralEnvio = parseFloat(c.envio_gratis_desde) || 0;
+  // Quita cualquier mención a "retiro/taller" del texto de envío (no hay taller).
+  if (c.envio_texto && /taller/i.test(c.envio_texto)) {
+    c.envio_texto = c.envio_texto.replace(/\s*[·.,;–—-]*\s*retiro[^.·|]*taller[^.·|]*\.?/gi, '').replace(/[·.,;\s]+$/, '').trim();
+  }
   // Trust-strip de envíos: texto base + (si hay umbral) la promesa de envío gratis.
-  const baseEnvio = c.envio_texto || 'A todo el país · Retiro en taller';
+  const baseEnvio = c.envio_texto || 'Envíos a todo el país';
   $('#trustEnvio').textContent = umbralEnvio > 0
     ? `${baseEnvio} · Envío gratis desde ${money(umbralEnvio, 'ARS')}`
     : baseEnvio;
@@ -1757,15 +1760,8 @@ function renderGrid() {
           </button>
         </div>
         <div class="card-body">
-          <span class="card-cat">${esc(p.categoria || p.material || 'Cuero')}</span>
           <span class="card-title">${esc(p.nombre)}</span>
-          ${rating ? `<div class="card-rating">${starsHtml(rating.avg)} <span>(${rating.count})</span></div>` : ''}
-          ${swatches ? `<div class="card-swatches">${swatches}</div>` : ''}
           <span class="card-price">${money(p.precio, p.moneda)}${p.precio_anterior && p.precio_anterior > p.precio ? ` <s>${money(p.precio_anterior, p.moneda)}</s>` : ''}</span>
-          ${transferHtml(p.precio, p.moneda)}
-          ${cuotasHtml(p.precio, p.moneda)}
-          ${entregaCardHtml(p)}
-          ${stockBajoN(p) ? `<div class="card-stock">${stockBajoTexto(stockBajoN(p))}</div>` : ''}
         </div>
       </article>`;
   }).join('');
