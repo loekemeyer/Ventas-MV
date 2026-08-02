@@ -1745,12 +1745,29 @@ const SOCIA_KEY = 'ventas_mv_socia';
 const CACHE_KEY = 'ventas_mv_cache_v2';
 const NOTIF_DISMISS_KEY = 'ventas_mv_notif_dismiss';
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
-});
+// Crear el cliente de Supabase de forma segura: si la librería (CDN) no cargó,
+// NO frenamos todo el script (eso dejaba el panel "trabado"); avisamos y sugerimos recargar.
+let sb = null;
+if (window.supabase && window.supabase.createClient) {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  });
+} else {
+  window.addEventListener('DOMContentLoaded', () => {
+    try {
+      const box = document.createElement('div');
+      box.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(20,15,10,.7);padding:24px;';
+      box.innerHTML = '<div style="max-width:420px;background:#fff;border-radius:14px;padding:26px;text-align:center;font-family:system-ui,sans-serif;">' +
+        '<h3 style="margin:0 0 8px;font-size:18px;">No se pudo conectar con la base de datos</h3>' +
+        '<p style="margin:0 0 18px;color:#666;font-size:14px;line-height:1.5;">La conexión con Supabase no cargó. Revisá tu internet o desactivá bloqueadores de anuncios, y volvé a cargar la página.</p>' +
+        '<button onclick="location.reload()" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:12px 22px;font-size:14px;font-weight:600;cursor:pointer;">Recargar</button></div>';
+      document.body.appendChild(box);
+    } catch (e) {}
+  });
+}
 // Login con Google: al volver del redirect (o si hay sesión guardada), validar el mail.
 // Se hace acá, después de crear `sb`, para no usarlo antes de declararlo.
-if (typeof checkGoogleSession === 'function') {
+if (sb && typeof checkGoogleSession === 'function') {
   sb.auth.onAuthStateChange((_evt, session) => { if (session) checkGoogleSession(); });
   checkGoogleSession();
 }
