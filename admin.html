@@ -1756,7 +1756,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v3.9';
+const APP_VERSION = 'v4.0';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -3440,12 +3440,23 @@ function showRealtimeToast(msg) {
   realtimeToast._t = setTimeout(() => realtimeToast.classList.remove('show'), 3500);
 }
 
-function showToast(msg, color = '#1c1c1e') {
+function showToast(msg, color = '#1c1c1e', ms = 2000) {
   toast.textContent = msg;
   toast.style.background = color;
   toast.classList.add('show');
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => toast.classList.remove('show'), 2000);
+  toast._t = setTimeout(() => toast.classList.remove('show'), ms);
+}
+
+// Detecta el nombre de columna faltante en un error de Supabase/Postgres
+// (PostgREST PGRST204 o Postgres 42703). Sirve para reintentar sin esa columna.
+function missingColumnFromError(error) {
+  if (!error) return null;
+  const msg = error.message || '';
+  const m = /Could not find the '([^']+)' column/i.exec(msg)
+         || /column "([^"]+)" of relation/i.exec(msg)
+         || /column ([a-z0-9_]+) does not exist/i.exec(msg);
+  return m ? m[1] : null;
 }
 
 let mostrarEntregados = false;
@@ -4335,6 +4346,13 @@ function openCobroNuevoModal(v) {
 const TIENDA_CATEGORIAS = ['Campera', 'Tapado', 'Chaleco', 'Saco', 'Accesorio'];
 const TIENDA_MATERIALES = ['Oveja', 'Vaca', 'Gamuza'];
 const TIENDA_TALLES     = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Único'];
+// Colecciones de la tienda (deben coincidir con los slugs de index.html).
+// El drop-down "Shop All" arma sus solapas a partir de la colección de cada producto.
+const TIENDA_COLECCIONES = [
+  { slug: 'foundations-aw26', label: 'Foundations · AW 26' },
+  { slug: 'all-year',         label: 'All Year Basics' },
+];
+const TIENDA_COLECCION_DEFAULT = 'foundations-aw26';
 
 function arr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
 
@@ -4365,6 +4383,8 @@ function renderTienda() {
       ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
     const catMat = [escapeHtml(p.categoria), escapeHtml(p.material)].filter(Boolean).join(' · ') || 'Sin categoría';
     const chips = [];
+    const colObj = TIENDA_COLECCIONES.find(c => c.slug === (p.coleccion || TIENDA_COLECCION_DEFAULT));
+    if (colObj) chips.push(`<span class="prod-chip col">${escapeHtml(colObj.label)}</span>`);
     if (p.stock != null && p.stock === 0) chips.push('<span class="prod-chip out">Agotado</span>');
     else if (p.stock != null && p.stock > 0) chips.push(`<span class="prod-chip">Stock ${p.stock}</span>`);
     if (nFotos) chips.push(`<span class="prod-chip">${nFotos} foto${nFotos === 1 ? '' : 's'}</span>`);
@@ -4496,6 +4516,8 @@ function openProductoModal(id) {
           <select name="categoria"><option value="">Elegir</option>${TIENDA_CATEGORIAS.map(c => opt(c, p.categoria)).join('')}</select></label>
         <label><span>Material</span>
           <select name="material"><option value="">Elegir</option>${TIENDA_MATERIALES.map(m => opt(m, p.material)).join('')}</select></label>
+        <label><span>Colección — dónde aparece en Shop All</span>
+          <select name="coleccion">${TIENDA_COLECCIONES.map(c => `<option value="${escapeHtml(c.slug)}" ${c.slug === (p.coleccion || TIENDA_COLECCION_DEFAULT) ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('')}</select></label>
         <label><span>Precio *</span>
           <div class="precio-row">
             <select name="moneda">${opt('ARS', p.moneda)}${opt('USD', p.moneda)}</select>
@@ -4549,6 +4571,7 @@ function openProductoModal(id) {
       descripcion: (fd.get('descripcion') || '').toString().trim() || null,
       categoria: fd.get('categoria') || null,
       material: fd.get('material') || null,
+      coleccion: fd.get('coleccion') || TIENDA_COLECCION_DEFAULT,
       precio: num(fd.get('precio')) ?? 0,
       precio_anterior: num(fd.get('precio_anterior')),
       moneda: fd.get('moneda') || 'ARS',
@@ -4563,17 +4586,36 @@ function openProductoModal(id) {
     };
     if (!row.nombre) { showToast('Poné un nombre', '#ff9500'); return; }
     try {
+      const dropped = [];
+      // Si la base todavía no tiene alguna columna (ej. "coleccion"), la quitamos
+      // y reintentamos: el producto se guarda igual y avisamos qué faltó.
+      const runSave = async () => {
+        for (;;) {
+          const q = editing
+            ? sb.from('productos').update(row).eq('id', editing.id).select().single()
+            : sb.from('productos').insert(row).select().single();
+          const { data, error } = await q;
+          if (!error) return data;
+          const col = missingColumnFromError(error);
+          if (col && Object.prototype.hasOwnProperty.call(row, col)) {
+            delete row[col];
+            dropped.push(col);
+            continue;
+          }
+          throw error;
+        }
+      };
+      const data = await runSave();
       if (editing) {
-        const { data, error } = await sb.from('productos').update(row).eq('id', editing.id).select().single();
-        if (error) throw error;
         const idx = state.productos.findIndex(x => x.id === editing.id);
         if (idx >= 0) state.productos[idx] = data;
         showToast('✓ Producto actualizado', '#34c759');
       } else {
-        const { data, error } = await sb.from('productos').insert(row).select().single();
-        if (error) throw error;
         state.productos.push(data);
         showToast('✓ Producto creado', '#34c759');
+      }
+      if (dropped.includes('coleccion')) {
+        showToast('Guardado. Falta un ajuste en la base para separar por colección — avisale al desarrollador.', '#ff9500', 6000);
       }
       modal.classList.remove('show');
       renderTienda();

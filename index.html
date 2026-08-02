@@ -1078,7 +1078,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v4.0';
+const STORE_VERSION = 'v4.1';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1537,7 +1537,7 @@ function categorias() {
 const COLECCION_DEFAULT = 'foundations-aw26';
 const COLECCIONES = [
   { slug: 'foundations-aw26', label: 'Foundations · AW 26', nota: 'Colección actual' },
-  { slug: 'all-year', label: 'All Year · Básicas', nota: 'Piezas de todo el año' },
+  { slug: 'all-year', label: 'All Year Basics', nota: 'Piezas de todo el año' },
 ];
 function colProd(p) {
   const c = (p && p.coleccion ? String(p.coleccion) : '').trim().toLowerCase();
