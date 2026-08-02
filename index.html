@@ -105,19 +105,19 @@
     -webkit-backdrop-filter: saturate(180%) blur(14px);
     border-bottom: 1px solid var(--line);
   }
-  /* Header: navegación arriba, logo MV grande centrado debajo */
-  .header-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 12px; height: 54px; }
+  /* Header: logo (monograma) centrado arriba, navegación debajo */
+  .header-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 12px; padding: 10px 0 4px; }
   .header-top .menu-toggle { grid-column: 1; justify-self: start; }
-  .header-top .nav-links { grid-column: 2; justify-self: center; }
+  .header-top .brand { grid-column: 2; justify-self: center; }
   .header-top .nav-actions { grid-column: 3; justify-self: end; }
   .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; }
   .brand img { height: 40px; width: auto; }
+  /* Lockup: monograma + wordmark */
+  .brand-logo { flex-direction: column; align-items: center; gap: 8px; padding: 4px 0 10px; }
+  .brand-mono { height: clamp(42px, 4.6vw, 58px); width: auto; display: block; }
+  .brand-wordmark { font-family: var(--sans); font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--ink); text-indent: 5px; }
   .brand-name { font-family: var(--serif); font-size: 24px; font-weight: 600; letter-spacing: 1.2px; white-space: nowrap; text-transform: uppercase; }
-  /* Lockup MV / LEATHER STUDIO */
-  .brand-lockup { flex-direction: column; align-items: center; gap: 3px; padding: 2px 0 14px; }
-  .lk-mono { font-family: var(--serif); font-weight: 500; font-size: clamp(30px, 3.6vw, 46px); letter-spacing: 6px; line-height: 1; color: var(--ink); text-indent: 6px; }
-  .lk-name { font-family: var(--sans); font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--muted); text-indent: 5px; }
-  .nav-links { display: flex; gap: 38px; justify-content: center; align-items: center; }
+  .nav-links { display: flex; gap: 38px; justify-content: center; align-items: center; padding: 2px 0 14px; }
   .nav-links > a, .nav-shop-trigger { text-transform: uppercase; }
   .nav-links a { font-size: 13px; letter-spacing: 0.5px; color: var(--muted); font-weight: 500; transition: color .2s; }
   .nav-links a:hover { color: var(--ink); }
@@ -790,16 +790,10 @@
     <button class="icon-btn menu-toggle" id="menuToggle" aria-label="Menú" aria-expanded="false" aria-controls="mnav">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <nav class="nav-links">
-      <div class="nav-shop" id="navShop">
-        <a href="#tienda" class="nav-shop-trigger" data-shop-all aria-haspopup="true" aria-expanded="false">Shop All <span class="nav-caret" aria-hidden="true">›</span></a>
-        <div class="nav-shop-menu" id="navShopMenu"></div>
-      </div>
-      <a href="#tienda" class="lnk-ofertas" data-ofertas style="display:none">Ofertas</a>
-      <a href="#historia">Nosotros</a>
-      <a href="#talles">Guía de talles</a>
-      <a href="#contacto">Contacto</a>
-    </nav>
+    <a class="brand brand-logo" href="#top" data-exit-shop aria-label="MV Leather Studio">
+      <img class="brand-mono" src="assets/monogram.png" alt="">
+      <span class="brand-wordmark">Leather Studio</span>
+    </a>
     <div class="nav-actions">
       <button class="icon-btn" id="openAccount" aria-label="Mi cuenta">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -812,10 +806,16 @@
       <span class="header-ver" id="storeVer" title="Versión de la tienda"></span>
     </div>
    </div>
-   <a class="brand brand-lockup" href="#top" data-exit-shop aria-label="MV Leather Studio">
-     <span class="lk-mono">MV</span>
-     <span class="lk-name">Leather Studio</span>
-   </a>
+   <nav class="nav-links">
+      <div class="nav-shop" id="navShop">
+        <a href="#tienda" class="nav-shop-trigger" data-shop-all aria-haspopup="true" aria-expanded="false">Shop All <span class="nav-caret" aria-hidden="true">›</span></a>
+        <div class="nav-shop-menu" id="navShopMenu"></div>
+      </div>
+      <a href="#tienda" class="lnk-ofertas" data-ofertas style="display:none">Ofertas</a>
+      <a href="#historia">Nosotros</a>
+      <a href="#talles">Guía de talles</a>
+      <a href="#contacto">Contacto</a>
+   </nav>
   </div>
 </header>
 
@@ -1069,7 +1069,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v2.3';
+const STORE_VERSION = 'v2.4';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
