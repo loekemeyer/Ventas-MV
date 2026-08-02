@@ -24,25 +24,27 @@
 <title>MV Leather Studio · Camperas de cuero</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Epilogue:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Epilogue:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>try{var t=localStorage.getItem('mv_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <style>
   :root {
-    --bg: #f3efe7;
-    --surface: #faf8f2;
-    --ink: #211b15;
+    --bg: #f4efe6;          /* ivory cálido */
+    --beige: #e9e0d1;       /* beige cálido para alternar secciones */
+    --surface: #faf7f0;
+    --ink: #211b15;         /* casi negro cálido / carbón */
+    --choco: #3a2a1c;       /* chocolate */
     --muted: #8a7f73;
     --leather: #7c4a28;
     --leather-dark: #4e2f19;
     --gold: #a9834b;
-    --line: #e7ded1;
+    --line: #e5dccd;
     --ok: #2e7d46;
     --danger: #b0503c;
     --shadow: 0 10px 40px rgba(40,26,14,0.08);
     --media-bg: var(--media-bg);
-    --header-bg: rgba(243,239,231,0.9);
-    --serif: "Fraunces", Georgia, "Times New Roman", serif;
+    --header-bg: rgba(244,239,230,0.86);
+    --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
     --sans: "Epilogue", "Helvetica Neue", Helvetica, -apple-system, Arial, sans-serif;
   }
   :root[data-theme="dark"] { --bg:#141009; --surface:#1d1712; --ink:#efe6d6; --muted:#a99e8d; --leather:#b8794c; --leather-dark:#8a5730; --gold:#c9a45e; --line:#332a21; --shadow:0 12px 40px rgba(0,0,0,0.55); --media-bg:#241d16; --header-bg:rgba(20,16,10,0.92); }
@@ -105,7 +107,7 @@
   .nav { display: flex; align-items: center; justify-content: space-between; height: 66px; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand img { height: 40px; width: auto; }
-  .brand-name { font-family: var(--serif); font-size: 21px; font-weight: 700; letter-spacing: 0.5px; }
+  .brand-name { font-family: var(--serif); font-size: 23px; font-weight: 600; letter-spacing: 0.6px; white-space: nowrap; }
   .nav-links { display: flex; gap: 26px; }
   .nav-links a { font-size: 13px; letter-spacing: 0.5px; color: var(--muted); font-weight: 500; transition: color .2s; }
   .nav-links a:hover { color: var(--ink); }
@@ -164,24 +166,50 @@
   .hero p { font-size: 17px; color: #e2d3bf; margin: 20px 0 30px; max-width: 480px; }
   .hero .eyebrow { color: rgba(244,234,217,0.55); }
 
-  /* ---- Hero editorial (claro / minimal, foto de producto real) ---- */
+  /* ---- Hero editorial (campaña, composición asimétrica) ---- */
   .hero.is-editorial { background: var(--bg); color: var(--ink); min-height: 0; }
   .hero.is-editorial::after { display: none; }
-  .hero-editorial { display: grid; grid-template-columns: 1.02fr 0.98fr; align-items: stretch; width: 100%; }
-  .hero-copy { align-self: center; padding: clamp(40px, 6vw, 92px); max-width: 640px; margin-left: auto; }
-  .hero.is-editorial .eyebrow { color: var(--muted); }
-  .hero.is-editorial h1 { color: var(--ink); font-size: clamp(36px, 5.4vw, 62px); }
-  .hero.is-editorial p { color: var(--muted); font-size: 16px; margin: 22px 0 34px; max-width: 420px; }
-  .hero-copy .hero-cta { align-items: center; gap: 26px; }
-  .hero-link { color: var(--ink); font-size: 12.5px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: 3px; transition: border-color .3s ease; white-space: nowrap; }
-  .hero-link:hover { border-bottom-color: var(--ink); }
-  .hero-figure { position: relative; min-height: 86vh; overflow: hidden; background: var(--line); }
-  .hero-figure img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+  /* Copy ~34% · Imagen ~66% — la foto es la protagonista. */
+  .hero-editorial { display: grid; grid-template-columns: minmax(290px, 0.82fr) 1.62fr; align-items: stretch; width: 100%; min-height: 92vh; }
+  .hero-copy { align-self: center; padding: clamp(40px, 5.5vw, 100px) clamp(28px, 3.6vw, 60px) clamp(40px, 5.5vw, 100px) clamp(24px, 5vw, 88px); max-width: 560px; position: relative; z-index: 3; }
+  .hero-wordmark { display: block; font-family: var(--sans); font-size: 10.5px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: clamp(26px, 4vw, 44px); }
+  .hero.is-editorial h1 { color: var(--ink); font-size: clamp(46px, 6.4vw, 90px); line-height: 1.02; font-weight: 500; letter-spacing: -0.5px; }
+  .hero-copy .hero-cta { display: flex; align-items: center; gap: 26px; margin-top: clamp(28px, 4vw, 46px); }
+  .hero-link { color: var(--ink); font-size: 12px; letter-spacing: 1.8px; text-transform: uppercase; font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--ink); padding-bottom: 4px; transition: opacity .3s ease, letter-spacing .3s ease; white-space: nowrap; }
+  .hero-link:hover { opacity: .6; letter-spacing: 2.2px; }
+  .hero-figure { position: relative; min-height: 92vh; overflow: hidden; background: var(--line); }
+  .hero-figure img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 26%; }
   @media (max-width: 860px) {
-    .hero-editorial { grid-template-columns: 1fr; }
-    .hero-figure { order: -1; min-height: 66vh; }
-    .hero-copy { margin: 0; padding: 38px 22px 52px; max-width: none; }
-    .hero.is-editorial p { max-width: none; }
+    .hero-editorial { grid-template-columns: 1fr; min-height: 0; }
+    .hero-figure { order: -1; min-height: 64vh; }
+    .hero-figure img { object-position: center 22%; }
+    .hero-copy { margin: 0; padding: clamp(34px, 8vw, 56px) 24px clamp(40px, 9vw, 64px); max-width: none; }
+    .hero.is-editorial h1 { font-size: clamp(42px, 12vw, 64px); }
+  }
+
+  /* ===== Interludios editoriales (ritmo tipo revista) ===== */
+  .ed-full { position: relative; min-height: 92vh; overflow: hidden; display: flex; align-items: flex-end; }
+  .ed-full img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+  .ed-full::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(24,16,10,0.62) 0%, rgba(24,16,10,0.12) 42%, rgba(24,16,10,0) 70%); }
+  .ed-caption { position: relative; z-index: 2; color: #f4ead9; padding: clamp(34px, 6vw, 92px); max-width: 640px; }
+  .ed-k { display: block; font-family: var(--sans); font-size: 10.5px; letter-spacing: 3px; text-transform: uppercase; opacity: .82; margin-bottom: 16px; }
+  .ed-caption h2 { color: #fbf3e6; font-size: clamp(32px, 4.6vw, 60px); line-height: 1.03; font-weight: 500; letter-spacing: -0.3px; }
+  .ed-caption .hero-link { color: #f4ead9; border-bottom-color: rgba(244,234,217,.6); margin-top: 26px; display: inline-block; }
+  .ed-caption .hero-link:hover { opacity: .7; }
+
+  .ed-split { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; background: var(--beige); }
+  .ed-split .ed-media { position: relative; min-height: 78vh; overflow: hidden; background: var(--line); }
+  .ed-split .ed-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 32%; }
+  .ed-split .ed-text { align-self: center; padding: clamp(44px, 6.5vw, 110px); max-width: 580px; }
+  .ed-split .ed-text .ed-k { color: var(--muted); opacity: 1; }
+  .ed-split .ed-text h2 { font-size: clamp(28px, 3.6vw, 46px); line-height: 1.08; font-weight: 500; letter-spacing: -0.2px; }
+  .ed-split .ed-text p { color: var(--muted); margin-top: 20px; font-size: 15.5px; line-height: 1.75; max-width: 44ch; }
+  .ed-split.reverse .ed-media { order: 2; }
+  @media (max-width: 860px) {
+    .ed-full { min-height: 74vh; }
+    .ed-split { grid-template-columns: 1fr; }
+    .ed-split .ed-media, .ed-split.reverse .ed-media { min-height: 66vh; order: -1; }
+    .ed-split .ed-text { padding: clamp(38px, 9vw, 60px) 24px; max-width: none; }
   }
 
   .btn {
@@ -210,9 +238,9 @@
   .trust-item p { font-size: 12px; color: var(--muted); margin: 0; }
 
   /* ===== Section headings ===== */
-  .section { padding: 68px 0; }
-  .section-head { text-align: center; max-width: 620px; margin: 0 auto 40px; }
-  .section-head h2 { font-size: clamp(30px, 5vw, 44px); margin-top: 8px; }
+  .section { padding: clamp(72px, 9vw, 112px) 0; }
+  .section-head { text-align: center; max-width: 640px; margin: 0 auto 52px; }
+  .section-head h2 { font-size: clamp(34px, 5.4vw, 52px); margin-top: 10px; line-height: 1.05; }
   .section-head p { color: var(--muted); margin-top: 12px; }
   .store-rating { margin-top: 14px; font-size: 14px; color: var(--muted); }
   .store-rating:empty { display: none; }
@@ -263,7 +291,7 @@
   .tag.off { background: transparent; color: #f4ead9; left: auto; right: 12px; text-shadow: 0 1px 8px rgba(0,0,0,0.45); }
   .card-body { padding: 10px 2px 6px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
   .card-cat { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-  .card-title { font-family: var(--serif); font-size: 17px; font-weight: 600; line-height: 1.12; }
+  .card-title { font-family: var(--serif); font-size: 20px; font-weight: 600; line-height: 1.08; letter-spacing: .2px; }
   .card-price { margin-top: 3px; font-size: 15px; font-weight: 600; }
   .card-price s { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
   /* Selector de vista (columnas) */
@@ -474,9 +502,11 @@
   @media (max-width: 640px) {
     .nav-links { display: none; }
     .menu-toggle { display: inline-flex; }
+    .brand-name { display: none; }   /* el monograma ya incluye el nombre */
+    .brand img { height: 38px; }
     .trust-grid { grid-template-columns: repeat(2, 1fr); gap: 18px 6px; }
     .grid { gap: 10px 8px; }
-    .card-title { font-size: 15px; }
+    .card-title { font-size: 17px; }
     .card-body { padding: 8px 2px 6px; }
     .section { padding: 46px 0; }
     .foot-grid { grid-template-columns: 1fr; }
@@ -729,17 +759,37 @@
   <div class="hero-carousel" id="heroCarousel"></div>
   <div class="hero-editorial" id="heroDefault">
     <div class="hero-copy">
-      <span class="eyebrow">Foundations · Autumn·Winter 2026</span>
-      <h1>El cuero que dura toda una vida.</h1>
-      <p>Camperas y prendas de cuero genuino argentino, cortadas y cosidas a mano, pieza por pieza, en nuestro taller.</p>
+      <span class="hero-wordmark">MV Leather Studio</span>
+      <h1>Hecho para durar.</h1>
       <div class="hero-cta">
-        <a href="#tienda" class="btn btn-outline">Ver colección</a>
-        <a href="#historia" class="hero-link">Nuestra historia →</a>
+        <a href="#tienda" class="hero-link">Descubrir colección →</a>
       </div>
     </div>
     <div class="hero-figure">
-      <img src="assets/productos/bomber/bomber-1.jpg" alt="Campera bomber de cuero — MV Leather Studio" loading="eager">
+      <img src="assets/productos/trench/trench-1.jpg" alt="Campaña MV Leather Studio — cuero genuino argentino" loading="eager">
     </div>
+  </div>
+</section>
+
+<!-- ===== EDITORIAL · campaña a sangre ===== -->
+<section class="ed-full" aria-label="Campaña MV Leather Studio">
+  <img src="assets/productos/trench/trench-3.jpg" alt="Campaña editorial — abrigo largo de cuero, MV Leather Studio" loading="lazy">
+  <div class="ed-caption">
+    <span class="ed-k">La casa</span>
+    <h2>La elegancia permanece.</h2>
+  </div>
+</section>
+
+<!-- ===== EDITORIAL · declaración + foto ===== -->
+<section class="ed-split reverse" aria-label="Nuestro oficio">
+  <div class="ed-media">
+    <img src="assets/productos/conjunto-reptil/conjunto-reptil-3.jpg" alt="Editorial de cuero — MV Leather Studio" loading="lazy">
+  </div>
+  <div class="ed-text">
+    <span class="ed-k">El oficio</span>
+    <h2>Cuero para siempre.</h2>
+    <p>Cuero genuino argentino, cortado y cosido a mano, pieza por pieza. Nada de producción en serie: prendas pensadas para acompañarte durante años.</p>
+    <div class="hero-cta" style="margin-top:30px;"><a href="#historia" class="hero-link">Nuestra historia →</a></div>
   </div>
 </section>
 
@@ -935,7 +985,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v1.6';
+const STORE_VERSION = 'v1.7';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
