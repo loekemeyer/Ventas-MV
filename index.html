@@ -1073,7 +1073,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v3.2';
+const STORE_VERSION = 'v3.3';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1731,7 +1731,7 @@ function renderGrid() {
   }
   if (info) {
     const clear = filtrosActivos() ? `<button class="link-u" data-clear-filters style="background:none;border:none;">Limpiar filtros</button>` : '';
-    info.innerHTML = `<span>${list.length} ${list.length === 1 ? 'pieza' : 'piezas'}</span><div class="grid-right">${clear}${viewToggleHtml()}</div>`;
+    info.innerHTML = `<span></span><div class="grid-right">${clear}${viewToggleHtml()}</div>`;
   }
   if (!list.length) {
     grid.innerHTML = `<div class="empty-store"><p style="font-family:var(--serif); font-size:20px;">No encontramos prendas con ese filtro.</p><button class="btn btn-dark" data-clear-filters style="margin-top:14px;">Limpiar filtros</button></div>`;
@@ -1749,9 +1749,6 @@ function renderGrid() {
         <div class="card-media">
           ${img ? `<img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy" decoding="async">` : `<div class="ph">MV LEATHER</div>`}
           ${arr(p.imagenes)[1] ? `<img class="card-media-2" src="${esc(arr(p.imagenes)[1])}" alt="" loading="lazy" decoding="async">` : ''}
-          <button class="wish-btn ${wished ? 'on' : ''}" data-wish="${p.id}" aria-label="Favorito" aria-pressed="${wished}" title="Guardar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-          </button>
           ${tieneStock(p) ? `<span class="tag rapida">Entrega rápida</span>` : (p.destacado ? `<span class="tag">Destacado</span>` : '')}
           ${off ? `<span class="tag off">-${off}%</span>` : ''}
           <button class="qadd-btn" data-quickadd="${p.id}" aria-label="Agregar ${esc(p.nombre)} al carrito" title="Agregar al carrito">
@@ -1867,9 +1864,6 @@ function openProduct(id, pushUrl = true) {
       <div class="opt-label">Cantidad</div>
       <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
         <div class="pm-qty"><button data-qminus>−</button><span id="pmQty">1</span><button data-qplus>+</button></div>
-        <button class="wish-btn ${wished ? 'on' : ''}" id="pmWish" data-wish="${p.id}" style="position:static; background:var(--bg); border:1px solid var(--line);" aria-label="Favorito" aria-pressed="${wished}" title="Guardar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-        </button>
         <button class="wish-btn" id="pmShare" style="position:static; background:var(--bg); border:1px solid var(--line);" aria-label="Compartir" title="Compartir">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
         </button>
@@ -2423,7 +2417,15 @@ document.addEventListener('click', (e) => {
   if (location.hash === target) { applyShopFromHash(); window.scrollTo(0, 0); }  // ya estamos: re-aplica
   else location.hash = target;
 });
-document.addEventListener('click', (e) => { if (e.target.closest('[data-exit-shop]')) { e.preventDefault(); location.hash = ''; } });
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-exit-shop]')) {
+    e.preventDefault();
+    // Volver a la página principal: salir de la vista Shop, limpiar la URL y subir al inicio.
+    document.body.classList.remove('shop-mode');
+    if (location.hash || location.search) { try { history.replaceState(null, '', location.pathname); } catch { location.hash = ''; } }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+});
 // En touch/click, alternar el desplegable de Shop (además del hover de escritorio).
 (function () {
   const shop = $('#navShop'); if (!shop) return;
