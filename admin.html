@@ -1756,7 +1756,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v4.0';
+const APP_VERSION = 'v4.1';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1865,8 +1865,11 @@ loginForm.addEventListener('submit', () => {
     if (sessionStorage.getItem(AUTH_KEY) === '1' && !state.mySociaId) checkSocia();
   }, 30);
 });
-// Si ya estaba autenticada al cargar la página, arrancar selector directo
-if (sessionStorage.getItem(AUTH_KEY) === '1') checkSocia();
+// Si ya estaba autenticada al cargar la página, arrancar selector directo.
+// Lo diferimos con setTimeout(…,0) para que TODO el resto del script (constantes
+// y `let` declarados más abajo, ej. mostrarEntregados) termine de inicializarse
+// antes de que bootApp() los use. Evita errores de TDZ en cascada al bootear ya logueada.
+if (sessionStorage.getItem(AUTH_KEY) === '1') setTimeout(checkSocia, 0);
 
 // ====== Mapeo camelCase <-> snake_case ======
 const FIELD_MAP = [
