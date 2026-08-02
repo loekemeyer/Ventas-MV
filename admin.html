@@ -1195,6 +1195,14 @@
   #productoSheet textarea, #productoSheet input, #productoSheet select {
     font-size: 16px;
   }
+  /* Grilla de fotos del producto (subir + arrastrar para ordenar) */
+  .fotos-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .foto-item { position: relative; width: 74px; height: 92px; border-radius: 6px; overflow: hidden; border: 1px solid #e0e0e0; cursor: grab; background: #f2f2f2; }
+  .foto-item.dragging { opacity: .4; }
+  .foto-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .foto-portada { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.65); color: #fff; font-size: 9px; text-align: center; padding: 2px 0; letter-spacing: .5px; }
+  .foto-del { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(0,0,0,.6); color: #fff; font-size: 13px; line-height: 1; cursor: pointer; padding: 0; }
+  .fotos-empty { font-size: 12px; color: #8e8e93; }
 </style>
 </head>
 <body>
@@ -4287,6 +4295,91 @@ function renderTienda() {
   });
 }
 
+// ====== Fotos del producto: subir a Storage + ordenar (arrastrar) ======
+const FOTOS_BUCKET = 'productos';   // bucket público de Supabase Storage
+let _fotos = [];
+function slugify(s) {
+  return (s || 'producto').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'producto';
+}
+function resizeImage(file, maxSide, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height; const m = Math.max(w, h);
+      if (m > maxSide) { const s = maxSide / m; w = Math.round(w * s); h = Math.round(h * s); }
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      c.toBlob(b => b ? resolve(b) : reject(new Error('toBlob null')), 'image/jpeg', quality);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+function renderFotosGrid(skipText) {
+  const grid = document.getElementById('fotosGrid');
+  const txt = document.getElementById('imagenesText');
+  if (!grid) return;
+  grid.innerHTML = _fotos.length ? _fotos.map((u, i) => `
+    <div class="foto-item" draggable="true" data-i="${i}">
+      <img src="${escapeHtml(u)}" alt="">
+      ${i === 0 ? '<span class="foto-portada">Portada</span>' : ''}
+      <button type="button" class="foto-del" data-del="${i}" title="Quitar">×</button>
+    </div>`).join('') : '<span class="fotos-empty">Todavía no hay fotos. Tocá "Subir fotos".</span>';
+  if (txt && !skipText) txt.value = _fotos.join('\n');
+  grid.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { _fotos.splice(parseInt(b.dataset.del, 10), 1); renderFotosGrid(); });
+  let dragI = null;
+  grid.querySelectorAll('.foto-item').forEach(it => {
+    it.addEventListener('dragstart', () => { dragI = parseInt(it.dataset.i, 10); it.classList.add('dragging'); });
+    it.addEventListener('dragend', () => it.classList.remove('dragging'));
+    it.addEventListener('dragover', (e) => e.preventDefault());
+    it.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const dropI = parseInt(it.dataset.i, 10);
+      if (dragI === null || dragI === dropI) return;
+      const [moved] = _fotos.splice(dragI, 1); _fotos.splice(dropI, 0, moved); dragI = null;
+      renderFotosGrid();
+    });
+  });
+}
+async function subirFoto(file, p) {
+  const msg = document.getElementById('fotosMsg');
+  try {
+    if (msg) msg.textContent = 'Subiendo…';
+    const blob = await resizeImage(file, 1400, 0.82);
+    const nombreProd = (document.querySelector('#prodForm [name=nombre]') || {}).value;
+    const slug = (p && p.slug) || slugify(nombreProd);
+    const path = slug + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 7) + '.jpg';
+    const up = await sb.storage.from(FOTOS_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+    if (up.error) throw up.error;
+    const pub = sb.storage.from(FOTOS_BUCKET).getPublicUrl(path);
+    _fotos.push(pub.data.publicUrl);
+    renderFotosGrid();
+    if (msg) msg.textContent = '';
+  } catch (e) {
+    console.error('subirFoto', e);
+    if (msg) msg.textContent = 'No se pudo subir (revisá que exista el bucket "productos" y sea público).';
+  }
+}
+function initFotosUploader(p) {
+  _fotos = arr(p.imagenes).slice();
+  renderFotosGrid();
+  const fileInput = document.getElementById('fotosFile');
+  const btn = document.getElementById('fotosBtn');
+  const txt = document.getElementById('imagenesText');
+  if (btn && fileInput) {
+    btn.onclick = () => fileInput.click();
+    fileInput.onchange = async () => {
+      const files = Array.from(fileInput.files || []);
+      fileInput.value = '';
+      for (const f of files) { await subirFoto(f, p); }
+    };
+  }
+  if (txt) txt.addEventListener('input', () => {
+    _fotos = txt.value.split('\n').map(s => s.trim()).filter(Boolean);
+    renderFotosGrid(true);
+  });
+}
 function openProductoModal(id) {
   const modal = document.getElementById('productoModal');
   const sheet = document.getElementById('productoSheet');
@@ -4327,8 +4420,16 @@ function openProductoModal(id) {
         <span style="font-size:11px; font-weight:600; color:#3c3c43;">Talles disponibles</span>
         <div class="chip-check-row">${talleChk}</div>
       </div>
-      <label style="margin-top:8px;"><span>Fotos — una URL por línea (la primera es la principal)</span>
-        <textarea name="imagenes" rows="3" style="resize:vertical;" placeholder="https://...jpg">${escapeHtml(arr(p.imagenes).join('\n'))}</textarea></label>
+      <div style="margin-top:8px;">
+        <span style="font-size:11px; font-weight:600; color:#3c3c43;">Fotos — arrastrá para ordenar (la primera es la portada)</span>
+        <div class="fotos-grid" id="fotosGrid"></div>
+        <input type="file" id="fotosFile" accept="image/*" multiple style="display:none;">
+        <button type="button" class="btn-secondary" id="fotosBtn" style="margin-top:6px;">＋ Subir fotos</button>
+        <span id="fotosMsg" style="font-size:12px; color:#8e8e93; margin-left:8px;"></span>
+        <details style="margin-top:8px;"><summary style="font-size:12px; color:#8e8e93; cursor:pointer;">Pegar URLs (avanzado)</summary>
+          <textarea id="imagenesText" name="imagenes" rows="3" style="resize:vertical; margin-top:6px; width:100%;" placeholder="https://...jpg"></textarea>
+        </details>
+      </div>
       <div style="display:flex; gap:16px; margin-top:10px;">
         <label class="chk-row" style="flex-direction:row; align-items:center; gap:6px;">
           <input type="checkbox" name="destacado" ${p.destacado ? 'checked' : ''} style="width:auto;"><span style="margin:0;">Destacado</span></label>
@@ -4343,6 +4444,7 @@ function openProductoModal(id) {
 
   modal.classList.add('show');
   document.getElementById('prodCancel').onclick = () => modal.classList.remove('show');
+  initFotosUploader(p);
 
   document.getElementById('prodForm').addEventListener('submit', async (e) => {
     e.preventDefault();
