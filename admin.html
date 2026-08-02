@@ -1756,7 +1756,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v3.8';
+const APP_VERSION = 'v3.9';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -1849,6 +1849,16 @@ function checkSocia() {
   }
 }
 
+// onSociaReady se llama al terminar de elegir socia (o al cargar si ya estaba guardada).
+// IMPORTANTE: declararlo ANTES de las llamadas a checkSocia() de abajo, porque checkSocia()
+// puede dispararlo de forma sincrónica y accedería a `_sociaReadyCalled` antes de tiempo (TDZ).
+let _sociaReadyCalled = false;
+function onSociaReady() {
+  if (_sociaReadyCalled) return;
+  _sociaReadyCalled = true;
+  bootApp();
+}
+
 // Tras login exitoso, mostrar selector de socia (si no hay uno guardado)
 loginForm.addEventListener('submit', () => {
   setTimeout(() => {
@@ -1857,14 +1867,6 @@ loginForm.addEventListener('submit', () => {
 });
 // Si ya estaba autenticada al cargar la página, arrancar selector directo
 if (sessionStorage.getItem(AUTH_KEY) === '1') checkSocia();
-
-// onSociaReady se llama al terminar de elegir socia (o al cargar si ya estaba guardada)
-let _sociaReadyCalled = false;
-function onSociaReady() {
-  if (_sociaReadyCalled) return;
-  _sociaReadyCalled = true;
-  bootApp();
-}
 
 // ====== Mapeo camelCase <-> snake_case ======
 const FIELD_MAP = [
