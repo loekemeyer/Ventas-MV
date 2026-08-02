@@ -25,7 +25,7 @@
 <title>MV Leather Studio · Camperas de cuero</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Epilogue:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>/* Tema fijo claro (la marca es siempre blanca; se ignora el modo oscuro del sistema) */document.documentElement.setAttribute('data-theme','light');try{localStorage.setItem('mv_theme','light');}catch(e){}</script>
 <style>
@@ -46,7 +46,8 @@
     --shadow: 0 10px 40px rgba(40,26,14,0.08);
     --media-bg: #f1ece3;
     --header-bg: rgba(255,255,255,0.9);
-    --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    /* Marca 100% Epilogue: se unificó toda la tipografía (títulos incluidos). */
+    --serif: "Epilogue", "Helvetica Neue", Helvetica, -apple-system, Arial, sans-serif;
     --sans: "Epilogue", "Helvetica Neue", Helvetica, -apple-system, Arial, sans-serif;
   }
   :root[data-theme="dark"] { --bg:#141009; --surface:#1d1712; --ink:#efe6d6; --muted:#a99e8d; --leather:#b8794c; --leather-dark:#8a5730; --gold:#c9a45e; --line:#332a21; --shadow:0 12px 40px rgba(0,0,0,0.55); --media-bg:#241d16; --header-bg:rgba(20,16,10,0.92); }
@@ -417,6 +418,21 @@
   .band h2 { color: #fbf3e6; font-size: clamp(26px, 4vw, 38px); }
   .band p { color: #e2d3bf; max-width: 560px; margin: 14px auto 0; }
 
+  /* ===== Página Guía de talles (secciones inline, sin pop-ups) ===== */
+  .talles-page { background: var(--bg); color: var(--ink); }
+  .talles-page .wrap { padding-top: clamp(18px, 3vw, 34px); padding-bottom: clamp(54px, 8vw, 96px); }
+  .talles-page .talles-title { font-size: clamp(28px, 4.2vw, 48px); margin-top: 8px; }
+  .talles-page .talles-intro { color: var(--muted); max-width: 60ch; margin-top: 14px; line-height: 1.7; }
+  .info-block { margin-top: clamp(36px, 5vw, 58px); max-width: 760px; }
+  .info-block h3 { font-family: var(--serif); font-size: clamp(22px, 2.7vw, 32px); font-weight: 500; margin-bottom: 12px; }
+  .info-block p { color: var(--muted); margin-bottom: 14px; line-height: 1.65; }
+  .info-block table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .info-block th { text-align: left; padding: 9px 6px; border-bottom: 2px solid var(--line); font-family: var(--sans); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+  .info-block td { padding: 9px 6px; border-bottom: 1px solid var(--line); }
+  .info-block td:first-child { font-weight: 600; }
+  .info-block ul { color: var(--ink); font-size: 14px; line-height: 1.9; padding-left: 20px; margin: 0; }
+  .info-block .note { color: var(--muted); font-size: 13px; margin-top: 12px; }
+
   /* ===== Footer ===== */
   footer { background: #14100b; color: #b8ab98; padding: 54px 0 30px; }
   .foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 30px; }
@@ -711,9 +727,15 @@
   .newsletter { background: var(--surface); border-top: 1px solid var(--line); }
   /* Instagram embebido */
   .ig-section #igHandleLine { font-size: 15px; color: var(--muted); letter-spacing: .04em; }
-  .ig-grid { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; align-items: flex-start; }
-  .ig-grid .instagram-media { flex: 1 1 300px; max-width: 328px; min-width: 0 !important; margin: 0 !important; }
+  .ig-carousel { position: relative; }
+  .ig-grid { display: flex; flex-wrap: nowrap; gap: 16px; align-items: flex-start; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding: 4px 2px 16px; scrollbar-width: thin; }
+  .ig-grid .instagram-media { flex: 0 0 300px !important; width: 300px !important; max-width: 300px !important; min-width: 300px !important; margin: 0 !important; scroll-snap-align: start; }
   .ig-grid:empty { display: none; }
+  .ig-arrow { position: absolute; top: 40%; transform: translateY(-50%); z-index: 6; width: 42px; height: 42px; border-radius: 50%; background: #fff; border: 1px solid var(--line); cursor: pointer; font-size: 22px; line-height: 1; color: var(--ink); box-shadow: 0 3px 12px rgba(0,0,0,.1); display: flex; align-items: center; justify-content: center; transition: opacity .2s; }
+  .ig-arrow:hover { opacity: .7; }
+  .ig-arrow.ig-prev { left: -8px; }
+  .ig-arrow.ig-next { right: -8px; }
+  @media (max-width: 720px) { .ig-arrow { display: none; } }
 
   /* ===== Cuotas sin interés ===== */
   .card-cuotas { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.3; }
@@ -933,17 +955,53 @@
   </div>
 </section>
 
-<!-- ===== GUÍA DE TALLES (band) ===== -->
-<section class="band page-sec" id="talles">
+<!-- ===== GUÍA DE TALLES (página con secciones inline) ===== -->
+<section class="section page-sec talles-page" id="talles">
   <div class="wrap">
-    <a class="page-back" href="#top" data-exit-shop style="color:rgba(244,234,217,.75)">← Volver al inicio</a>
-    <span class="eyebrow" style="color:var(--gold)">Para elegir bien</span>
-    <h2>Guía de talles &amp; cuidado del cuero</h2>
-    <p>¿Dudas con el talle o cómo cuidar tu prenda? Tenemos una guía simple para que aciertes a la primera y tu cuero se mantenga impecable.</p>
-    <div style="margin-top:24px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <button class="btn btn-ghost" id="openTalles">Ver guía de talles</button>
-      <button class="btn btn-ghost" id="openCuidado">Cuidado del cuero</button>
-      <button class="btn btn-ghost" id="openCambios">Política de cambios</button>
+    <a class="page-back" href="#top" data-exit-shop>← Volver al inicio</a>
+    <span class="eyebrow">Para elegir bien</span>
+    <h2 class="talles-title">Guía de talles &amp; cuidado del cuero</h2>
+    <p class="talles-intro">¿Dudas con el talle o cómo cuidar tu prenda? Acá está todo para que aciertes a la primera y tu cuero se mantenga impecable.</p>
+
+    <div class="info-block">
+      <h3>Guía de talles</h3>
+      <p>Medidas de referencia sobre el cuerpo (cm). Ante la duda, elegí el talle mayor o escribinos: hacemos ajustes.</p>
+      <div style="overflow-x:auto;"><table>
+        <thead><tr><th>Talle</th><th>Busto</th><th>Cintura</th><th>Cadera</th></tr></thead>
+        <tbody>
+          <tr><td>S</td><td>85-89</td><td>67-71</td><td>91-95</td></tr>
+          <tr><td>M</td><td>90-94</td><td>72-76</td><td>96-100</td></tr>
+          <tr><td>L</td><td>95-100</td><td>77-82</td><td>101-106</td></tr>
+          <tr><td>XL</td><td>101-107</td><td>83-89</td><td>107-113</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note">También confeccionamos <b>a medida</b>. Consultanos por WhatsApp y coordinamos tus medidas exactas.</p>
+    </div>
+
+    <div class="info-block">
+      <h3>Cuidado del cuero</h3>
+      <p>Bien cuidado, el cuero mejora con los años. Unos simples hábitos:</p>
+      <ul>
+        <li>Guardá la prenda en un lugar ventilado, lejos del sol directo y del calor.</li>
+        <li>No la guardes en bolsas de plástico: el cuero necesita respirar.</li>
+        <li>Ante manchas, limpiá con un paño apenas húmedo y dejá secar al aire.</li>
+        <li>Hidratá el cuero 1–2 veces al año con crema o acondicionador específico.</li>
+        <li>Si se moja, secala a temperatura ambiente, nunca con secador ni estufa.</li>
+        <li>La gamuza se cepilla en seco con cepillo suave para levantar el pelo.</li>
+      </ul>
+    </div>
+
+    <div class="info-block">
+      <h3>Cambios y devoluciones</h3>
+      <p>Queremos que tu prenda te quede perfecta. Si algo no encaja, lo resolvemos.</p>
+      <ul>
+        <li><b>Plazo:</b> tenés 7 días desde que recibís el pedido para pedir un cambio.</li>
+        <li><b>Condición:</b> la prenda debe estar sin uso, con sus etiquetas y en buen estado.</li>
+        <li><b>Cambio de talle o color:</b> lo coordinamos según disponibilidad, dentro de la misma colección.</li>
+        <li><b>Prendas a medida:</b> al ser personalizadas no tienen cambio, salvo falla de confección.</li>
+        <li><b>Cómo iniciarlo:</b> escribinos por WhatsApp con tu número de pedido y coordinamos el retiro/envío.</li>
+      </ul>
+      <p class="note">Ante cualquier falla de fabricación, la reparamos o cambiamos sin cargo.</p>
     </div>
   </div>
 </section>
@@ -956,7 +1014,11 @@
       <h2>Seguinos en Instagram</h2>
       <p id="igHandleLine"></p>
     </div>
-    <div class="ig-grid" id="igGrid"></div>
+    <div class="ig-carousel">
+      <button class="ig-arrow ig-prev" id="igPrev" type="button" aria-label="Anterior">‹</button>
+      <div class="ig-grid" id="igGrid"></div>
+      <button class="ig-arrow ig-next" id="igNext" type="button" aria-label="Siguiente">›</button>
+    </div>
     <div style="text-align:center; margin-top:26px;">
       <a class="btn btn-dark" id="igFollowBtn" href="#" target="_blank" rel="noopener">Ver el perfil</a>
     </div>
@@ -1079,7 +1141,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v4.2';
+const STORE_VERSION = 'v4.3';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1365,6 +1427,7 @@ function renderInstagram() {
   const handle = (store.cfg.instagram || DEFAULT_IG_HANDLE || '').replace(/^@/, '').trim();
   let posts = parseIgPosts(store.cfg.instagram_posts);
   if (!posts.length) posts = parseIgPosts(DEFAULT_IG_POSTS.join('\n'));
+  posts = posts.slice(0, 6); // carrusel de 1 fila: máximo 6
   if (!handle && !posts.length) { sec.hidden = true; return; }
   sec.hidden = false;
   const line = $('#igHandleLine');
@@ -1375,6 +1438,20 @@ function renderInstagram() {
   if (grid) {
     grid.innerHTML = posts.map(igBlockquote).join('');
     if (posts.length) loadInstagramEmbed();
+  }
+  // Flechas del carrusel (desplazan una tarjeta ~316px)
+  const prev = $('#igPrev'), next = $('#igNext');
+  if (prev && next && grid) {
+    const step = 316;
+    prev.onclick = () => grid.scrollBy({ left: -step, behavior: 'smooth' });
+    next.onclick = () => grid.scrollBy({ left: step, behavior: 'smooth' });
+    const upd = () => {
+      const max = grid.scrollWidth - grid.clientWidth - 4;
+      prev.style.display = grid.scrollLeft > 4 ? '' : 'none';
+      next.style.display = grid.scrollLeft < max ? '' : 'none';
+    };
+    grid.onscroll = upd;
+    setTimeout(upd, 400);
   }
 }
 
@@ -2560,9 +2637,8 @@ $('#cartBody').addEventListener('click', (e) => {
 
 $('#openCart').addEventListener('click', openCart);
 $('#goCheckout').addEventListener('click', openCheckout);
-$('#openTalles').addEventListener('click', () => openInfo('talles'));
-$('#openCuidado').addEventListener('click', () => openInfo('cuidado'));
-$('#openCambios').addEventListener('click', () => openInfo('cambios'));
+// Los botones de la página Guía de talles se reemplazaron por secciones inline.
+// openInfo() sigue disponible para el link "guía de talles" del modal de producto.
 { const w = $('#openWish'); if (w) w.addEventListener('click', openWish); }
 $('#openAccount').addEventListener('click', openAccount);
 $('#wishBody').addEventListener('click', (e) => {
