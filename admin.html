@@ -1238,6 +1238,30 @@
 </style>
 </head>
 <body>
+<script>
+/* Cartel visible de errores: si algo del panel falla, se muestra abajo (para diagnosticar). */
+(function(){
+  function showAdminError(msg, line){
+    try{
+      var d=document.getElementById('adminErrBar');
+      if(!d){
+        d=document.createElement('div'); d.id='adminErrBar';
+        d.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:2147483647;background:#b0281f;color:#fff;font:13px/1.45 system-ui,-apple-system,sans-serif;padding:12px 46px 12px 16px;box-shadow:0 -4px 16px rgba(0,0,0,.3);max-height:45vh;overflow:auto;';
+        (document.body||document.documentElement).appendChild(d);
+        var x=document.createElement('button'); x.textContent='✕';
+        x.style.cssText='position:fixed;right:12px;bottom:10px;z-index:2147483647;background:none;border:none;color:#fff;font-size:18px;cursor:pointer;';
+        x.onclick=function(){d.remove();}; d.appendChild(x);
+      }
+      var row=document.createElement('div');
+      row.innerHTML='<b>⚠ Error en el panel:</b> '+String(msg)+(line?(' (línea '+line+')'):'');
+      d.insertBefore(row,d.firstChild);
+    }catch(_){}
+  }
+  window.addEventListener('error',function(e){ showAdminError((e.error&&e.error.message)||e.message||'Error', e.lineno); });
+  window.addEventListener('unhandledrejection',function(e){ showAdminError('Promesa rechazada: '+((e.reason&&e.reason.message)||e.reason||'error')); });
+  window.__showAdminError=showAdminError;
+})();
+</script>
 
 <div id="loginScreen">
   <div class="login-card">
@@ -1732,7 +1756,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v3.3';
+const APP_VERSION = 'v3.8';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
