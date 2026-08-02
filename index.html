@@ -251,12 +251,18 @@
   .store-rating:empty { display: none; }
   .store-rating b { color: var(--ink); }
 
-  /* ===== "Página" Shop: solo el catálogo ===== */
+  /* ===== "Página" Shop: solo la grilla de productos ===== */
   .shop-back { display: none; }
   body.shop-mode main > *:not(#tienda) { display: none !important; }
   body.shop-mode #tienda { padding-top: clamp(26px, 4vw, 52px); }
   body.shop-mode .shop-back { display: inline-flex; align-items: center; gap: 8px; margin: 0 auto 26px; font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); font-weight: 500; width: max-content; }
   body.shop-mode .shop-back:hover { color: var(--ink); }
+  /* En la página Shop: sin rieles horizontales; grilla 2 / 3 / 4 columnas */
+  body.shop-mode #colecciones,
+  body.shop-mode .view-toggle { display: none; }
+  body.shop-mode #grid { grid-template-columns: repeat(2, 1fr); gap: 22px 14px; }
+  @media (min-width: 720px)  { body.shop-mode #grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1080px) { body.shop-mode #grid { grid-template-columns: repeat(4, 1fr); } }
 
   /* ===== Filters ===== */
   .filters { display: flex; flex-wrap: wrap; gap: 26px; justify-content: center; margin-bottom: 22px; }
@@ -1001,7 +1007,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v1.8';
+const STORE_VERSION = 'v1.9';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
