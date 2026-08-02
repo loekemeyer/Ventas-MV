@@ -210,6 +210,8 @@
   }
   .chip:hover { color: var(--ink); }
   .chip.active { color: var(--ink); border-bottom-color: var(--ink); }
+  .chip-ofertas { color: var(--leather); }
+  .chip-ofertas.active { color: var(--leather); border-bottom-color: var(--leather); }
   .search-row { display: flex; justify-content: center; margin-bottom: 44px; }
   .search-row input {
     width: 100%; max-width: 420px; padding: 12px 8px; border-radius: 0; text-align: center;
@@ -663,6 +665,7 @@
     </a>
     <nav class="nav-links">
       <a href="#tienda">Tienda</a>
+      <a href="#tienda" class="lnk-ofertas" data-ofertas style="display:none">Ofertas</a>
       <a href="#historia">Historia</a>
       <a href="#talles">Guía de talles</a>
       <a href="#contacto">Contacto</a>
@@ -691,6 +694,7 @@
 
 <div class="mnav" id="mnav">
   <a href="#tienda" data-close-mnav>Tienda</a>
+  <a href="#tienda" class="lnk-ofertas" data-ofertas data-close-mnav style="display:none">Ofertas</a>
   <a href="#historia" data-close-mnav>Historia</a>
   <a href="#talles" data-close-mnav>Guía de talles</a>
   <a href="#contacto" data-close-mnav>Contacto</a>
@@ -1327,12 +1331,25 @@ function categorias() {
   store.productos.forEach(p => { if (p.categoria) set.add(p.categoria); });
   return ['all', ...set];
 }
+function hayOfertas() {
+  return store.productos.some(p => (parseFloat(p.precio_anterior) || 0) > (parseFloat(p.precio) || 0));
+}
+function syncOfertasNav() {
+  const show = hayOfertas();
+  $$('.lnk-ofertas').forEach(a => { a.style.display = show ? '' : 'none'; });
+}
 function renderFilters() {
   const cats = categorias();
-  if (cats.length <= 1) { $('#filters').innerHTML = ''; return; }
-  $('#filters').innerHTML = cats.map(c =>
+  const oferta = hayOfertas();
+  syncOfertasNav();
+  if (cats.length <= 1 && !oferta) { $('#filters').innerHTML = ''; return; }
+  let html = cats.map(c =>
     `<button class="chip ${c === store.filtro ? 'active' : ''}" data-cat="${esc(c)}" aria-pressed="${c === store.filtro}">${c === 'all' ? 'Todo' : esc(c)}</button>`
   ).join('');
+  if (oferta) {
+    html += `<button class="chip chip-ofertas ${store.filtro === '__ofertas__' ? 'active' : ''}" data-cat="__ofertas__" aria-pressed="${store.filtro === '__ofertas__'}">Ofertas</button>`;
+  }
+  $('#filters').innerHTML = html;
 }
 function materiales() {
   const set = new Set();
@@ -1403,7 +1420,9 @@ function renderToolbar() {
 function filtered() {
   const q = store.busca.toLowerCase().trim();
   let list = store.productos.filter(p => {
-    if (store.filtro !== 'all' && p.categoria !== store.filtro) return false;
+    if (store.filtro === '__ofertas__') {
+      if (!((parseFloat(p.precio_anterior) || 0) > (parseFloat(p.precio) || 0))) return false;
+    } else if (store.filtro !== 'all' && p.categoria !== store.filtro) return false;
     if (store.filtroMaterial !== 'all' && p.material !== store.filtroMaterial) return false;
     if (store.filtroTalle !== 'all' && !arr(p.talles).includes(store.filtroTalle)) return false;
     if (store.filtroColor !== 'all' && !arr(p.colores).some(c => (c || '').trim().toLowerCase() === store.filtroColor.toLowerCase())) return false;
@@ -2120,6 +2139,9 @@ function limpiarFiltros() {
   renderFilters(); renderToolbar(); renderGrid();
 }
 document.addEventListener('click', (e) => { if (e.target.closest('[data-clear-filters]')) limpiarFiltros(); });
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-ofertas]')) { store.filtro = '__ofertas__'; renderFilters(); renderGrid(); }
+});
 $('#gridInfo').addEventListener('click', (e) => {
   const vb = e.target.closest('[data-view]');
   if (!vb) return;
