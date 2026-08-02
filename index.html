@@ -17,14 +17,14 @@
 <meta name="twitter:description" content="Camperas de cuero genuino argentino, hechas a mano.">
 <meta name="twitter:image" content="https://loekemeyer.github.io/Ventas-MV/logo.jpg">
 <link rel="canonical" href="https://loekemeyer.github.io/Ventas-MV/">
-<link rel="preload" as="image" href="assets/hero-1.jpg">
+<link rel="preload" as="image" href="assets/productos/bomber/bomber-1.jpg">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <title>MV Leather Studio · Camperas de cuero</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Epilogue:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>try{var t=localStorage.getItem('mv_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <style>
@@ -43,7 +43,7 @@
     --media-bg: var(--media-bg);
     --header-bg: rgba(243,239,231,0.9);
     --serif: "Fraunces", Georgia, "Times New Roman", serif;
-    --sans: "Inter", "Helvetica Neue", Helvetica, -apple-system, Arial, sans-serif;
+    --sans: "Epilogue", "Helvetica Neue", Helvetica, -apple-system, Arial, sans-serif;
   }
   :root[data-theme="dark"] { --bg:#141009; --surface:#1d1712; --ink:#efe6d6; --muted:#a99e8d; --leather:#b8794c; --leather-dark:#8a5730; --gold:#c9a45e; --line:#332a21; --shadow:0 12px 40px rgba(0,0,0,0.55); --media-bg:#241d16; --header-bg:rgba(20,16,10,0.92); }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#141009; --surface:#1d1712; --ink:#efe6d6; --muted:#a99e8d; --leather:#b8794c; --leather-dark:#8a5730; --gold:#c9a45e; --line:#332a21; --shadow:0 12px 40px rgba(0,0,0,0.55); --media-bg:#241d16; --header-bg:rgba(20,16,10,0.92); } }
@@ -146,6 +146,26 @@
   .hero h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.02; color: #fbf3e6; }
   .hero p { font-size: 17px; color: #e2d3bf; margin: 20px 0 30px; max-width: 480px; }
   .hero .eyebrow { color: rgba(244,234,217,0.55); }
+
+  /* ---- Hero editorial (claro / minimal, foto de producto real) ---- */
+  .hero.is-editorial { background: var(--bg); color: var(--ink); min-height: 0; }
+  .hero.is-editorial::after { display: none; }
+  .hero-editorial { display: grid; grid-template-columns: 1.02fr 0.98fr; align-items: stretch; width: 100%; }
+  .hero-copy { align-self: center; padding: clamp(40px, 6vw, 92px); max-width: 640px; margin-left: auto; }
+  .hero.is-editorial .eyebrow { color: var(--muted); }
+  .hero.is-editorial h1 { color: var(--ink); font-size: clamp(36px, 5.4vw, 62px); }
+  .hero.is-editorial p { color: var(--muted); font-size: 16px; margin: 22px 0 34px; max-width: 420px; }
+  .hero-copy .hero-cta { align-items: center; gap: 26px; }
+  .hero-link { color: var(--ink); font-size: 12.5px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: 3px; transition: border-color .3s ease; white-space: nowrap; }
+  .hero-link:hover { border-bottom-color: var(--ink); }
+  .hero-figure { position: relative; min-height: 86vh; overflow: hidden; background: var(--line); }
+  .hero-figure img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+  @media (max-width: 860px) {
+    .hero-editorial { grid-template-columns: 1fr; }
+    .hero-figure { order: -1; min-height: 66vh; }
+    .hero-copy { margin: 0; padding: 38px 22px 52px; max-width: none; }
+    .hero.is-editorial p { max-width: none; }
+  }
 
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -489,8 +509,8 @@
   /* ===== Sort/filter bar ===== */
   .toolbar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-bottom: 30px; }
   .toolbar select {
-    padding: 10px 16px; border-radius: 40px; border: 1px solid var(--line); background: var(--surface);
-    font-size: 13px; font-family: inherit; color: var(--ink);
+    padding: 10px 16px; border-radius: 0; border: 1px solid var(--line); background: var(--surface);
+    font-size: 12px; font-family: inherit; color: var(--ink); letter-spacing: .5px;
   }
 
   /* ===== Free shipping bar (cart) ===== */
@@ -682,13 +702,18 @@
 <!-- ===== HERO ===== -->
 <section class="hero" id="hero">
   <div class="hero-carousel" id="heroCarousel"></div>
-  <div class="wrap hero-inner" id="heroDefault">
-    <span class="eyebrow">MV Leather Studio</span>
-    <h1>El cuero que dura toda una vida.</h1>
-    <p>Camperas de cuero cortadas y cosidas a mano, una por una, en nuestro taller. Cuero argentino de verdad, prendas para toda la vida.</p>
-    <div class="hero-cta">
-      <a href="#tienda" class="btn btn-ghost">Ver colección</a>
-      <a href="#historia" class="btn btn-ghost">Nuestra historia</a>
+  <div class="hero-editorial" id="heroDefault">
+    <div class="hero-copy">
+      <span class="eyebrow">Foundations · Autumn·Winter 2026</span>
+      <h1>El cuero que dura toda una vida.</h1>
+      <p>Camperas y prendas de cuero genuino argentino, cortadas y cosidas a mano, pieza por pieza, en nuestro taller.</p>
+      <div class="hero-cta">
+        <a href="#tienda" class="btn btn-outline">Ver colección</a>
+        <a href="#historia" class="hero-link">Nuestra historia →</a>
+      </div>
+    </div>
+    <div class="hero-figure">
+      <img src="assets/productos/bomber/bomber-1.jpg" alt="Campera bomber de cuero — MV Leather Studio" loading="eager">
     </div>
   </div>
 </section>
@@ -885,7 +910,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v1.3';
+const STORE_VERSION = 'v1.4';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1202,7 +1227,16 @@ function heroSlideHtml(m, i) {
 function renderHero() {
   const car = $('#heroCarousel'), def = $('#heroDefault'), hero = $('#hero');
   clearInterval(heroTimer);
-  const slides = (store.media && store.media.length) ? store.media : DEFAULT_HERO_SLIDES;
+  // Sin media propia configurada → hero editorial claro (foto de producto real).
+  if (!(store.media && store.media.length)) {
+    car.innerHTML = '';
+    def.style.display = '';
+    hero.classList.remove('has-media');
+    hero.classList.add('is-editorial');
+    return;
+  }
+  const slides = store.media;
+  hero.classList.remove('is-editorial');
   def.style.display = 'none';
   hero.classList.add('has-media');
   car.innerHTML = slides.map(heroSlideHtml).join('')
