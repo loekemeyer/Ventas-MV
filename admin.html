@@ -18,22 +18,31 @@
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { -webkit-text-size-adjust: 100%; }
+  :root {
+    --bg: #f5f5f8; --surface: #ffffff; --ink: #17171b; --muted: #8a8a92;
+    --line: #e8e8ee; --line-soft: #f0f0f4;
+    --primary: #1c1c1e; --primary-ink: #ffffff;
+    --accent: #0a6cff; --ok: #1a9c46; --ok-bg: #e6f8ee; --danger: #e0392e;
+    --radius: 14px; --radius-sm: 10px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 20px rgba(20,20,30,.05);
+  }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background: #f2f2f7;
-    color: #1c1c1e;
+    background: var(--bg);
+    color: var(--ink);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     padding-bottom: env(safe-area-inset-bottom);
   }
   header {
-    background: rgba(255,255,255,0.92);
+    background: rgba(255,255,255,0.9);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
-    padding: calc(6px + env(safe-area-inset-top)) 12px 8px;
-    box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+    padding: calc(8px + env(safe-area-inset-top)) 16px 10px;
+    border-bottom: 1px solid var(--line);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -52,28 +61,32 @@
   }
   .tabs {
     display: flex;
-    gap: 6px;
-    background: #e9e9ee;
-    padding: 3px;
-    border-radius: 8px;
+    gap: 4px;
+    background: #ececf1;
+    padding: 4px;
+    border-radius: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
   }
   .tab {
     flex: 1;
-    padding: 6px 4px;
+    padding: 8px 4px;
     background: transparent;
     border: none;
-    border-radius: 6px;
-    font-size: 12px;
+    border-radius: 9px;
+    font-size: 12.5px;
     font-weight: 600;
     cursor: pointer;
-    color: #1c1c1e;
-    transition: all 0.2s;
-    min-height: 38px;
+    color: #6a6a72;
+    transition: all 0.18s;
+    min-height: 40px;
     line-height: 1.15;
   }
+  .tab:hover { color: var(--ink); }
   .tab.active {
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 3px 8px rgba(0,0,0,0.04);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
   }
   main { padding: 10px 12px; max-width: 1200px; margin: 0 auto; }
   .module { display: none; position: relative; }
@@ -96,11 +109,12 @@
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   .card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 10px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    margin-bottom: 10px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 12px;
   }
   .grid {
     display: grid;
@@ -161,16 +175,18 @@
     font-size: 15px;
     font-weight: 600;
     border: none;
-    border-radius: 9px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: transform 0.05s, opacity 0.15s;
+    transition: transform 0.05s, opacity 0.15s, background 0.15s, box-shadow 0.15s;
     font-family: inherit;
     min-height: 40px;
   }
   button:active { transform: scale(0.97); opacity: 0.85; }
-  .btn-primary { background: #007aff; color: #fff; flex: 1; }
-  .btn-secondary { background: #e9e9ee; color: #1c1c1e; flex: 1; }
-  .btn-danger { background: #ff3b30; color: #fff; }
+  .btn-primary { background: var(--primary); color: var(--primary-ink); flex: 1; box-shadow: 0 2px 8px rgba(20,20,30,.18); }
+  .btn-primary:hover { background: #000; }
+  .btn-secondary { background: #eef0f3; color: var(--ink); flex: 1; border: 1px solid var(--line); }
+  .btn-secondary:hover { background: #e6e8ec; }
+  .btn-danger { background: var(--danger); color: #fff; }
   .btn-small { padding: 10px 14px; font-size: 14px; min-height: 38px; }
 
   /* Stats */
@@ -1156,31 +1172,36 @@
     min-height: auto;
   }
 
-  /* ===== Tienda (admin) ===== */
-  .producto-card { padding: 10px; }
-  .producto-row { display: flex; align-items: center; gap: 10px; }
-  .producto-thumb {
-    width: 56px; height: 56px; flex-shrink: 0; border-radius: 8px;
-    overflow: hidden; background: #f2f2f7; display: flex;
-    align-items: center; justify-content: center;
+  /* ===== Tienda (admin) — lista de productos ===== */
+  .prod-card { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: #fff; border: 1px solid #ececf0; border-radius: 14px; margin-bottom: 8px; transition: border-color .15s, box-shadow .15s; }
+  .prod-card:hover { border-color: #d8d8de; box-shadow: 0 2px 10px rgba(0,0,0,.04); }
+  .prod-thumb { width: 60px; height: 74px; flex-shrink: 0; border-radius: 9px; overflow: hidden; background: #f2f2f7; display: flex; align-items: center; justify-content: center; }
+  .prod-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .prod-thumb.noimg::after, .prod-thumb:empty::after { content: 'sin foto'; font-size: 9px; color: #b0b0b5; text-transform: uppercase; letter-spacing: .5px; }
+  .prod-info { flex: 1; min-width: 0; }
+  .prod-name { font-weight: 700; font-size: 15px; color: #1c1c1e; letter-spacing: -.2px; display: flex; align-items: center; gap: 6px; }
+  .prod-name .star { color: #ff9f0a; font-size: 13px; }
+  .prod-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 11.5px; color: #8e8e93; margin-top: 3px; }
+  .prod-chip { background: #f2f2f7; color: #636366; border-radius: 6px; padding: 1px 7px; font-weight: 600; font-size: 10.5px; }
+  .prod-chip.out { background: #fdecec; color: #d0304a; }
+  .prod-price { font-size: 15px; font-weight: 800; color: #1c1c1e; margin-top: 5px; }
+  .prod-price s { color: #b0b0b5; font-weight: 500; font-size: 12.5px; margin-left: 6px; }
+  .prod-price .off { color: #d0304a; font-weight: 800; font-size: 11px; margin-left: 6px; }
+  .prod-status { flex-shrink: 0; }
+  .pill { font-size: 11px; font-weight: 700; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid transparent; letter-spacing: .2px; white-space: nowrap; }
+  .pill-active { background: #e4f8ec; color: #1a9c46; border-color: #b9ecca; }
+  .pill-hidden { background: #f2f2f7; color: #8e8e93; border-color: #e2e2e7; }
+  .prod-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-icon { width: 38px; height: 38px; border-radius: 10px; border: 1px solid #e2e2e7; background: #fff; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; padding: 0; }
+  .btn-icon:hover { background: #f7f7f9; }
+  .btn-icon.del:hover { background: #fdecec; border-color: #f2b8b8; }
+  @media (max-width: 620px) {
+    .prod-card { flex-wrap: wrap; }
+    .prod-info { flex-basis: calc(100% - 74px); }
+    .prod-status, .prod-actions { margin-left: 74px; }
+    .prod-actions { margin-left: auto; }
   }
-  .producto-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .producto-thumb span, .producto-thumb.noimg img { display: none; }
-  .producto-thumb.noimg::after, .producto-thumb:not(:has(img))::after {
-    content: 'Sin foto'; font-size: 9px; color: #b0b0b5;
-  }
-  .producto-meta { flex: 1; min-width: 0; }
-  .producto-nombre { font-weight: 700; font-size: 14px; letter-spacing: -0.2px; }
-  .producto-sub { font-size: 11px; color: #8e8e93; margin-top: 1px; }
-  .producto-precio { font-size: 13px; font-weight: 600; margin-top: 2px; }
-  .badge-dest { color: #ff9500; font-size: 12px; }
-  .producto-flags { flex-shrink: 0; }
-  .flag-btn {
-    border: 1px solid #d1d1d6; background: #f2f2f7; color: #8e8e93;
-    font-size: 11px; font-weight: 600; padding: 5px 8px; border-radius: 20px;
-    cursor: pointer; min-height: auto;
-  }
-  .flag-btn.on { background: #e4f8ec; border-color: #34c759; color: #1a9c46; }
+  .badge-dest { color: #ff9f0a; }
   .chip-check-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
   .chip-check { position: relative; }
   .chip-check input { position: absolute; opacity: 0; width: 0; height: 0; }
@@ -4272,24 +4293,29 @@ function renderTienda() {
   }
   prods.forEach(p => {
     const img = arr(p.imagenes)[0];
-    const precio = fmtMoney(p.precio, p.moneda);
+    const nFotos = arr(p.imagenes).length;
+    const off = (p.precio_anterior && p.precio_anterior > p.precio)
+      ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
+    const catMat = [escapeHtml(p.categoria), escapeHtml(p.material)].filter(Boolean).join(' · ') || 'Sin categoría';
+    const chips = [];
+    if (p.stock != null && p.stock === 0) chips.push('<span class="prod-chip out">Agotado</span>');
+    else if (p.stock != null && p.stock > 0) chips.push(`<span class="prod-chip">Stock ${p.stock}</span>`);
+    if (nFotos) chips.push(`<span class="prod-chip">${nFotos} foto${nFotos === 1 ? '' : 's'}</span>`);
     const card = document.createElement('div');
-    card.className = 'venta-card producto-card';
+    card.className = 'prod-card';
     card.innerHTML = `
-      <div class="producto-row">
-        <div class="producto-thumb">${img ? `<img src="${escapeHtml(img)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg')">` : '<span>Sin foto</span>'}</div>
-        <div class="producto-meta">
-          <div class="producto-nombre">${escapeHtml(p.nombre) || '(sin nombre)'} ${p.destacado ? '<span class="badge-dest">★</span>' : ''}</div>
-          <div class="producto-sub">${[escapeHtml(p.categoria), escapeHtml(p.material)].filter(Boolean).join(' · ') || '—'}</div>
-          <div class="producto-precio">${precio}${p.precio_anterior ? ` <s style="color:#8e8e93;font-weight:400;">${fmtMoney(p.precio_anterior, p.moneda)}</s>` : ''}</div>
-        </div>
-        <div class="producto-flags">
-          <button class="flag-btn ${p.activo ? 'on' : ''}" data-toggle-activo="${p.id}" title="Mostrar en la tienda">${p.activo ? 'Activo' : 'Oculto'}</button>
-        </div>
+      <div class="prod-thumb${img ? '' : ' noimg'}">${img ? `<img src="${escapeHtml(img)}" alt="" loading="lazy" onerror="this.style.display='none'; this.parentNode.classList.add('noimg')">` : ''}</div>
+      <div class="prod-info">
+        <div class="prod-name">${escapeHtml(p.nombre) || '(sin nombre)'}${p.destacado ? '<span class="star" title="Destacado">★</span>' : ''}</div>
+        <div class="prod-tags"><span>${catMat}</span>${chips.join('')}</div>
+        <div class="prod-price">${fmtMoney(p.precio, p.moneda)}${p.precio_anterior && p.precio_anterior > p.precio ? ` <s>${fmtMoney(p.precio_anterior, p.moneda)}</s>` : ''}${off ? `<span class="off">-${off}%</span>` : ''}</div>
       </div>
-      <div class="venta-actions">
-        <button class="btn-edit" data-edit-prod="${p.id}" title="Editar">✏️ Editar</button>
-        <button class="del-btn" data-del-prod="${p.id}">Borrar</button>
+      <div class="prod-status">
+        <button class="pill ${p.activo ? 'pill-active' : 'pill-hidden'}" data-toggle-activo="${p.id}" title="${p.activo ? 'Visible en la tienda — tocá para ocultar' : 'Oculto — tocá para mostrar'}">${p.activo ? '● Activo' : '○ Oculto'}</button>
+      </div>
+      <div class="prod-actions">
+        <button class="btn-icon" data-edit-prod="${p.id}" title="Editar" aria-label="Editar">✏️</button>
+        <button class="btn-icon del" data-del-prod="${p.id}" title="Borrar" aria-label="Borrar">🗑️</button>
       </div>`;
     listEl.appendChild(card);
   });
