@@ -24,26 +24,26 @@
 <title>MV Leather Studio · Camperas de cuero</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>try{var t=localStorage.getItem('mv_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <style>
   :root {
-    --bg: #f6f2ec;
-    --surface: #ffffff;
-    --ink: #1c1712;
-    --muted: #7b7168;
+    --bg: #f3efe7;
+    --surface: #faf8f2;
+    --ink: #211b15;
+    --muted: #8a7f73;
     --leather: #7c4a28;
     --leather-dark: #4e2f19;
     --gold: #a9834b;
-    --line: #e6ddd0;
+    --line: #e7ded1;
     --ok: #2e7d46;
-    --danger: #c0392b;
-    --shadow: 0 10px 40px rgba(40,26,14,0.10);
+    --danger: #b0503c;
+    --shadow: 0 10px 40px rgba(40,26,14,0.08);
     --media-bg: var(--media-bg);
-    --header-bg: rgba(246,242,236,0.92);
+    --header-bg: rgba(243,239,231,0.9);
     --serif: "Fraunces", Georgia, "Times New Roman", serif;
-    --sans: "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    --sans: "Inter", "Helvetica Neue", Helvetica, -apple-system, Arial, sans-serif;
   }
   :root[data-theme="dark"] { --bg:#141009; --surface:#1d1712; --ink:#efe6d6; --muted:#a99e8d; --leather:#b8794c; --leather-dark:#8a5730; --gold:#c9a45e; --line:#332a21; --shadow:0 12px 40px rgba(0,0,0,0.55); --media-bg:#241d16; --header-bg:rgba(20,16,10,0.92); }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#141009; --surface:#1d1712; --ink:#efe6d6; --muted:#a99e8d; --leather:#b8794c; --leather-dark:#8a5730; --gold:#c9a45e; --line:#332a21; --shadow:0 12px 40px rgba(0,0,0,0.55); --media-bg:#241d16; --header-bg:rgba(20,16,10,0.92); } }
@@ -73,8 +73,9 @@
   /* ===== Announcement ===== */
   .announce {
     position: relative;
-    background: var(--leather-dark); color: #f3e9dc; text-align: center;
-    font-size: 12px; letter-spacing: 1.5px; padding: 8px 16px; text-transform: uppercase;
+    background: var(--bg); color: var(--muted); text-align: center;
+    font-size: 10.5px; letter-spacing: 2px; padding: 9px 16px; text-transform: uppercase; font-weight: 500;
+    border-bottom: 1px solid var(--line);
   }
   .announce-ver { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; letter-spacing: 1px; opacity: .5; }
   .header-ver { align-self: center; margin-left: 6px; font-size: 10px; letter-spacing: .5px; color: var(--muted); opacity: .7; white-space: nowrap; }
@@ -148,15 +149,17 @@
 
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 14px 30px; border-radius: 2px; font-size: 13px; font-weight: 600;
-    letter-spacing: 1.5px; text-transform: uppercase; border: 1px solid transparent;
-    transition: all .2s; min-height: 48px;
+    padding: 15px 34px; border-radius: 0; font-size: 12px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase; border: 1px solid transparent;
+    transition: all .35s ease; min-height: 50px;
   }
-  .btn-primary { background: var(--leather); color: #fff; }
-  .btn-primary:hover { background: var(--leather-dark); }
+  .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .btn-primary:hover { background: #000; }
+  .btn-outline { background: transparent; color: var(--ink); border-color: var(--ink); }
+  .btn-outline:hover { background: var(--ink); color: var(--bg); }
   .btn-ghost { background: transparent; color: #f4ead9; border-color: rgba(244,234,217,0.5); }
-  .btn-ghost:hover { background: rgba(244,234,217,0.12); }
-  .btn-dark { background: var(--ink); color: var(--bg); }
+  .btn-ghost:hover { background: rgba(244,234,217,0.10); }
+  .btn-dark { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   .btn-dark:hover { background: #000; }
   .btn-block { width: 100%; }
   .btn[disabled] { opacity: .5; cursor: not-allowed; }
@@ -179,18 +182,22 @@
   .store-rating b { color: var(--ink); }
 
   /* ===== Filters ===== */
-  .filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 14px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 26px; justify-content: center; margin-bottom: 22px; }
   .chip {
-    padding: 9px 18px; border-radius: 40px; border: 1px solid var(--line);
-    background: var(--surface); font-size: 13px; font-weight: 500; color: var(--muted); transition: all .2s;
+    padding: 4px 0; border: none; background: transparent;
+    font-size: 12px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid transparent; transition: color .25s, border-color .25s;
   }
-  .chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  .search-row { display: flex; justify-content: center; margin-bottom: 34px; }
+  .chip:hover { color: var(--ink); }
+  .chip.active { color: var(--ink); border-bottom-color: var(--ink); }
+  .search-row { display: flex; justify-content: center; margin-bottom: 44px; }
   .search-row input {
-    width: 100%; max-width: 380px; padding: 12px 18px; border-radius: 40px;
-    border: 1px solid var(--line); background: var(--surface); font-size: 14px; font-family: inherit;
+    width: 100%; max-width: 420px; padding: 12px 8px; border-radius: 0; text-align: center;
+    border: none; border-bottom: 1px solid var(--line); background: transparent;
+    font-size: 13px; letter-spacing: .5px; font-family: inherit; color: var(--ink);
   }
-  .search-row input:focus { outline: none; border-color: var(--leather); }
+  .search-row input::placeholder { color: var(--muted); letter-spacing: 1px; font-size: 12px; }
+  .search-row input:focus { outline: none; border-bottom-color: var(--ink); }
 
   /* ===== Product grid ===== */
   /* Grilla editorial, foto-first (estética tipo Lovely Denim) */
@@ -203,17 +210,18 @@
   }
   .card { overflow: hidden; display: flex; flex-direction: column; cursor: pointer; }
   .card-media { position: relative; aspect-ratio: 3/4; background: var(--media-bg); overflow: hidden; }
-  .card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .55s ease; }
-  .card:hover .card-media img { transform: scale(1.04); }
+  .card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+  .card:hover .card-media img { transform: scale(1.03); }
   /* 2da foto: aparece al pasar el mouse (solo en dispositivos con hover) para dar aire editorial. */
   .card-media .card-media-2 { position: absolute; inset: 0; opacity: 0; transition: opacity .45s ease, transform .55s ease; }
   @media (hover: hover) { .card:hover .card-media-2 { opacity: 1; transform: scale(1.04); } }
   .card-media .ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#b6a894; font-family: var(--serif); font-size: 15px; letter-spacing: 2px; }
   .tag {
-    position: absolute; top: 10px; left: 10px; background: rgba(28,20,14,0.82); color: #fff;
-    font-size: 9px; font-weight: 700; letter-spacing: 1px; padding: 4px 8px; text-transform: uppercase; backdrop-filter: blur(2px);
+    position: absolute; top: 12px; left: 12px; background: transparent; color: #f4ead9;
+    font-size: 9.5px; font-weight: 500; letter-spacing: 1.6px; padding: 0; text-transform: uppercase;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.45);
   }
-  .tag.off { background: var(--danger); left: auto; right: 10px; }
+  .tag.off { background: transparent; color: #f4ead9; left: auto; right: 12px; text-shadow: 0 1px 8px rgba(0,0,0,0.45); }
   .card-body { padding: 10px 2px 6px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
   .card-cat { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
   .card-title { font-family: var(--serif); font-size: 17px; font-weight: 600; line-height: 1.12; }
@@ -679,7 +687,7 @@
     <h1>El cuero que dura toda una vida.</h1>
     <p>Camperas de cuero cortadas y cosidas a mano, una por una, en nuestro taller. Cuero argentino de verdad, prendas para toda la vida.</p>
     <div class="hero-cta">
-      <a href="#tienda" class="btn btn-primary">Ver colección</a>
+      <a href="#tienda" class="btn btn-ghost">Ver colección</a>
       <a href="#historia" class="btn btn-ghost">Nuestra historia</a>
     </div>
   </div>
@@ -877,7 +885,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v1.2';
+const STORE_VERSION = 'v1.3';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1187,7 +1195,7 @@ function heroSlideHtml(m, i) {
       <span class="eyebrow">${esc(store.cfg.nombre_tienda || 'MV Leather Studio')}</span>
       ${m.titulo ? `<h1>${esc(m.titulo)}</h1>` : ''}
       ${m.subtitulo ? `<p>${esc(m.subtitulo)}</p>` : ''}
-      ${m.cta_texto ? `<a class="btn btn-primary" href="${esc(m.cta_link || '#tienda')}">${esc(m.cta_texto)}</a>` : ''}
+      ${m.cta_texto ? `<a class="btn btn-ghost" href="${esc(m.cta_link || '#tienda')}">${esc(m.cta_texto)}</a>` : ''}
     </div>` : ''}
   </div>`;
 }
