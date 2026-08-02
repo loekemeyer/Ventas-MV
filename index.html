@@ -264,7 +264,8 @@
   footer a:hover { color: #fff; }
   .foot-brand .brand-name { color: #f3e7d3; }
   .foot-bottom { border-top: 1px solid #2a2016; margin-top: 36px; padding-top: 18px; font-size: 12px; color: #7d715f; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-  .admin-link { color: #5f5647; }
+  .admin-link { display: inline-block; padding: 6px 14px; border: 1px solid #4a3f31; border-radius: 3px; color: #cdbfa8; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; font-size: 11px; }
+  .admin-link:hover { background: #2a2016; color: #f3e9dc; }
 
   /* ===== Drawer / Modal shared ===== */
   .overlay {
@@ -794,7 +795,7 @@
     </div>
     <div class="foot-bottom">
       <span>© <span id="year"></span> MV Leather Studio. Todos los derechos reservados.</span>
-      <a class="admin-link" href="admin.html">Acceso panel</a>
+      <a class="admin-link" href="admin.html">Admin</a>
     </div>
   </div>
 </footer>
@@ -874,7 +875,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v1.0';
+const STORE_VERSION = 'v1.1';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
