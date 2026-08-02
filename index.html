@@ -119,8 +119,8 @@
   .brand-name { font-family: var(--serif); font-size: 24px; font-weight: 600; letter-spacing: 1.2px; white-space: nowrap; text-transform: uppercase; }
   .nav-links { display: flex; gap: 38px; justify-content: center; align-items: center; padding: 2px 0 14px; }
   .nav-links > a, .nav-shop-trigger { text-transform: uppercase; }
-  .nav-links a { font-size: 13px; letter-spacing: 0.5px; color: var(--muted); font-weight: 500; transition: color .2s; }
-  .nav-links a:hover { color: var(--ink); }
+  .nav-links a { font-size: 12px; letter-spacing: 3px; color: var(--ink); font-weight: 400; transition: opacity .2s; }
+  .nav-links a:hover { opacity: .55; }
   /* Shop dropdown (colecciones) */
   .nav-shop { position: relative; display: inline-flex; align-items: center; }
   .nav-shop-trigger { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
@@ -1082,7 +1082,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v2.5';
+const STORE_VERSION = 'v2.6';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
