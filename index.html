@@ -1147,7 +1147,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v4.6';
+const STORE_VERSION = 'v4.7';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -2149,7 +2149,10 @@ function coHeadHtml() {
   const total = subtotal - desc;
   const mon = store.cart[0]?.moneda || 'ARS';
   const dt = parseFloat(store.cfg.descuento_transferencia) || 0;
-  const rows = store.cart.map(i => `<div class="row"><span>${esc(i.nombre)} ${i.talle?`(${esc(i.talle)})`:''} ×${i.qty}</span><span>${money(i.precio*i.qty, i.moneda)}</span></div>`).join('');
+  const rows = store.cart.map(i => {
+    const variante = [i.color, i.talle].filter(Boolean).join(' · ');
+    return `<div class="row"><span>${esc(i.nombre)}${variante ? ` (${esc(variante)})` : ''} ×${i.qty}</span><span>${money(i.precio*i.qty, i.moneda)}</span></div>`;
+  }).join('');
   return `
     <div class="co-summary">
       ${rows}
