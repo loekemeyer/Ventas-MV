@@ -459,10 +459,10 @@
 
   .drawer {
     position: fixed; top: 0; right: 0; height: 100%; width: 420px; max-width: 92vw;
-    background: var(--bg); z-index: 70; transform: translateX(100%); transition: transform .3s;
+    background: var(--bg); z-index: 70; transform: translateX(100%); visibility: hidden; transition: transform .3s, visibility 0s .3s;
     display: flex; flex-direction: column; box-shadow: -10px 0 40px rgba(0,0,0,0.2);
   }
-  .drawer.show { transform: translateX(0); }
+  .drawer.show { transform: translateX(0); visibility: visible; transition: transform .3s, visibility 0s 0s; }
   @media (max-width: 560px) { .drawer { width: 100%; max-width: 100%; } }
   .drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid var(--line); }
   .drawer-head h3 { font-size: 24px; }
@@ -1078,7 +1078,7 @@
 
 <!-- ===== CART DRAWER ===== -->
 <div class="overlay" id="overlay"></div>
-<aside class="drawer" id="cartDrawer" aria-label="Carrito">
+<aside class="drawer" id="cartDrawer" role="dialog" aria-modal="true" aria-label="Carrito">
   <div class="drawer-head">
     <h3>Tu carrito</h3>
     <button class="close-x" data-close-cart>&times;</button>
@@ -1091,7 +1091,7 @@
 </aside>
 
 <!-- ===== PRODUCT MODAL ===== -->
-<div class="pmodal" id="pmodal"><div class="pmodal-inner" id="pmodalInner"></div><div class="pm-sticky-buy" id="pmStickyBuy" hidden></div></div>
+<div class="pmodal" id="pmodal" role="dialog" aria-modal="true" aria-label="Detalle del producto"><div class="pmodal-inner" id="pmodalInner"></div><div class="pm-sticky-buy" id="pmStickyBuy" hidden></div></div>
 
 <!-- ===== LIGHTBOX (zoom de foto de producto) ===== -->
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
@@ -1102,7 +1102,7 @@
 </div>
 
 <!-- ===== CHECKOUT DRAWER ===== -->
-<aside class="drawer" id="checkoutDrawer" aria-label="Checkout">
+<aside class="drawer" id="checkoutDrawer" role="dialog" aria-modal="true" aria-label="Checkout">
   <div class="drawer-head">
     <h3>Finalizar compra</h3>
     <button class="close-x" data-close-checkout>&times;</button>
@@ -1111,7 +1111,7 @@
 </aside>
 
 <!-- ===== ACCOUNT DRAWER ===== -->
-<aside class="drawer" id="accountDrawer" aria-label="Mi cuenta">
+<aside class="drawer" id="accountDrawer" role="dialog" aria-modal="true" aria-label="Mi cuenta">
   <div class="drawer-head">
     <h3>Mi cuenta</h3>
     <button class="close-x" data-close-account>&times;</button>
@@ -1120,7 +1120,7 @@
 </aside>
 
 <!-- ===== WISHLIST DRAWER ===== -->
-<aside class="drawer" id="wishDrawer" aria-label="Favoritos">
+<aside class="drawer" id="wishDrawer" role="dialog" aria-modal="true" aria-label="Favoritos">
   <div class="drawer-head">
     <h3>Tus favoritos</h3>
     <button class="close-x" data-close-wish>&times;</button>
@@ -1129,7 +1129,7 @@
 </aside>
 
 <!-- ===== INFO MODAL (talles / cuidado) ===== -->
-<div class="pmodal" id="infoModal"><div class="pmodal-inner" id="infoInner" style="grid-template-columns:1fr; max-width:620px;"></div></div>
+<div class="pmodal" id="infoModal" role="dialog" aria-modal="true" aria-label="Información"><div class="pmodal-inner" id="infoInner" style="grid-template-columns:1fr; max-width:620px;"></div></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -1147,7 +1147,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v4.5';
+const STORE_VERSION = 'v4.6';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
