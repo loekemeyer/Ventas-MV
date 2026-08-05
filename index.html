@@ -883,9 +883,9 @@
       <p>Cuero genuino argentino. Piezas hechas para acompañarte toda la vida.</p>
     </div>
     <div class="hero-figure" id="heroFigure">
-      <img class="hf-slide active" src="assets/productos/campera-jeans/campera-jeans-1.jpg" style="object-position:center 30%" alt="Campaña MV Leather Studio — campera de cuero" loading="eager">
-      <img class="hf-slide" src="assets/productos/falda-botones/falda-botones-1.jpg" style="object-position:center 34%" alt="Campaña MV Leather Studio — falda de cuero" loading="eager">
-      <img class="hf-slide" src="assets/productos/napalan-largo/napalan-largo-1.jpg" style="object-position:center 32%" alt="Campaña MV Leather Studio — tapado largo napalán" loading="eager">
+      <img class="hf-slide active" src="assets/productos/campera-jeans/campera-jeans-1.jpg" style="object-position:center 30%" alt="Campaña MV Leather Studio — campera de cuero" loading="eager" aria-hidden="false">
+      <img class="hf-slide" src="assets/productos/falda-botones/falda-botones-1.jpg" style="object-position:center 34%" alt="Campaña MV Leather Studio — falda de cuero" loading="eager" aria-hidden="true">
+      <img class="hf-slide" src="assets/productos/napalan-largo/napalan-largo-1.jpg" style="object-position:center 32%" alt="Campaña MV Leather Studio — tapado largo napalán" loading="eager" aria-hidden="true">
       <div class="hf-dots" aria-hidden="true">
         <button class="hf-dot active" data-hf="0" aria-label="Foto 1"></button>
         <button class="hf-dot" data-hf="1" aria-label="Foto 2"></button>
@@ -1147,7 +1147,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v4.9';
+const STORE_VERSION = 'v5.0';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -2435,7 +2435,7 @@ $('#featGrid').addEventListener('click', (e) => {
   let i = 0, timer = null;
   function go(n) {
     i = (n + slides.length) % slides.length;
-    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    slides.forEach((s, k) => { s.classList.toggle('active', k === i); s.setAttribute('aria-hidden', k === i ? 'false' : 'true'); });
     dots.forEach((d, k) => d.classList.toggle('active', k === i));
   }
   function start() { stop(); if (!reduce) timer = setInterval(() => go(i + 1), 5000); }
