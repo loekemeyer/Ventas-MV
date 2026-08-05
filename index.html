@@ -1147,7 +1147,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v5.0';
+const STORE_VERSION = 'v5.1';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -2442,6 +2442,23 @@ $('#featGrid').addEventListener('click', (e) => {
   function stop() { if (timer) clearInterval(timer); timer = null; }
   dots.forEach(d => d.addEventListener('click', () => { go(+d.dataset.hf); start(); }));
   start();
+})();
+// ===== Focus-trap básico: mientras hay un diálogo abierto, el fondo (header/contenido/footer)
+// queda `inert` — no enfocable ni interactivo, así el Tab no se escapa detrás del overlay.
+// Reacciona a la clase .show de cada diálogo, sin tocar sus funciones de apertura/cierre.
+// `inert` degrada de forma segura en navegadores viejos (simplemente lo ignoran).
+(function backgroundInertGuard() {
+  const bg = ['header', '#contenido', 'footer'].map(s => document.querySelector(s)).filter(Boolean);
+  const dialogs = ['cartDrawer', 'checkoutDrawer', 'accountDrawer', 'wishDrawer', 'pmodal', 'infoModal']
+    .map(id => document.getElementById(id)).filter(Boolean);
+  if (!bg.length || !dialogs.length) return;
+  const update = () => {
+    const open = dialogs.some(d => d.classList.contains('show'));
+    bg.forEach(el => { if (open) el.setAttribute('inert', ''); else el.removeAttribute('inert'); });
+  };
+  const mo = new MutationObserver(update);
+  dialogs.forEach(d => mo.observe(d, { attributes: true, attributeFilter: ['class'] }));
+  update();
 })();
 // Accesibilidad por teclado: Enter/Espacio sobre una card (grilla, rails, relacionados,
 // favoritos) abre la ficha. Solo actúa si la card en sí tiene el foco, no un botón interno
