@@ -972,6 +972,15 @@
     border-radius: 8px; font-weight: 600;
     min-height: 36px; border: none;
   }
+  .btn-pago {
+    padding: 8px 12px; font-size: 13px;
+    border-radius: 8px; font-weight: 700;
+    min-height: 36px; border: none; cursor: pointer;
+  }
+  .btn-pago.is-pend  { background: #f59e0b; color: #fff; }   /* ámbar: falta confirmar pago */
+  .btn-pago.is-pagado { background: #d1fae5; color: #065f46; } /* verde: ya pagó (tocar para deshacer) */
+  /* Pedido web con pago sin confirmar: se destaca para darle seguimiento */
+  .venta-card.pago-pendiente { border-left: 4px solid #f59e0b; background: #fffdf7; }
 
   /* Modal flujo */
   .estado-modal {
@@ -1457,8 +1466,9 @@
   <section id="registro" class="module">
     <div class="card">
       <div class="period-chips" style="margin-bottom: 12px;">
-        <button type="button" class="period-chip active" data-filter="enCurso" onclick="setVerTodos(false)">Solo en curso</button>
-        <button type="button" class="period-chip" data-filter="todos" onclick="setVerTodos(true)">Ver todos</button>
+        <button type="button" class="period-chip active" data-filter="enCurso" onclick="setVistaPedidos('enCurso')">Solo en curso</button>
+        <button type="button" class="period-chip" data-filter="todos" onclick="setVistaPedidos('todos')">Ver todos</button>
+        <button type="button" class="period-chip" data-filter="pagoPend" onclick="setVistaPedidos('pagoPend')">💳 Pago pendiente</button>
       </div>
       <div id="ventaList" class="venta-list"></div>
     </div>
@@ -1793,7 +1803,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v4.3';
+const APP_VERSION = 'v4.4';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -3523,13 +3533,16 @@ function missingColumnFromError(error) {
 }
 
 let mostrarEntregados = false;
-function setVerTodos(todos) {
-  mostrarEntregados = todos;
+let vistaPedidos = 'enCurso';   // 'enCurso' | 'todos' | 'pagoPend'
+function setVistaPedidos(modo) {
+  vistaPedidos = modo;
+  mostrarEntregados = (modo === 'todos');
   document.querySelectorAll('#registro .period-chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.filter === (todos ? 'todos' : 'enCurso'));
+    c.classList.toggle('active', c.dataset.filter === modo);
   });
   render();
 }
+function setVerTodos(todos) { setVistaPedidos(todos ? 'todos' : 'enCurso'); }
 
 function getFiltered() {
   const qEl = document.getElementById('filtroBusqueda');
@@ -3539,8 +3552,13 @@ function getFiltered() {
   const desde = desdeEl ? desdeEl.value : '';
   const hasta = hastaEl ? hastaEl.value : '';
   let data = load();
-  // Por defecto ocultar los entregados
-  if (!mostrarEntregados) data = data.filter(v => v.estado !== 'Entregado');
+  if (vistaPedidos === 'pagoPend') {
+    // Solo pedidos web con el pago sin confirmar (para darles seguimiento)
+    data = data.filter(v => v.origen === 'web' && v.pagoEstado !== 'pagado' && v.estado !== 'Entregado');
+  } else if (!mostrarEntregados) {
+    // Por defecto ocultar los entregados
+    data = data.filter(v => v.estado !== 'Entregado');
+  }
   if (q) data = data.filter(v => Object.values(v).some(val => (val || '').toString().toLowerCase().includes(q)));
   if (desde) data = data.filter(v => v.fecha >= desde);
   if (hasta) data = data.filter(v => v.fecha <= hasta);
@@ -3703,7 +3721,7 @@ function render() {
     const estadoHtml = `<span class="estado-chip ${estadoClass}">${escapeHtml(v.estado || 'Recepcionado')}</span>`;
     const trackerHtml = renderTracker(v);
     const card = document.createElement('div');
-    card.className = 'venta-card';
+    card.className = 'venta-card' + (v.origen === 'web' && v.pagoEstado !== 'pagado' ? ' pago-pendiente' : '');
     card.innerHTML = `
       <div class="venta-head">
         <div>
@@ -3726,6 +3744,7 @@ function render() {
       <div class="venta-actions">
         <button class="btn-edit" data-edit-id="${v.id}" title="Editar">✏️</button>
         ${v.estado !== 'Entregado' ? `<button class="btn-estado" data-estado-id="${v.id}">Avanzar estado</button>` : ''}
+        ${v.origen === 'web' ? `<button class="btn-pago ${v.pagoEstado === 'pagado' ? 'is-pagado' : 'is-pend'}" data-pago-id="${v.id}">${v.pagoEstado === 'pagado' ? '✓ Pagado' : '💳 Marcar pagado'}</button>` : ''}
         ${tel ? `<a class="btn-wa" href="https://wa.me/${tel}" target="_blank">WhatsApp</a>` : ''}
         <button class="del-btn" data-id="${v.id}">Borrar</button>
       </div>
@@ -3801,11 +3820,31 @@ listEl.addEventListener('click', async (e) => {
     const id = e.target.dataset.estadoId;
     openEstadoModal(id);
   }
+  if (e.target.classList.contains('btn-pago')) {
+    marcarPago(e.target.dataset.pagoId);
+  }
   if (e.target.classList.contains('btn-edit')) {
     const id = e.target.dataset.editId;
     openEditModal(id);
   }
 });
+
+// Marcar un pedido como pagado / pago pendiente (sobre todo para transferencias)
+async function marcarPago(ventaId) {
+  const v = state.ventas.find(x => x.id === ventaId);
+  if (!v) return;
+  const nuevo = (v.pagoEstado === 'pagado') ? 'pendiente' : 'pagado';
+  try {
+    const { error } = await sb.from('ventas').update({ pago_estado: nuevo }).eq('id', ventaId);
+    if (error) throw error;
+    v.pagoEstado = nuevo;
+    saveCache();
+    render();
+    showToast(nuevo === 'pagado' ? '✓ Marcado como pagado' : 'Marcado como pago pendiente', '#34c759');
+  } catch (e) {
+    showToast('Error al actualizar el pago', '#ff3b30');
+  }
+}
 
 // ====== Modal de avance de estado ======
 const estadoModal = document.getElementById('estadoModal');
