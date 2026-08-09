@@ -1213,7 +1213,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.13';
+const STORE_VERSION = 'v6.14';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1872,7 +1872,7 @@ function cardHtml(p) {
       <div class="card-media">
         ${img ? `<img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy" decoding="async">` : `<div class="ph">MV LEATHER</div>`}
         ${arr(p.imagenes)[1] ? `<img class="card-media-2" src="${esc(arr(p.imagenes)[1])}" alt="" loading="lazy" decoding="async">` : ''}
-        ${tieneStock(p) ? `<span class="tag rapida">Entrega rápida</span>` : (p.destacado ? `<span class="tag">Destacado</span>` : '')}
+        ${tieneStock(p) ? `<span class="tag rapida">Entrega rápida</span>` : ''}
         ${off ? `<span class="tag off">-${off}%</span>` : ''}
         <button class="qadd-btn" data-quickadd="${p.id}" aria-label="Agregar ${esc(p.nombre)} al carrito" title="Agregar al carrito">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
