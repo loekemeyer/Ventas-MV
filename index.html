@@ -515,6 +515,21 @@
   .tr-row > b { flex: 1; color: var(--ink); word-break: break-all; }
   .tr-copy { flex: none; background: var(--ink); color: var(--bg); border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
   .tr-copy:hover { background: #000; }
+  /* ===== Método de envío / retiro (checkout) ===== */
+  .seg-toggle { display: flex; gap: 6px; background: var(--line); padding: 4px; border-radius: 10px; }
+  .seg-opt { flex: 1; padding: 10px 8px; border: none; background: transparent; border-radius: 7px; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; transition: background .15s, color .15s; }
+  .seg-opt.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .dir-check { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .btn-verificar { background: var(--ink); color: var(--bg); border: none; border-radius: 8px; padding: 9px 14px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-verificar:disabled { opacity: .6; cursor: default; }
+  .dir-hint { font-size: 12px; color: var(--muted); }
+  .dir-resultado { margin-top: 10px; padding: 12px; border-radius: 8px; font-size: 13px; border: 1px solid var(--line); }
+  .dir-resultado.ok { background: #f2f8f4; border-color: #bfe3cd; }
+  .dir-resultado.warn { background: #fdf6ec; border-color: #f0d9a8; color: #7a5b12; }
+  .dr-found { color: var(--ink); margin-bottom: 8px; line-height: 1.4; }
+  .dr-cost { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+  .dr-cost span { color: var(--muted); font-weight: 500; }
+  .dr-map { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--leather); }
 
   /* ===== Lightbox ===== */
   .lightbox {
@@ -1160,7 +1175,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v5.7';
+const STORE_VERSION = 'v5.8';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1178,7 +1193,7 @@ try {
 
 const store = {
   productos: [],
-  cfg: { whatsapp: '', instagram: '', instagram_posts: '', anuncio: '', envio_texto: '', mp_activo: '0', nombre_tienda: 'MV Leather Studio', envio_gratis_desde: '0', cuotas_sin_interes: '3', cuotas_max: '12', descuento_transferencia: '0', stock_bajo_umbral: '3', google_login: '0', demora_dias: '15' },
+  cfg: { whatsapp: '', instagram: '', instagram_posts: '', anuncio: '', envio_texto: '', mp_activo: '0', nombre_tienda: 'MV Leather Studio', envio_gratis_desde: '0', cuotas_sin_interes: '3', cuotas_max: '12', descuento_transferencia: '0', stock_bajo_umbral: '3', google_login: '0', demora_dias: '15', envio_caba: '0', envio_amba: '10000', envio_interior: 'a convenir' },
   cart: [],
   wish: [],
   media: [],              // slides de portada (fotos/videos)
@@ -2166,12 +2181,23 @@ function coHeadHtml() {
     const variante = [i.color, i.talle].filter(Boolean).join(' · ');
     return `<div class="row"><span>${esc(i.nombre)}${variante ? ` (${esc(variante)})` : ''} ×${i.qty}</span><span>${money(i.precio*i.qty, i.moneda)}</span></div>`;
   }).join('');
+  const env = envioResumen();
+  const envNum = (typeof env.costo === 'number' && isFinite(env.costo)) ? env.costo : 0;
+  const totalFinal = total + envNum;
+  const interior = envioState.metodo === 'envio' && env.zona === 'interior';
+  const envioRow = envioState.metodo === 'retiro'
+    ? `<div class="row"><span>Envío</span><span>Retiro sin cargo</span></div>`
+    : (env.zona
+        ? `<div class="row"><span>Envío</span><span>${esc(env.texto)}</span></div>`
+        : `<div class="row" style="color:var(--muted);"><span>Envío</span><span>a calcular</span></div>`);
   return `
     <div class="co-summary">
       ${rows}
       ${desc > 0 ? `<div class="row" style="color:var(--ok); font-weight:600;"><span>Cupón ${esc(store.cupon.codigo)}</span><span>−${money(desc, mon)}</span></div>` : ''}
-      <div class="tot"><span>Total</span><span>${money(total, mon)}</span></div>
-      ${dt > 0 ? `<div class="row" style="color:var(--ok); margin-top:6px;"><span>Pagando por transferencia</span><span><b>${money(Math.round(total * (1 - dt/100)), mon)}</b> (−${dt}%)</span></div>` : ''}
+      ${envioRow}
+      <div class="tot"><span>Total</span><span>${money(totalFinal, mon)}</span></div>
+      ${interior ? `<div class="row" style="color:var(--muted); font-size:12px;"><span></span><span>+ envío a convenir</span></div>` : ''}
+      ${dt > 0 ? `<div class="row" style="color:var(--ok); margin-top:6px;"><span>Pagando por transferencia</span><span><b>${money(Math.round(total * (1 - dt/100)) + envNum, mon)}</b> (−${dt}%)</span></div>` : ''}
     </div>
     ${store.cart.every(i => i.rapida)
       ? `<div class="co-envio">Entrega rápida: coordinamos el envío apenas confirmes.</div>`
@@ -2192,8 +2218,84 @@ function refreshCoHead() {
   const el = $('#coHead');
   if (el) { el.innerHTML = coHeadHtml(); wireCoHead(); }
 }
+// ====== ENVÍO / RETIRO ======
+// Partidos del AMBA (Gran Buenos Aires) — normalizados sin acentos, en minúscula.
+const AMBA_PARTIDOS = ['almirante brown','avellaneda','berazategui','berisso','brandsen','campana','canuelas','ensenada','escobar','esteban echeverria','exaltacion de la cruz','ezeiza','florencio varela','general las heras','general rodriguez','general san martin','san martin','hurlingham','ituzaingo','jose c paz','la matanza','la plata','lanus','lomas de zamora','lujan','malvinas argentinas','marcos paz','merlo','moreno','moron','pilar','presidente peron','quilmes','san fernando','san isidro','san miguel','san vicente','tigre','tres de febrero','vicente lopez','zarate','nordelta'];
+const _norm = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+
+let envioState = { metodo: 'envio', pickup: null, direccion: '', geo: null, zona: null };
+
+// Geocoding gratuito con OpenStreetMap (Nominatim). Sin API key ni tarjeta.
+async function geocodeDireccion(q) {
+  const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&countrycodes=ar&accept-language=es&q=' + encodeURIComponent(q);
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error('geo_http_' + res.status);
+  const arr = await res.json();
+  return Array.isArray(arr) && arr[0] ? arr[0] : null;
+}
+
+// Clasifica un resultado de Nominatim en 'caba' | 'amba' | 'interior'.
+function clasificarZona(geo) {
+  if (!geo) return null;
+  const a = geo.address || {};
+  const st = _norm(a.state);
+  if (st.includes('ciudad autonoma de buenos aires') || st.includes('autonomous city of buenos aires') || st === 'caba') return 'caba';
+  if (st === 'buenos aires' || st.includes('provincia de buenos aires')) {
+    const campos = [a.city, a.town, a.village, a.suburb, a.county, a.municipality, a.city_district, a.state_district, a.neighbourhood].map(_norm);
+    const hit = AMBA_PARTIDOS.some(p => campos.some(c => c && (c === p || c.includes(p) || p.includes(c))));
+    return hit ? 'amba' : 'interior';
+  }
+  return 'interior';   // otra provincia
+}
+
+// Resumen del envío para mostrar y para el total. costo = número o null ("a convenir").
+function envioResumen() {
+  if (envioState.metodo === 'retiro') return { costo: 0, texto: 'Retiro sin cargo', zona: 'retiro' };
+  const z = envioState.zona;
+  if (z === 'caba')     { const c = parseFloat(store.cfg.envio_caba) || 0; return { costo: c, texto: c === 0 ? 'Envío gratis (CABA)' : money(c, 'ARS'), zona: 'caba' }; }
+  if (z === 'amba')     { const c = parseFloat(store.cfg.envio_amba) || 0; return { costo: c, texto: c === 0 ? 'Gratis' : money(c, 'ARS') + ' (AMBA)', zona: 'amba' }; }
+  if (z === 'interior') { return { costo: null, texto: (store.cfg.envio_interior || 'a convenir') + ' (interior)', zona: 'interior' }; }
+  return { costo: null, texto: '', zona: null };   // todavía sin verificar
+}
+
+async function verificarDireccion() {
+  const dirInput = $('#direccionInput'), dirRes = $('#dirResultado'), btn = $('#btnVerificarDir');
+  const q = (dirInput.value || '').trim();
+  if (q.length < 5) { toast('Escribí la dirección completa (calle, número y localidad)'); return; }
+  envioState.direccion = q;
+  btn.disabled = true; const prev = btn.textContent; btn.textContent = 'Buscando…';
+  dirRes.hidden = false; dirRes.className = 'dir-resultado'; dirRes.textContent = 'Buscando la dirección en el mapa…';
+  try {
+    const geo = await geocodeDireccion(q);
+    if (!geo) {
+      envioState.geo = null; envioState.zona = null;
+      dirRes.className = 'dir-resultado warn';
+      dirRes.textContent = 'No encontramos esa dirección. Revisá que esté bien escrita (calle, número y localidad), o seguí igual y coordinamos el envío por WhatsApp.';
+      refreshCoHead();
+      return;
+    }
+    envioState.geo = geo;
+    envioState.zona = clasificarZona(geo);
+    const r = envioResumen();
+    const mapUrl = `https://www.openstreetmap.org/?mlat=${encodeURIComponent(geo.lat)}&mlon=${encodeURIComponent(geo.lon)}#map=17/${geo.lat}/${geo.lon}`;
+    dirRes.className = 'dir-resultado ok';
+    dirRes.innerHTML = `<div class="dr-found">📍 ${esc(geo.display_name)}</div>
+      <div class="dr-cost"><span>Costo de envío</span><b>${esc(r.texto)}</b></div>
+      <a href="${mapUrl}" target="_blank" rel="noopener" class="dr-map">Ver en el mapa ↗</a>`;
+    refreshCoHead();
+  } catch (e) {
+    envioState.geo = null; envioState.zona = null;
+    dirRes.className = 'dir-resultado warn';
+    dirRes.textContent = 'No pudimos verificar ahora. Podés seguir igual y coordinamos el envío por WhatsApp.';
+    refreshCoHead();
+  } finally {
+    btn.disabled = false; btn.textContent = prev;
+  }
+}
+
 function openCheckout() {
   if (!store.cart.length) { toast('Tu carrito está vacío'); return; }
+  envioState = { metodo: 'envio', pickup: null, direccion: '', geo: null, zona: null };
   const mpOn = store.cfg.mp_activo === '1' || store.cfg.mp_activo === 'true';
   const transferOn = !!(store.cfg.alias_transferencia || '').trim();
   const dt = parseFloat(store.cfg.descuento_transferencia) || 0;
@@ -2203,8 +2305,34 @@ function openCheckout() {
       <div class="field"><label>Nombre y apellido *</label><input name="nombre" required autocomplete="name" value="${esc(store.user?.name || '')}"></div>
       <div class="field"><label>WhatsApp *</label><input name="telefono" type="tel" inputmode="tel" required autocomplete="tel" placeholder="11 1234-5678"></div>
       <div class="field"><label>Email ${mpOn ? '*' : '(opcional)'}</label><input name="email" type="email" ${mpOn?'required':''} autocomplete="email" value="${esc(store.user?.email || '')}" placeholder="para el comprobante de pago"></div>
-      <input type="hidden" name="entrega" value="Envío a domicilio">
-      <div class="field" id="dirField"><label>Dirección de envío *</label><input name="direccion" required autocomplete="street-address" placeholder="Calle, número, localidad, CP"></div>
+      <div class="field">
+        <label>Método de envío *</label>
+        <div class="seg-toggle" id="metodoToggle">
+          <button type="button" class="seg-opt active" data-metodo="envio">📦 Envío a domicilio</button>
+          <button type="button" class="seg-opt" data-metodo="retiro">🏬 Retiro en persona</button>
+        </div>
+      </div>
+      <div id="envioSection">
+        <div class="field">
+          <label>Dirección de envío *</label>
+          <input name="direccion" id="direccionInput" autocomplete="off" placeholder="Calle y número, localidad">
+          <div class="dir-check">
+            <button type="button" class="btn-verificar" id="btnVerificarDir">📍 Verificar en el mapa</button>
+            <span class="dir-hint">Verificá para calcular el costo de envío</span>
+          </div>
+          <div id="dirResultado" class="dir-resultado" hidden></div>
+        </div>
+      </div>
+      <div id="retiroSection" hidden>
+        <div class="field">
+          <label>Punto de retiro *</label>
+          <div class="seg-toggle" id="pickupToggle">
+            <button type="button" class="seg-opt active" data-pickup="Recoleta">Recoleta</button>
+            <button type="button" class="seg-opt" data-pickup="Nordelta">Nordelta</button>
+          </div>
+          <p class="dir-hint" style="margin-top:8px;">Coordinamos la dirección y el horario exactos por WhatsApp.</p>
+        </div>
+      </div>
       <div class="field"><label>Notas (opcional)</label><textarea name="notas" rows="2" placeholder="Aclaraciones, horarios, etc."></textarea></div>
       ${mpOn ? `<button type="submit" class="btn btn-primary btn-block" data-pay="mp">Pagar con tarjeta / Mercado Pago</button>` : ''}
       ${transferOn ? `<button type="submit" class="btn ${mpOn ? 'btn-outline' : 'btn-primary'} btn-block" data-pay="transfer" style="margin-top:${mpOn ? '8px' : '0'};">Pagar por transferencia${dt > 0 ? ` (−${dt}%)` : ''}</button>` : ''}
@@ -2212,11 +2340,31 @@ function openCheckout() {
       <p class="pay-note">Al confirmar, guardamos tu pedido y te contactamos para coordinar. ${mpOn ? 'Con Mercado Pago pagás online de forma segura.' : ''}${transferOn ? ' Por transferencia te mostramos el alias y confirmás enviando el comprobante.' : ''}</p>
     </form>`;
   wireCoHead();
-  // toggle dirección
   const form = $('#coForm');
-  const syncDir = () => { $('#dirField').style.display = form.entrega.value === 'Envío a domicilio' ? 'block' : 'none'; };
-  form.querySelectorAll('[name=entrega]').forEach(r => r.addEventListener('change', syncDir));
-  syncDir();
+
+  // Método de envío: Envío / Retiro
+  const envioSec = $('#envioSection'), retiroSec = $('#retiroSection');
+  $$('#metodoToggle .seg-opt').forEach(b => b.addEventListener('click', () => {
+    $$('#metodoToggle .seg-opt').forEach(o => o.classList.toggle('active', o === b));
+    envioState.metodo = b.dataset.metodo;
+    if (envioState.metodo === 'retiro' && !envioState.pickup) envioState.pickup = 'Recoleta';
+    envioSec.hidden = envioState.metodo !== 'envio';
+    retiroSec.hidden = envioState.metodo !== 'retiro';
+    refreshCoHead();
+  }));
+
+  // Punto de retiro
+  $$('#pickupToggle .seg-opt').forEach(b => b.addEventListener('click', () => {
+    $$('#pickupToggle .seg-opt').forEach(o => o.classList.toggle('active', o === b));
+    envioState.pickup = b.dataset.pickup;
+  }));
+
+  // Verificar dirección con OpenStreetMap
+  const dirInput = $('#direccionInput'), dirRes = $('#dirResultado');
+  const resetGeo = () => { envioState.geo = null; envioState.zona = null; dirRes.hidden = true; dirRes.innerHTML = ''; refreshCoHead(); };
+  dirInput.addEventListener('input', () => { envioState.direccion = dirInput.value; if (envioState.zona) resetGeo(); });
+  $('#btnVerificarDir').addEventListener('click', () => verificarDireccion());
+
   let payMethod = 'wa';
   form.querySelectorAll('button[type=submit]').forEach(b => b.addEventListener('click', () => { payMethod = b.dataset.pay; }));
   form.addEventListener('submit', (e) => { e.preventDefault(); finalizarPedido(form, payMethod); });
@@ -2232,11 +2380,20 @@ async function finalizarPedido(form, metodo) {
   const nombre = (fd.get('nombre')||'').toString().trim();
   const telefono = (fd.get('telefono')||'').toString().trim();
   const email = (fd.get('email')||'').toString().trim();
-  const entrega = fd.get('entrega');
-  const direccion = (fd.get('direccion')||'').toString().trim();
   const notas = (fd.get('notas')||'').toString().trim();
   if (!nombre || !telefono) { toast('Completá nombre y WhatsApp'); return; }
-  if (entrega === 'Envío a domicilio' && !direccion) { toast('Completá la dirección de envío'); return; }
+  // Envío / Retiro (desde envioState)
+  const env = envioResumen();
+  const envioCosto = (typeof env.costo === 'number' && isFinite(env.costo)) ? env.costo : 0;
+  let entrega, direccion = '';
+  if (envioState.metodo === 'retiro') {
+    entrega = `Retiro en ${envioState.pickup || 'Recoleta'}`;
+  } else {
+    direccion = (envioState.direccion || fd.get('direccion') || '').toString().trim();
+    if (!direccion) { toast('Completá la dirección de envío'); return; }
+    const zl = env.zona === 'caba' ? 'CABA' : env.zona === 'amba' ? 'AMBA' : env.zona === 'interior' ? 'Interior' : 'a verificar';
+    entrega = `Envío a domicilio (${zl})`;
+  }
   if (metodo === 'mp' && !email) { toast('Necesitamos tu email para el pago'); return; }
 
   const btns = form.querySelectorAll('button[type=submit]');
@@ -2249,7 +2406,8 @@ async function finalizarPedido(form, metodo) {
   const descuento = discountAmount(subtotal);
   const total = subtotal - descuento;
   const dt = parseFloat(store.cfg.descuento_transferencia) || 0;
-  const totalTransfer = (metodo === 'transfer' && dt > 0) ? Math.round(total * (1 - dt / 100)) : total;
+  const totalFinal = total + envioCosto;
+  const totalTransfer = ((metodo === 'transfer' && dt > 0) ? Math.round(total * (1 - dt / 100)) : total) + envioCosto;
   const moneda = store.cart[0]?.moneda || 'ARS';
   const resumen = store.cart.map(i => `${i.nombre}${i.color||i.talle?` (${[i.color,i.talle].filter(Boolean).join('/')})`:''} ×${i.qty}`).join(' + ');
 
@@ -2263,13 +2421,13 @@ async function finalizarPedido(form, metodo) {
     cupon: store.cupon?.codigo || null,
     descuento: descuento || null,
     prenda: resumen.slice(0, 500),
-    importe: metodo === 'transfer' ? totalTransfer : total,
+    importe: metodo === 'transfer' ? totalTransfer : totalFinal,
     moneda,
     forma_pago: metodo === 'mp' ? 'Mercado Pago' : metodo === 'transfer' ? 'Transferencia' : 'WhatsApp',
     estado: 'Recepcionado',
     origen: 'web',
     pago_estado: 'pendiente',
-    pedido_json: { items, cliente: { nombre, telefono, email }, entrega, direccion, notas, subtotal, descuento, cupon: store.cupon?.codigo || null, total, moneda },
+    pedido_json: { items, cliente: { nombre, telefono, email }, entrega, direccion, notas, subtotal, descuento, cupon: store.cupon?.codigo || null, envio_costo: env.costo, total: metodo === 'transfer' ? totalTransfer : totalFinal, moneda, envio: { metodo: envioState.metodo, pickup: envioState.pickup || null, zona: env.zona || null, costo: env.costo, texto: env.texto, geo: envioState.geo ? { lat: envioState.geo.lat, lon: envioState.geo.lon, display: envioState.geo.display_name } : null } },
   };
 
   let ventaId = null;
@@ -2286,11 +2444,15 @@ async function finalizarPedido(form, metodo) {
     // Aun sin guardar, dejamos que el pedido salga por WhatsApp para no perder la venta.
   }
 
+  const geo = envioState.geo;
+  const mapUrl = geo ? `https://www.openstreetmap.org/?mlat=${geo.lat}&mlon=${geo.lon}#map=17/${geo.lat}/${geo.lon}` : '';
+
   if (metodo === 'mp') {
     // Si hay descuento, mandamos un ítem consolidado para que el monto sea exacto.
     const mpItems = descuento > 0
       ? [{ nombre: 'Pedido MV Leather' + (store.cupon ? ` (cupón ${store.cupon.codigo})` : ''), qty: 1, precio: total, moneda, talle: '' }]
-      : items;
+      : items.slice();
+    if (envioCosto > 0) mpItems.push({ nombre: 'Envío', qty: 1, precio: envioCosto, moneda, talle: '' });
     const ok = await pagarConMP(ventaId, mpItems, { nombre, email, telefono });
     if (ok) return; // redirige a MP
     toast('Mercado Pago no disponible — coordinamos por WhatsApp');
@@ -2299,12 +2461,12 @@ async function finalizarPedido(form, metodo) {
     const snap = store.cart.map(i => ({ ...i }));       // copia para el mensaje de WhatsApp
     store.cart = []; saveCart();
     closeAll();
-    showTransferencia({ nombre, telefono, email, entrega, direccion, notas, total: totalTransfer, moneda, descuento, cupon: store.cupon?.codigo, dt, items: snap }, ventaId);
+    showTransferencia({ nombre, telefono, email, entrega, direccion, notas, total: totalTransfer, moneda, descuento, cupon: store.cupon?.codigo, dt, items: snap, envioTexto: env.texto, mapUrl }, ventaId);
     btns.forEach(b => b.disabled = false);
     return;
   }
   // WhatsApp (o fallback)
-  abrirWhatsappPedido({ nombre, telefono, email, entrega, direccion, notas, resumen, total, moneda, descuento, cupon: store.cupon?.codigo }, ventaId);
+  abrirWhatsappPedido({ nombre, telefono, email, entrega, direccion, notas, resumen, total: totalFinal, moneda, descuento, cupon: store.cupon?.codigo, envioTexto: env.texto, mapUrl }, ventaId);
   finalizarUI();
   btns.forEach(b => b.disabled = false);
 }
@@ -2352,7 +2514,9 @@ function abrirWhatsappPedido(o, ventaId) {
   L.push(`*Total:* ${money(o.total, o.moneda)}`);
   if (o.pagoNota) L.push(`*Pago:* ${o.pagoNota}`);
   L.push(`*Entrega:* ${o.entrega}`);
-  if (o.entrega === 'Envío a domicilio' && o.direccion) L.push(`*Dirección:* ${o.direccion}`);
+  if (o.direccion) L.push(`*Dirección:* ${o.direccion}`);
+  if (o.envioTexto) L.push(`*Costo de envío:* ${o.envioTexto}`);
+  if (o.mapUrl) L.push(`*Ubicación:* ${o.mapUrl}`);
   if (o.notas) L.push(`*Notas:* ${o.notas}`);
   const text = encodeURIComponent(L.join('\n'));
   const url = wa ? `https://wa.me/${wa}?text=${text}` : `https://wa.me/?text=${text}`;
