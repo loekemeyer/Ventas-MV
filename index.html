@@ -585,7 +585,8 @@
   .pm-info h2 { font-family: var(--sans); font-weight: 500; font-size: clamp(21px, 2.3vw, 26px); letter-spacing: -0.2px; margin: 8px 0 12px; }
   .pm-price { font-family: var(--sans); font-size: 20px; font-weight: 600; margin-bottom: 4px; letter-spacing: .2px; }
   .pm-price s { color: var(--muted); font-weight: 400; font-size: 15px; margin-left: 8px; }
-  .pm-desc { color: var(--muted); font-size: 14px; line-height: 1.7; margin: 16px 0; }
+  .pm-desc { color: var(--muted); font-size: 14px; line-height: 1.7; margin: 16px 0 0; white-space: pre-line; }
+  .pm-desc-img { color: var(--muted); font-size: 12.5px; font-style: italic; letter-spacing: .2px; margin: 8px 0 16px; opacity: .85; }
   .opt-label { font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink); font-weight: 600; margin: 22px 0 10px; }
   .opt-val { text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 500; margin-left: 4px; }
   .opt-row { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -1224,7 +1225,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.15';
+const STORE_VERSION = 'v6.16';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1331,6 +1332,18 @@ const TALLES_MEDIDAS = { S: ['85-89','67-71','91-95'], M: ['90-94','72-76','96-1
 function talleMedidaHtml(t) {
   const m = TALLES_MEDIDAS[t]; if (!m) return '';
   return `Talle <b>${esc(t)}</b> · Busto ${m[0]} · Cintura ${m[1]} · Cadera ${m[2]} cm`;
+}
+// Descripción del producto: si la última línea empieza con "En la imagen",
+// se muestra debajo como pie de foto (más chico, en itálica).
+function descripcionHtml(desc) {
+  if (!desc) return '';
+  const lineas = String(desc).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (!lineas.length) return '';
+  const imgIdx = lineas.findIndex(l => /^en la imagen/i.test(l));
+  let nota = '';
+  if (imgIdx !== -1) nota = lineas.splice(imgIdx, 1)[0];
+  const cuerpo = lineas.join('\n');
+  return `${cuerpo ? `<p class="pm-desc">${esc(cuerpo)}</p>` : ''}${nota ? `<p class="pm-desc-img">${esc(nota)}</p>` : ''}`;
 }
 // Tabla de talles completa, embebida dentro de cada producto (colapsable).
 function tablaTallesHtml() {
@@ -2035,7 +2048,7 @@ function openProduct(id, pushUrl = true) {
       ${off ? `<span style="color:var(--danger); font-size:13px; font-weight:600;">${off}% OFF</span>` : ''}
       ${transferHtml(p.precio, p.moneda, 'pm-transfer')}
       ${cuotasHtml(p.precio, p.moneda, 'pm-cuotas')}
-      ${p.descripcion ? `<p class="pm-desc">${esc(p.descripcion)}</p>` : ''}
+      ${descripcionHtml(p.descripcion)}
       <div class="pm-meta">
         ${p.material ? `<span>${esc(p.material)}</span>` : ''}
         ${entregaFichaHtml(p)}
