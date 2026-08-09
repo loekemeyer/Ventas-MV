@@ -1237,6 +1237,10 @@
   .prod-toolbar { margin-bottom: 10px; }
   #prodSearch { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 15px; background: var(--surface); color: var(--ink); }
   #prodSearch:focus { outline: none; border-color: #c9c9d2; box-shadow: 0 0 0 3px rgba(10,108,255,.08); }
+  .prod-cat-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+  .prod-cat-chip { background: #f2f2f7; color: #636366; border: none; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s; }
+  .prod-cat-chip:hover { background: #e7e7ee; }
+  .prod-cat-chip.active { background: var(--ink); color: #fff; }
   .tienda-config-title { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .6px; margin: 26px 4px 10px; }
   .chip-check-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
   .chip-check { position: relative; }
@@ -1490,6 +1494,7 @@
     <div class="prod-toolbar">
       <input type="search" id="prodSearch" placeholder="🔍  Buscar producto por nombre…" aria-label="Buscar producto">
     </div>
+    <div class="prod-cat-chips" id="prodCatChips"></div>
     <div id="productosList" class="venta-list"></div>
 
     <h3 class="tienda-config-title">Configuración de la tienda</h3>
@@ -1809,7 +1814,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.6';
+const APP_VERSION = 'v6.7';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4476,6 +4481,7 @@ const TIENDA_COLECCION_DEFAULT = 'foundations-aw26';
 
 function arr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
 
+let _prodCat = 'all';   // filtro de categoría activo en la lista del admin
 function renderTienda() {
   const listEl = document.getElementById('productosList');
   const resumen = document.getElementById('tiendaResumen');
@@ -4485,7 +4491,18 @@ function renderTienda() {
   if (resumen) resumen.textContent = `${all.length} producto${all.length === 1 ? '' : 's'} · ${activos} activo${activos === 1 ? '' : 's'} en la tienda`;
 
   const term = (document.getElementById('prodSearch')?.value || '').toLowerCase().trim();
-  const prods = term ? all.filter(p => (p.nombre || '').toLowerCase().includes(term)) : all;
+  // Chips de filtro por categoría (derivados de las categorías presentes en los productos)
+  const cats = [...new Set(all.map(p => (p.categoria || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const hayVacias = all.some(p => !(p.categoria || '').trim());
+  const chipsEl = document.getElementById('prodCatChips');
+  if (chipsEl) {
+    const opts = [['all', 'Todas'], ...cats.map(c => [c, c])];
+    if (hayVacias) opts.push(['__none__', 'Sin categoría']);
+    chipsEl.innerHTML = opts.map(([v, l]) => `<button type="button" class="prod-cat-chip${_prodCat === v ? ' active' : ''}" data-cat="${escapeHtml(v)}">${escapeHtml(l)}</button>`).join('');
+  }
+  let prods = term ? all.filter(p => (p.nombre || '').toLowerCase().includes(term)) : all.slice();
+  if (_prodCat === '__none__') prods = prods.filter(p => !(p.categoria || '').trim());
+  else if (_prodCat !== 'all') prods = prods.filter(p => (p.categoria || '').trim() === _prodCat);
 
   listEl.innerHTML = '';
   if (!all.length) {
@@ -4803,6 +4820,11 @@ async function guardarTiendaCfg() {
 // Wiring de la pestaña Tienda
 document.getElementById('btnAddProducto')?.addEventListener('click', () => openProductoModal(null));
 document.getElementById('prodSearch')?.addEventListener('input', () => renderTienda());
+document.getElementById('prodCatChips')?.addEventListener('click', (e) => {
+  const b = e.target.closest('.prod-cat-chip'); if (!b) return;
+  _prodCat = b.dataset.cat;
+  renderTienda();
+});
 document.getElementById('btnGuardarCfg')?.addEventListener('click', guardarTiendaCfg);
 document.getElementById('tiendaCfgHead')?.addEventListener('click', () => {
   document.getElementById('tiendaCfgBody').classList.toggle('caja-collapsed');
