@@ -642,7 +642,7 @@
     .grid { grid-template-columns: 1fr; }
   }
   /* Mobile nav sheet */
-  .mnav { position: fixed; inset: 0 0 auto 0; background: var(--surface); z-index: 45; padding: 80px 24px 24px; transform: translateY(-100%); transition: transform .3s; box-shadow: var(--shadow); }
+  .mnav { position: fixed; inset: 0 0 auto 0; background: var(--surface); z-index: 65; padding: 80px 24px 24px; transform: translateY(-100%); transition: transform .3s; box-shadow: var(--shadow); }
   .mnav.show { transform: translateY(0); }
   .mnav a { display: block; font-family: var(--serif); font-size: 24px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 
@@ -1160,7 +1160,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v5.3';
+const STORE_VERSION = 'v5.4';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
