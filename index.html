@@ -1037,7 +1037,7 @@
         <p class="story-accent">Hoy esa historia continúa.</p>
       </div>
       <figure class="story-figure">
-        <img src="assets/historia.jpg" alt="MV Leather Studio — pieza de cuero" loading="lazy">
+        <img id="historiaFoto" src="assets/historia.jpg" alt="MV Leather Studio — pieza de cuero" loading="lazy">
       </figure>
     </div>
     <span id="statPiezas" hidden></span>
@@ -1225,7 +1225,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.28';
+const STORE_VERSION = 'v6.29';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1500,6 +1500,8 @@ function applyConfig() {
   const igUrl = ig ? `https://instagram.com/${ig}` : '#';
   $('#footIg').href = igUrl;
   const igf = $('#igFloat'); if (igf) igf.href = igUrl;
+  // Foto de "Nuestra historia": si hay una cargada en el admin (Supabase), la usa.
+  const hf = $('#historiaFoto'); if (hf && c.img_historia) hf.src = c.img_historia;
   // Determinístico: sin inline cuando hay WhatsApp (deja que la CSS gobierne, p.ej.
   // ocultarlo con la ficha abierta en mobile); 'none' cuando no hay número.
   $('#waFloat').style.display = wa ? '' : 'none';

@@ -1580,6 +1580,11 @@
           <label><span>Tipo</span><select id="medTipo"><option value="imagen">Foto</option><option value="video">Video</option></select></label>
           <label><span>Orden</span><input type="number" id="medOrden" inputmode="numeric" placeholder="0"></label>
           <label class="full"><span>URL de la foto / video</span><input type="url" id="medUrl" placeholder="https://...jpg  ·  https://...mp4"></label>
+          <div class="full" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <input type="file" id="medFile" accept="image/*" style="display:none;">
+            <button type="button" class="btn-secondary" id="medUploadBtn" style="width:auto;">📤 Subir foto (queda en Supabase)</button>
+            <span id="medUploadMsg" style="font-size:12px; color:#8e8e93;"></span>
+          </div>
           <label class="full"><span>Título (opcional)</span><input type="text" id="medTitulo" placeholder="Nueva colección de invierno"></label>
           <label class="full"><span>Subtítulo (opcional)</span><input type="text" id="medSub"></label>
           <label><span>Texto del botón (opcional)</span><input type="text" id="medCta" placeholder="Ver colección"></label>
@@ -1587,6 +1592,23 @@
         </div>
         <div class="actions" style="margin-top:8px;"><button type="button" id="btnAddMedia" class="btn-primary">Agregar a la portada</button></div>
         <div id="mediaList" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tienda-cfg-head" id="histHead" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+        <h3 style="margin:0;">Foto de "Nuestra historia"</h3>
+        <span class="caja-chev">▾</span>
+      </div>
+      <div id="histBody" class="caja-collapsed" style="margin-top:10px;">
+        <div style="font-size:12px; color:#8e8e93; margin-bottom:8px;">La foto de la sección Nosotros. Subí una nueva (queda guardada en Supabase) o volvé a la de por defecto.</div>
+        <img id="histPreview" src="assets/historia.jpg" alt="" style="width:120px; height:150px; object-fit:cover; border-radius:8px; display:block; margin-bottom:8px; background:#f0f0f0;">
+        <input type="file" id="histFile" accept="image/*" style="display:none;">
+        <div class="actions" style="margin-top:4px;">
+          <button type="button" class="btn-primary" id="histUploadBtn">📤 Subir foto</button>
+          <button type="button" class="btn-secondary" id="histClearBtn">Volver a la de por defecto</button>
+        </div>
+        <div id="histMsg" style="font-size:12px; color:#8e8e93; margin-top:8px;"></div>
       </div>
     </div>
 
@@ -1816,7 +1838,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.28';
+const APP_VERSION = 'v6.29';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -5228,6 +5250,59 @@ document.getElementById('btnAddMedia')?.addEventListener('click', async () => {
     ['medUrl','medTitulo','medSub','medCta','medCtaLink','medOrden'].forEach(id => document.getElementById(id).value = '');
     showToast('✓ Agregado a la portada', '#34c759');
   } catch (e) { console.error(e); showToast('Error al agregar', '#ff3b30'); }
+});
+// Subir foto a la portada (se guarda dentro de Supabase como data URI, no en GitHub)
+document.getElementById('medUploadBtn')?.addEventListener('click', () => document.getElementById('medFile')?.click());
+document.getElementById('medFile')?.addEventListener('change', async (e) => {
+  const file = (e.target.files || [])[0]; e.target.value = '';
+  if (!file) return;
+  const msg = document.getElementById('medUploadMsg');
+  try {
+    if (msg) msg.textContent = 'Procesando…';
+    const blob = await resizeImage(file, 1400, 0.72);
+    const dataUri = await blobToDataURL(blob);
+    document.getElementById('medUrl').value = dataUri;
+    document.getElementById('medTipo').value = 'imagen';
+    if (msg) msg.textContent = '✓ Foto lista. Ahora tocá "Agregar a la portada".';
+  } catch (err) { console.error(err); if (msg) msg.textContent = 'No se pudo procesar la foto.'; }
+});
+// ===== Foto de "Nuestra historia" (guardada en Supabase, tienda_config) =====
+function setHistPreview() {
+  const img = document.getElementById('histPreview'); if (!img) return;
+  img.src = (state.tiendaCfg && state.tiendaCfg.img_historia) || 'assets/historia.jpg';
+}
+document.getElementById('histHead')?.addEventListener('click', () => {
+  document.getElementById('histBody').classList.toggle('caja-collapsed');
+  setHistPreview();
+});
+document.getElementById('histUploadBtn')?.addEventListener('click', () => document.getElementById('histFile')?.click());
+document.getElementById('histFile')?.addEventListener('change', async (e) => {
+  const file = (e.target.files || [])[0]; e.target.value = '';
+  if (!file) return;
+  const msg = document.getElementById('histMsg');
+  try {
+    if (msg) msg.textContent = 'Procesando y guardando…';
+    const blob = await resizeImage(file, 1200, 0.72);
+    const dataUri = await blobToDataURL(blob);
+    const { error } = await sb.from('tienda_config').upsert({ clave: 'img_historia', valor: dataUri }, { onConflict: 'clave' });
+    if (error) throw error;
+    state.tiendaCfg = state.tiendaCfg || {};
+    state.tiendaCfg.img_historia = dataUri;
+    setHistPreview();
+    if (msg) msg.textContent = '✓ Foto guardada. Se ve en la tienda al recargar.';
+    showToast('✓ Foto de Nuestra historia guardada', '#34c759');
+  } catch (err) { console.error(err); if (msg) msg.textContent = 'No se pudo guardar.'; showToast('Error al guardar la foto', '#ff3b30'); }
+});
+document.getElementById('histClearBtn')?.addEventListener('click', async () => {
+  const msg = document.getElementById('histMsg');
+  try {
+    const { error } = await sb.from('tienda_config').delete().eq('clave', 'img_historia');
+    if (error) throw error;
+    if (state.tiendaCfg) delete state.tiendaCfg.img_historia;
+    setHistPreview();
+    if (msg) msg.textContent = '✓ Volvió a la foto por defecto.';
+    showToast('Volvió a la foto por defecto', '#34c759');
+  } catch (err) { console.error(err); showToast('Error', '#ff3b30'); }
 });
 document.getElementById('mediaList')?.addEventListener('click', async (e) => {
   const id = e.target.closest('[data-del-media]')?.dataset.delMedia;
