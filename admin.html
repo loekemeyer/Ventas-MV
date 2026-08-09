@@ -1815,7 +1815,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.22';
+const APP_VERSION = 'v6.23';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4888,6 +4888,13 @@ function openProductoModal(id) {
       updated_at: new Date().toISOString(),
     };
     if (!row.nombre) { showToast('Poné un nombre', '#ff9500'); return; }
+    // Protección anti-borrado de fotos: al editar, si el form quedó sin imágenes
+    // pero el producto ya tenía, NO tocamos esa columna (evita perder las fotos
+    // por un guardado con la grilla vacía). Para dejar un producto sin fotos,
+    // borralas una por una y volvé a guardar cuando la grilla cargó bien.
+    if (editing && row.imagenes.length === 0 && arr(editing.imagenes).length > 0) {
+      delete row.imagenes;
+    }
     try {
       const dropped = [];
       // Si la base todavía no tiene alguna columna (ej. "coleccion"), la quitamos
