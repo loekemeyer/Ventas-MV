@@ -592,6 +592,17 @@
   .opt { min-width: 48px; text-align: center; padding: 10px 15px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 500; border-radius: 2px; transition: all .15s; }
   .opt.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
   .pm-talle-med { margin-top: 10px; font-size: 12.5px; color: var(--muted); letter-spacing: .2px; }
+  .pm-talles-tabla { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .pm-talles-tabla summary { cursor: pointer; font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); list-style: none; display: inline-flex; align-items: center; gap: 6px; }
+  .pm-talles-tabla summary::-webkit-details-marker { display: none; }
+  .pm-talles-tabla summary::before { content: '+'; font-size: 14px; line-height: 1; }
+  .pm-talles-tabla[open] summary::before { content: '–'; }
+  .pm-tt-scroll { overflow-x: auto; margin-top: 12px; }
+  .pm-talles-tabla table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .pm-talles-tabla th { text-align: left; font-weight: 500; font-size: 11px; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); padding: 0 8px 8px 0; }
+  .pm-talles-tabla td { padding: 8px 8px 8px 0; border-top: 1px solid var(--line); color: var(--ink); }
+  .pm-talles-tabla td:first-child { font-weight: 600; }
+  .pm-tt-note { margin-top: 10px; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
   .pm-talle-med b { color: var(--ink); font-weight: 600; }
   /* Swatches de color: solo círculos */
   .swatches { gap: 16px; margin-top: 2px; }
@@ -1213,7 +1224,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.14';
+const STORE_VERSION = 'v6.15';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1304,13 +1315,15 @@ function transferHtml(precio, moneda, cls = 'card-transfer') {
   return `<div class="${cls}"><b>${money(eff, moneda)}</b> con transferencia <span>(−${d}%)</span></div>`;
 }
 // Colores customizables (mismos para todas las prendas) y talles estándar.
+// Opciones de color: FIJAS e IGUALES para todas las prendas (cada modelo se
+// confecciona a pedido en cualquiera de estos cueros).
 const COLORES_CUSTOM = [
-  { name: 'Verde oliva', hex: '#5b5a35' },
-  { name: 'Blanco', hex: '#f2efe8' },
   { name: 'Negro', hex: '#1a1a1a' },
+  { name: 'Marrón', hex: '#5a3620' },
   { name: 'Chocolate', hex: '#3d2b1f' },
   { name: 'Camel', hex: '#b58d5b' },
-  { name: 'Nude', hex: '#d9c3aa' },
+  { name: 'Verde', hex: '#4d5233' },
+  { name: 'Blanco', hex: '#f2efe8' },
 ];
 const TALLES_STD = ['S', 'M', 'L', 'XL'];
 // Medidas de referencia (cm) por talle — Busto · Cintura · Cadera
@@ -1318,6 +1331,21 @@ const TALLES_MEDIDAS = { S: ['85-89','67-71','91-95'], M: ['90-94','72-76','96-1
 function talleMedidaHtml(t) {
   const m = TALLES_MEDIDAS[t]; if (!m) return '';
   return `Talle <b>${esc(t)}</b> · Busto ${m[0]} · Cintura ${m[1]} · Cadera ${m[2]} cm`;
+}
+// Tabla de talles completa, embebida dentro de cada producto (colapsable).
+function tablaTallesHtml() {
+  const filas = TALLES_STD.map(t => {
+    const m = TALLES_MEDIDAS[t];
+    return `<tr><td>${esc(t)}</td><td>${m[0]}</td><td>${m[1]}</td><td>${m[2]}</td></tr>`;
+  }).join('');
+  return `<details class="pm-talles-tabla">
+    <summary>Ver tabla de talles</summary>
+    <div class="pm-tt-scroll"><table>
+      <thead><tr><th>Talle</th><th>Busto</th><th>Cintura</th><th>Cadera</th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table></div>
+    <p class="pm-tt-note">Medidas de referencia sobre el cuerpo (cm). Ante la duda, elegí el talle mayor. También confeccionamos a medida.</p>
+  </details>`;
 }
 function colorDot(name) {
   const map = { negro:'#1c1712', marron:'#5a3620', 'marrón':'#5a3620', camel:'#c19a6b', cognac:'#7c4a28', suela:'#a9834b', bordo:'#5e1f28', bordó:'#5e1f28', verde:'#3d4a2f', azul:'#243b53', blanco:'#f4efe6', beige:'#d8c5a8', gris:'#8a8a8a', rojo:'#9c2b23', gamuza:'#b08558' };
@@ -2016,7 +2044,8 @@ function openProduct(id, pushUrl = true) {
         <div class="opt-row swatches" id="pmColors" role="radiogroup" aria-label="Color">${COLORES_CUSTOM.map(c => `<button class="sw ${pmState.color===c.name?'active':''}" data-color="${esc(c.name)}" role="radio" aria-checked="${pmState.color===c.name}" title="${esc(c.name)}" aria-label="${esc(c.name)}"><span class="sw-dot" style="background:${c.hex}"></span></button>`).join('')}</div>
       ${talles.length ? `<div class="opt-label">Talle · <span class="link-u" id="pmTalleGuide">guía</span></div>
         <div class="opt-row" id="pmTalles" role="radiogroup" aria-label="Talle">${talles.map(t => `<button class="opt ${pmState.talle===t?'active':''}" data-talle="${esc(t)}" role="radio" aria-checked="${pmState.talle===t}">${esc(t)}</button>`).join('')}</div>
-        <div id="pmTalleMed" class="pm-talle-med"${pmState.talle && talleMedidaHtml(pmState.talle) ? '' : ' hidden'}>${pmState.talle ? talleMedidaHtml(pmState.talle) : ''}</div>` : ''}
+        <div id="pmTalleMed" class="pm-talle-med"${pmState.talle && talleMedidaHtml(pmState.talle) ? '' : ' hidden'}>${pmState.talle ? talleMedidaHtml(pmState.talle) : ''}</div>
+        ${tablaTallesHtml()}` : ''}
       <div class="opt-label">Cantidad</div>
       <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
         <div class="pm-qty"><button data-qminus>−</button><span id="pmQty">1</span><button data-qplus>+</button></div>
