@@ -282,12 +282,21 @@
   .btn[disabled] { opacity: .5; cursor: not-allowed; }
 
   /* ===== Trust strip ===== */
-  .trust { background: var(--surface); border-bottom: 1px solid var(--line); }
-  .trust-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; padding: 22px 0; }
-  .trust-item { text-align: center; padding: 0 8px; }
-  .trust-item .t-ico { font-size: 20px; }
-  .trust-item h4 { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; margin: 0 0 4px; }
-  .trust-item p { font-size: 12px; color: var(--muted); margin: 0; }
+  .esencial { background: var(--beige); }
+  .esencial .wrap { padding: clamp(64px, 10vw, 120px) 24px; }
+  .esencial-eyebrow { text-align: center; font-size: 10.5px; letter-spacing: 3.6px; text-transform: uppercase; color: var(--muted); font-weight: 500; font-family: var(--sans); margin: 0 0 clamp(40px, 6vw, 76px); }
+  .esencial-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .esencial-col { position: relative; text-align: center; padding: 0 clamp(16px, 4vw, 48px); }
+  .esencial-col + .esencial-col::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 62px; background: var(--line); }
+  .esencial-label { display: block; font-family: var(--sans); font-size: 10px; letter-spacing: 2.6px; text-transform: uppercase; color: var(--muted); margin-bottom: 15px; }
+  .esencial-concept { font-family: var(--serif); font-size: clamp(17px, 2vw, 22px); line-height: 1.36; color: var(--ink); margin: 0; }
+  @media (max-width: 720px) {
+    .esencial .wrap { padding: clamp(48px, 12vw, 72px) 24px; }
+    .esencial-grid { grid-template-columns: 1fr; }
+    .esencial-col { padding: 26px 16px; }
+    .esencial-col + .esencial-col { border-top: 1px solid var(--line); }
+    .esencial-col + .esencial-col::before { display: none; }
+  }
 
   /* ===== Section headings ===== */
   .section { padding: clamp(72px, 9vw, 112px) 0; }
@@ -649,7 +658,6 @@
     .menu-toggle { display: inline-flex; }
     .lk-mono { font-size: 34px; letter-spacing: 5px; }
     .brand-lockup { padding-bottom: 12px; }
-    .trust-grid { grid-template-columns: repeat(3, 1fr); gap: 14px 6px; }
     .grid { gap: 10px 8px; }
     .card-title { font-size: 17px; }
     .card-body { padding: 8px 2px 6px; }
@@ -766,17 +774,18 @@
   .badge-estado { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: #eee6d8; color: var(--leather-dark); font-weight: 600; }
 
   .newsletter { background: var(--surface); border-top: 1px solid var(--line); }
-  /* Instagram embebido */
-  .ig-section #igHandleLine { font-size: 15px; color: var(--muted); letter-spacing: .04em; }
-  .ig-carousel { position: relative; }
-  .ig-grid { display: flex; flex-wrap: nowrap; gap: 16px; align-items: flex-start; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding: 4px 2px 16px; scrollbar-width: thin; }
-  .ig-grid .instagram-media { flex: 0 0 300px !important; width: 300px !important; max-width: 300px !important; min-width: 300px !important; margin: 0 !important; scroll-snap-align: start; }
-  .ig-grid:empty { display: none; }
-  .ig-arrow { position: absolute; top: 40%; transform: translateY(-50%); z-index: 6; width: 42px; height: 42px; border-radius: 50%; background: #fff; border: 1px solid var(--line); cursor: pointer; font-size: 22px; line-height: 1; color: var(--ink); box-shadow: 0 3px 12px rgba(0,0,0,.1); display: flex; align-items: center; justify-content: center; transition: opacity .2s; }
-  .ig-arrow:hover { opacity: .7; }
-  .ig-arrow.ig-prev { left: -8px; }
-  .ig-arrow.ig-next { right: -8px; }
-  @media (max-width: 720px) { .ig-arrow { display: none; } }
+  /* Instagram — bloque editorial con feed 3×3 (imágenes de la marca) */
+  .ig-editorial { display: grid; grid-template-columns: 40% 60%; align-items: center; gap: clamp(30px, 5vw, 64px); }
+  .ig-title { font-family: var(--display); font-size: clamp(30px, 4vw, 48px); line-height: 1.05; margin: 10px 0 0; color: var(--ink); }
+  .ig-handle { display: inline-block; margin-top: 22px; font-family: var(--sans); font-size: 13px; letter-spacing: .06em; color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 4px; text-decoration: none; transition: opacity .3s; }
+  .ig-handle:hover { opacity: .55; }
+  .ig-feed { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .ig-feed:empty { display: none; }
+  .ig-cell { display: block; aspect-ratio: 1; background-size: cover; background-position: center; background-color: var(--media-bg); }
+  @media (max-width: 760px) {
+    .ig-editorial { grid-template-columns: 1fr; text-align: center; gap: 28px; }
+    .ig-feed { max-width: 420px; margin: 0 auto; }
+  }
 
   /* ===== Cuotas sin interés ===== */
   .card-cuotas { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.3; }
@@ -946,12 +955,24 @@
   </div>
 </section>
 
-<!-- ===== TRUST ===== -->
-<section class="trust home-sec">
-  <div class="wrap trust-grid">
-    <div class="trust-item"><h4>Cuero genuino</h4><p>Oveja, vaca y gamuza seleccionados</p></div>
-    <div class="trust-item"><h4>Hecho a mano</h4><p>Confección artesanal, pieza por pieza</p></div>
-    <div class="trust-item"><h4>Envíos al país</h4><p id="trustEnvio">Envíos a todo el país</p></div>
+<!-- ===== LO ESENCIAL ===== -->
+<section class="esencial home-sec">
+  <div class="wrap">
+    <p class="esencial-eyebrow">Lo esencial</p>
+    <div class="esencial-grid">
+      <div class="esencial-col">
+        <span class="esencial-label">Material</span>
+        <p class="esencial-concept">Cuero genuino argentino</p>
+      </div>
+      <div class="esencial-col">
+        <span class="esencial-label">Oficio</span>
+        <p class="esencial-concept">Confección artesanal</p>
+      </div>
+      <div class="esencial-col">
+        <span class="esencial-label">Desde Argentina</span>
+        <p class="esencial-concept" id="trustEnvio">Envíos a todo el país</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -963,7 +984,7 @@
     <div class="section-head">
       <span class="eyebrow" id="colEyebrow">Colección</span>
       <h2>Nuestras piezas de cuero</h2>
-      <p>Cada pieza se hace a mano, con cuero elegido y terminaciones prolijas. Elegí la tuya y la preparamos para vos.</p>
+      <p>Diseños contemporáneos en cuero genuino argentino.</p>
       <div id="storeRating" class="store-rating"></div>
     </div>
     <div class="tienda-controls">
@@ -986,12 +1007,9 @@
     <a class="page-back" href="#top" data-exit-shop>← Volver al inicio</a>
     <span class="eyebrow">Nuestra historia</span>
     <p class="story-lead">El tiempo cambia las cosas. Algunas las transforma. Otras las devuelve a su origen.</p>
-    <p>MV Leather Studio nació hace décadas, cuando el cuero era un oficio que se aprendía en el taller, pieza por pieza. Lo que comenzó con una generación de artesanos fue creciendo con el tiempo, atravesando distintas etapas, cambios y pausas.</p>
-    <p class="story-accent">Hoy esa historia continúa.</p>
-    <p>No como una copia del pasado, sino como una nueva interpretación de aquello que siempre nos definió: el respeto por los materiales, el trabajo hecho a mano y la convicción de crear piezas que permanezcan.</p>
-    <p>MV Leather Studio representa un nuevo comienzo construido sobre una herencia real. Rescatamos el oficio, refinamos cada proceso y diseñamos una colección pensada para acompañar una vida entera, no una temporada.</p>
-    <p>Porque creemos que las mejores piezas no siguen tendencias.</p>
-    <p class="story-accent big">Se quedan.</p>
+    <p>MV Leather Studio nació cuando el cuero era un oficio que se aprendía en el taller, pieza por pieza. Una herencia de artesanos que atravesó generaciones, cambios y pausas.</p>
+    <p>Hoy la retomamos con la misma convicción: respeto por los materiales, trabajo hecho a mano y piezas pensadas para acompañar una vida entera.</p>
+    <p class="story-accent big">Hoy esa historia continúa.</p>
     <span id="statPiezas" hidden></span>
   </div>
 </section>
@@ -1049,32 +1067,24 @@
 
 <!-- ===== INSTAGRAM ===== -->
 <section class="section ig-section home-sec" id="instagram" hidden>
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">Comunidad</span>
-      <h2>Seguinos en Instagram</h2>
-      <p id="igHandleLine"></p>
+  <div class="wrap ig-editorial">
+    <div class="ig-text">
+      <span class="eyebrow">Community</span>
+      <h2 class="ig-title">Follow our world.</h2>
+      <a class="ig-handle" id="igFollowBtn" href="#" target="_blank" rel="noopener">@mv.leather.studio →</a>
     </div>
-    <div class="ig-carousel">
-      <button class="ig-arrow ig-prev" id="igPrev" type="button" aria-label="Anterior">‹</button>
-      <div class="ig-grid" id="igGrid"></div>
-      <button class="ig-arrow ig-next" id="igNext" type="button" aria-label="Siguiente">›</button>
-    </div>
-    <div style="text-align:center; margin-top:26px;">
-      <a class="btn btn-dark" id="igFollowBtn" href="#" target="_blank" rel="noopener">Ver el perfil</a>
-    </div>
+    <div class="ig-feed" id="igGrid" aria-hidden="true"></div>
   </div>
 </section>
 
 <!-- ===== NEWSLETTER ===== -->
 <section class="newsletter home-sec">
-  <div class="wrap" style="text-align:center; padding:52px 20px;">
-    <span class="eyebrow" style="color:var(--gold)">Sumate al club</span>
-    <h2 style="font-size:clamp(26px,4vw,36px); margin-top:8px; color:var(--ink);">Novedades y descuentos exclusivos</h2>
-    <p style="color:var(--muted); margin:12px auto 20px; max-width:460px;">Dejanos tu email y enterate primero de nuevos ingresos, ofertas y cupones.</p>
-    <form id="nlForm" style="display:flex; gap:8px; max-width:440px; margin:0 auto; flex-wrap:wrap;">
+  <div class="wrap" style="text-align:center; padding:clamp(64px,9vw,110px) 20px;">
+    <span class="eyebrow">Stay in the know</span>
+    <p style="font-family:var(--serif); font-size:clamp(20px,2.4vw,26px); color:var(--ink); margin:14px auto 26px; max-width:22ch; line-height:1.4;">Nuevos ingresos, colecciones y novedades de MV.</p>
+    <form id="nlForm" style="display:flex; gap:10px; max-width:440px; margin:0 auto; flex-wrap:wrap; align-items:stretch;">
       <input type="email" name="email" required placeholder="tu@email.com" style="flex:1; min-width:200px; padding:13px 16px; border:1px solid var(--line); background:var(--surface); border-radius:2px; font-size:15px; font-family:inherit;">
-      <button class="btn btn-dark" type="submit">Suscribirme</button>
+      <button class="btn btn-dark" type="submit">Suscribirme →</button>
     </form>
   </div>
 </section>
@@ -1182,7 +1192,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v5.9';
+const STORE_VERSION = 'v6.0';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1472,34 +1482,16 @@ function loadInstagramEmbed() {
 function renderInstagram() {
   const sec = $('#instagram'); if (!sec) return;
   const handle = (store.cfg.instagram || DEFAULT_IG_HANDLE || '').replace(/^@/, '').trim();
-  let posts = parseIgPosts(store.cfg.instagram_posts);
-  if (!posts.length) posts = parseIgPosts(DEFAULT_IG_POSTS.join('\n'));
-  posts = posts.slice(0, 6); // carrusel de 1 fila: máximo 6
-  if (!handle && !posts.length) { sec.hidden = true; return; }
+  // Feed 3×3 con imágenes reales de la marca (primeras fotos de productos).
+  const imgs = [];
+  (store.productos || []).forEach(p => { const a = arr(p.imagenes); if (a[0]) imgs.push(a[0]); });
+  const grid = imgs.slice(0, 9);
+  if (!handle && !grid.length) { sec.hidden = true; return; }
   sec.hidden = false;
-  const line = $('#igHandleLine');
-  if (line) line.textContent = handle ? `@${handle}` : '';
   const btn = $('#igFollowBtn');
-  if (btn) btn.href = handle ? `https://instagram.com/${handle}` : '#';
-  const grid = $('#igGrid');
-  if (grid) {
-    grid.innerHTML = posts.map(igBlockquote).join('');
-    if (posts.length) loadInstagramEmbed();
-  }
-  // Flechas del carrusel (desplazan una tarjeta ~316px)
-  const prev = $('#igPrev'), next = $('#igNext');
-  if (prev && next && grid) {
-    const step = 316;
-    prev.onclick = () => grid.scrollBy({ left: -step, behavior: 'smooth' });
-    next.onclick = () => grid.scrollBy({ left: step, behavior: 'smooth' });
-    const upd = () => {
-      const max = grid.scrollWidth - grid.clientWidth - 4;
-      prev.style.display = grid.scrollLeft > 4 ? '' : 'none';
-      next.style.display = grid.scrollLeft < max ? '' : 'none';
-    };
-    grid.onscroll = upd;
-    setTimeout(upd, 400);
-  }
+  if (btn) { btn.href = handle ? `https://instagram.com/${handle}` : '#'; btn.textContent = (handle ? '@' + handle : 'Ver el perfil') + ' →'; }
+  const g = $('#igGrid');
+  if (g) g.innerHTML = grid.map(src => `<span class="ig-cell" style="background-image:url('${esc(src)}')"></span>`).join('');
 }
 
 // ---------- carrusel de portada (fotos + videos) ----------
