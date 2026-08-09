@@ -721,6 +721,7 @@
 
   /* ===== Sort/filter bar ===== */
   .toolbar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-bottom: 30px; }
+  .toolbar:empty { display: none; margin: 0; }
   .toolbar select {
     padding: 10px 16px; border-radius: 0; border: 1px solid var(--line); background: var(--surface);
     font-size: 12px; font-family: inherit; color: var(--ink); letter-spacing: .5px;
@@ -1213,7 +1214,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.10';
+const STORE_VERSION = 'v6.11';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1803,33 +1804,10 @@ function rangosPrecios() {
   ];
 }
 function renderToolbar() {
-  const mats = materiales();
-  const tls = talles();
-  const cols = colores();
-  const rangos = rangosPrecios();
-  const matSel = mats.length ? `<select id="matSel" aria-label="Filtrar por material">
-      <option value="all">Todos los materiales</option>
-      ${mats.map(m => `<option value="${esc(m)}" ${m===store.filtroMaterial?'selected':''}>${esc(m)}</option>`).join('')}
-    </select>` : '';
-  const colorSel = cols.length ? `<select id="colorSel" aria-label="Filtrar por color">
-      <option value="all">Todos los colores</option>
-      ${cols.map(c => `<option value="${esc(c)}" ${c===store.filtroColor?'selected':''}>${esc(c)}</option>`).join('')}
-    </select>` : '';
-  const talleSel = tls.length ? `<select id="talleSel" aria-label="Filtrar por talle">
-      <option value="all">Todos los talles</option>
-      ${tls.map(t => `<option value="${esc(t)}" ${t===store.filtroTalle?'selected':''}>Talle ${esc(t)}</option>`).join('')}
-    </select>` : '';
-  const precioSel = rangos.length ? `<select id="precioSel" aria-label="Filtrar por precio">
-      <option value="all">Cualquier precio</option>
-      ${rangos.map(r => `<option value="${esc(r.value)}" ${r.value===store.filtroPrecio?'selected':''}>${esc(r.label)}</option>`).join('')}
-    </select>` : '';
-  $('#toolbar').innerHTML = `${matSel}${colorSel}${talleSel}${precioSel}
-    <select id="ordenSel" aria-label="Ordenar productos">
-      <option value="destacados" ${store.orden==='destacados'?'selected':''}>Destacados</option>
-      <option value="nuevos" ${store.orden==='nuevos'?'selected':''}>Novedades</option>
-      <option value="precio_asc" ${store.orden==='precio_asc'?'selected':''}>Precio: menor a mayor</option>
-      <option value="precio_desc" ${store.orden==='precio_desc'?'selected':''}>Precio: mayor a menor</option>
-    </select>`;
+  // Filtros de materiales/colores/talles/precio y orden ocultos por decisión de diseño
+  // (se busca por nombre y se filtra por categoría con los chips). Estética editorial.
+  const el = $('#toolbar');
+  if (el) el.innerHTML = '';
 }
 function filtered() {
   const q = store.busca.toLowerCase().trim();
