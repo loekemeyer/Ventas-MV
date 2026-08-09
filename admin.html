@@ -1487,6 +1487,7 @@
       </div>
       <div style="display:flex; gap:6px;">
         <a class="btn-secondary" href="index.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; white-space:nowrap; flex:none;">Ver tienda ↗</a>
+        <button type="button" id="btnCargarDesc" class="btn-secondary" style="width:auto; flex:none; white-space:nowrap;">✍️ Descripciones</button>
         <button type="button" id="btnAddProducto" class="btn-primary" style="width:auto; flex:none; white-space:nowrap;">＋ Producto</button>
       </div>
     </div>
@@ -1814,7 +1815,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.16';
+const APP_VERSION = 'v6.17';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4640,6 +4641,114 @@ function initFotosUploader(p) {
     renderFotosGrid(true);
   });
 }
+// ====== Descripciones sugeridas (autoría MV) ======
+// Se cargan con un botón desde el admin, sobre tus productos existentes.
+// La 2ª línea ("En la imagen…") la tienda la muestra como pie de foto.
+const DESCRIPCIONES_SUGERIDAS = [
+  { t: 'Bomber de cuero', kw: ['bomber'],
+    d: 'Bomber de silueta oversize y caída relajada, con puños y ruedo elastizados y cierre metálico. Impronta urbana para todos los días, hecha a mano para durar.\nEn la imagen la modelo lleva el bomber en color verde.' },
+  { t: 'Campera Napalán (aviador)', kw: ['aviador', 'napalan aviador'],
+    d: 'Campera aviadora con cuello y forro de corderito. Abriga de verdad y tiene la actitud de un clásico atemporal.\nEn la imagen la modelo lleva la campera en color negro.' },
+  { t: 'Campera trucker', kw: ['trucker', 'jean'],
+    d: 'Campera de corte trucker, estilo campera de jean: canesú, bolsillos con tapa y un calce boxy. El básico de fondo de placard.\nEn la imagen la modelo lleva la campera en color marrón.' },
+  { t: 'Campera rockera (biker)', kw: ['rocker', 'rockera', 'rockerita'],
+    d: 'Campera biker con cierres y actitud rockera. El clásico infaltable que sube de nivel cualquier look.\nEn la imagen la modelo lleva la campera en color negro.' },
+  { t: 'Campera España (biker)', kw: ['españa', 'espana'],
+    d: 'Campera biker con cierre asimétrico y detalles metálicos. Estructurada, con carácter, para usar todo el año.\nEn la imagen la modelo lleva la campera en color negro.' },
+  { t: 'Campera Tina (oversized)', kw: ['tina'],
+    d: 'Campera oversized de corte cropped, con mangas globo y puños de hebilla. Volumen y aire moderno para un look con personalidad.\nEn la imagen la modelo lleva la campera en color cognac.' },
+  { t: 'Trench largo de cuero', kw: ['trench largo', 'trench'],
+    d: 'Trench largo de línea sobria y elegante. Cae impecable y se usa abierto o cerrado con cinturón: una pieza statement para el entretiempo y el frío.\nEn la imagen la modelo lleva el trench en color negro.' },
+  { t: 'Tapado Napalán largo (reversible)', kw: ['napalan largo', 'tapado largo'],
+    d: 'Tapado largo de napa reversible: cuero de un lado, corderito del otro. Máximo abrigo y dos prendas en una.\nEn la imagen la modelo lleva el tapado en color caramelo.' },
+  { t: 'Tapado Napalán 3/4 (reversible)', kw: ['napalan 3', '3/4', '3-4'],
+    d: 'Tapado 3/4 reversible en cuero y corderito, con cuello sport amplio y calce envolvente. Ideal para los días más fríos.\nEn la imagen la modelo lleva el tapado en color negro.' },
+  { t: 'Camisa de gamuza', kw: ['gamuza'],
+    d: 'Camisa de gamuza suave al tacto, con bolsillos de pecho y una caída perfecta. Se lleva como camisa o como sobrecamisa.\nEn la imagen la modelo lleva la camisa en color caramelo.' },
+  { t: 'Camisa de cuero', kw: ['camisa'],
+    d: 'Camisa de cuero de textura marcada. Se usa abierta o cerrada y aporta presencia a cualquier base.\nEn la imagen la modelo lleva la camisa en color negro.' },
+  { t: 'Blazer de cuero', kw: ['blazer'],
+    d: 'Blazer de sastrería con onda. Estiliza la silueta y transforma un jean + remera en un outfit completo.\nEn la imagen la modelo lleva el blazer en color negro.' },
+  { t: 'Falda de cuero con botones', kw: ['falda'],
+    d: 'Falda midi con botonadura frontal y tajo. Largo elegante y silueta que estiliza; se luce con botas o con zapatillas.\nEn la imagen la modelo lleva la falda en color bordó.' },
+  { t: 'Pantalón de cuero wide-leg', kw: ['pantalon', 'wide'],
+    d: 'Pantalón de pierna ancha con cintura cómoda y caída fluida. Elegancia sin esfuerzo, de día o de noche.\nEn la imagen la modelo lleva el pantalón en color negro.' },
+  { t: 'Conjunto print reptil', kw: ['reptil', 'conjunto'],
+    d: 'Conjunto de campera + pantalón wide-leg con textura print reptil. Se usan juntos para un look total o por separado como piezas statement.\nEn la imagen la modelo lleva el conjunto en print reptil.' },
+];
+function _normTxt(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
+function _matchDescripcion(nombre) {
+  const n = _normTxt(nombre);
+  if (!n) return null;
+  let best = null, bestLen = 0;
+  for (const s of DESCRIPCIONES_SUGERIDAS) {
+    for (const k of s.kw) {
+      const kk = _normTxt(k);
+      if (n.includes(kk) && kk.length > bestLen) { best = s; bestLen = kk.length; }
+    }
+  }
+  return best;
+}
+function openDescripcionesModal() {
+  const modal = document.getElementById('productoModal');
+  const sheet = document.getElementById('productoSheet');
+  const prods = (state.productos || []).slice().sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+  if (!prods.length) { showToast('No hay productos cargados todavía.', '#ff9500'); return; }
+  const rows = prods.map((p, i) => {
+    const m = _matchDescripcion(p.nombre);
+    const sugerida = m ? m.d : '';
+    const yaTiene = (p.descripcion || '').trim();
+    const preSel = !!sugerida;
+    return `<div class="desc-row" data-pid="${escapeHtml(p.id)}" style="border:1px solid var(--line,#e5e5ea); border-radius:10px; padding:12px; margin-bottom:10px;">
+      <label class="chk-row" style="flex-direction:row; align-items:center; gap:8px; margin-bottom:6px;">
+        <input type="checkbox" class="desc-chk" ${preSel ? 'checked' : ''} style="width:auto;">
+        <span style="margin:0; font-weight:600;">${escapeHtml(p.nombre || '(sin nombre)')}</span>
+        ${yaTiene ? '<span style="font-size:11px; color:#8e8e93;">· ya tiene texto (se reemplaza)</span>' : ''}
+      </label>
+      ${sugerida ? '' : '<div style="font-size:11px; color:#c0392b; margin-bottom:6px;">Sin sugerencia automática — escribila o dejala sin tildar.</div>'}
+      <textarea class="desc-text" rows="3" style="resize:vertical; width:100%; font-size:13px;">${escapeHtml(sugerida)}</textarea>
+    </div>`;
+  }).join('');
+  const conMatch = prods.filter(p => _matchDescripcion(p.nombre)).length;
+  sheet.innerHTML = `
+    <h3>Cargar descripciones</h3>
+    <p style="font-size:12.5px; color:#8e8e93; margin:0 0 12px;">Se detectaron sugerencias para <b>${conMatch}</b> de ${prods.length} productos. Revisá, editá lo que quieras y guardá. La 2ª línea (“En la imagen…”) se muestra sola, debajo, como pie de foto en la tienda.</p>
+    <div style="max-height:52vh; overflow-y:auto; padding-right:4px;">${rows}</div>
+    <div class="actions" style="margin-top:14px;">
+      <button type="button" class="btn-primary" id="descSaveAll">Guardar descripciones tildadas</button>
+      <button type="button" class="btn-secondary" id="descCancel">Cancelar</button>
+    </div>
+    <div id="descMsg" style="font-size:12px; color:#8e8e93; margin-top:8px;"></div>`;
+  modal.classList.add('show');
+  document.getElementById('descCancel').onclick = () => modal.classList.remove('show');
+  document.getElementById('descSaveAll').onclick = async (e) => {
+    const btn = e.currentTarget;
+    const msg = document.getElementById('descMsg');
+    const items = [];
+    sheet.querySelectorAll('.desc-row').forEach(row => {
+      const on = row.querySelector('.desc-chk').checked;
+      const txt = row.querySelector('.desc-text').value.trim();
+      if (on && txt) items.push({ id: row.dataset.pid, descripcion: txt });
+    });
+    if (!items.length) { msg.textContent = 'No hay nada tildado con texto.'; return; }
+    btn.disabled = true; let ok = 0, fail = 0;
+    for (const it of items) {
+      msg.textContent = `Guardando ${ok + fail + 1}/${items.length}…`;
+      try {
+        const { error } = await sb.from('productos').update({ descripcion: it.descripcion, updated_at: new Date().toISOString() }).eq('id', it.id);
+        if (error) { fail++; } else {
+          ok++;
+          const pp = state.productos.find(x => x.id === it.id); if (pp) pp.descripcion = it.descripcion;
+        }
+      } catch (_) { fail++; }
+    }
+    btn.disabled = false;
+    msg.textContent = `Listo: ${ok} guardada${ok === 1 ? '' : 's'}${fail ? `, ${fail} con error` : ''}.`;
+    showToast(`✓ ${ok} descripción${ok === 1 ? '' : 'es'} guardada${ok === 1 ? '' : 's'}`, fail ? '#ff9500' : '#34c759');
+    renderTienda();
+    if (!fail) setTimeout(() => modal.classList.remove('show'), 900);
+  };
+}
 function openProductoModal(id) {
   const modal = document.getElementById('productoModal');
   const sheet = document.getElementById('productoSheet');
@@ -4829,6 +4938,7 @@ async function guardarTiendaCfg() {
 
 // Wiring de la pestaña Tienda
 document.getElementById('btnAddProducto')?.addEventListener('click', () => openProductoModal(null));
+document.getElementById('btnCargarDesc')?.addEventListener('click', () => openDescripcionesModal());
 document.getElementById('prodSearch')?.addEventListener('input', () => renderTienda());
 document.getElementById('prodCatChips')?.addEventListener('click', (e) => {
   const b = e.target.closest('.prod-cat-chip'); if (!b) return;
