@@ -455,15 +455,16 @@
   .info-block .note { color: var(--muted); font-size: 13px; margin-top: 12px; }
 
   /* ===== Footer ===== */
-  footer { background: #14100b; color: #b8ab98; padding: 54px 0 30px; }
-  .foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 30px; }
-  footer h4 { font-family: var(--sans); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #e9ddc9; margin-bottom: 14px; }
-  footer a { display: block; color: #b8ab98; font-size: 14px; padding: 4px 0; }
+  footer { background: #14100b; color: #ac9f8c; padding: clamp(56px, 8vw, 84px) 0 34px; }
+  .foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; }
+  footer h4 { font-family: var(--sans); font-size: 10.5px; letter-spacing: 2.6px; text-transform: uppercase; color: #d8cbb4; font-weight: 500; margin-bottom: 18px; }
+  footer a { display: block; color: #a99d8a; font-size: 13px; padding: 5px 0; letter-spacing: .3px; transition: color .2s; }
   footer a:hover { color: #fff; }
-  .foot-brand .brand-name { color: #f3e7d3; }
-  .foot-bottom { border-top: 1px solid #2a2016; margin-top: 36px; padding-top: 18px; font-size: 12px; color: #7d715f; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-  .admin-link { display: inline-block; padding: 6px 14px; border: 1px solid #4a3f31; border-radius: 3px; color: #cdbfa8; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; font-size: 11px; }
-  .admin-link:hover { background: #2a2016; color: #f3e9dc; }
+  .foot-brand .brand-name { color: #efe3cf; font-weight: 400; font-size: 19px; letter-spacing: 2.6px; }
+  .foot-tagline { color: #8d8170; font-size: 13px; line-height: 1.75; max-width: 300px; font-weight: 300; }
+  .foot-bottom { border-top: 1px solid #241b12; margin-top: 44px; padding-top: 20px; font-size: 11px; letter-spacing: .3px; color: #6f6555; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .admin-link { display: inline-block; padding: 6px 14px; border: 1px solid #3c3327; border-radius: 2px; color: #b8ab98; font-weight: 500; letter-spacing: 1.4px; text-transform: uppercase; font-size: 10px; transition: background .2s, color .2s; }
+  .admin-link:hover { background: #241b12; color: #f3e9dc; }
 
   /* ===== Drawer / Modal shared ===== */
   .overlay {
@@ -1002,7 +1003,6 @@
     </div>
     <div class="tienda-controls">
       <div class="filters" id="filters"></div>
-      <div class="search-row"><input type="search" id="search" placeholder="Buscar por nombre, color o material…" aria-label="Buscar productos"></div>
       <div class="toolbar" id="toolbar"></div>
     </div>
     <div class="tienda-results">
@@ -1114,8 +1114,8 @@
   <div class="wrap">
     <div class="foot-grid">
       <div class="foot-brand">
-        <div class="brand" style="margin-bottom:14px;"><img src="logo.jpg" alt="" style="height:38px;"><span class="brand-name" id="footBrand">MV Leather</span></div>
-        <p style="color:#9c8f7c; font-size:14px; max-width:320px;">Camperas y prendas de cuero genuino argentino. Diseño atemporal, confección artesanal.</p>
+        <div class="brand" style="margin-bottom:16px;"><img src="logo.jpg" alt="" style="height:30px;"><span class="brand-name" id="footBrand">MV Leather</span></div>
+        <p class="foot-tagline">Camperas y prendas de cuero genuino argentino. Diseño atemporal, confección artesanal.</p>
       </div>
       <div>
         <h4>Tienda</h4>
@@ -1214,7 +1214,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.11';
+const STORE_VERSION = 'v6.12';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -2797,7 +2797,7 @@ $('#filters').addEventListener('click', (e) => {
   store.filtro = b.dataset.cat; renderFilters(); renderGrid();
 });
 let _searchTimer = null;
-$('#search').addEventListener('input', (e) => {
+$('#search')?.addEventListener('input', (e) => {
   store.busca = e.target.value;
   clearTimeout(_searchTimer);
   _searchTimer = setTimeout(renderGrid, 250);   // evita re-renderizar toda la grilla en cada tecla
