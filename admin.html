@@ -1814,7 +1814,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.8';
+const APP_VERSION = 'v6.9';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4546,7 +4546,8 @@ function renderTienda() {
 }
 
 // ====== Fotos del producto: subir a Storage + ordenar (arrastrar) ======
-const FOTOS_BUCKET = 'productos';   // bucket público de Supabase Storage
+// Las fotos se comprimen en el navegador y se guardan DENTRO del producto
+// (data URI, campo imagenes). Sin bucket de Storage, sin Supabase, sin SQL.
 let _fotos = [];
 function slugify(s) {
   return (s || 'producto').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -4592,23 +4593,28 @@ function renderFotosGrid(skipText) {
     });
   });
 }
+function blobToDataURL(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
 async function subirFoto(file, p) {
   const msg = document.getElementById('fotosMsg');
   try {
-    if (msg) msg.textContent = 'Subiendo…';
-    const blob = await resizeImage(file, 1400, 0.82);
-    const nombreProd = (document.querySelector('#prodForm [name=nombre]') || {}).value;
-    const slug = (p && p.slug) || slugify(nombreProd);
-    const path = slug + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 7) + '.jpg';
-    const up = await sb.storage.from(FOTOS_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false });
-    if (up.error) throw up.error;
-    const pub = sb.storage.from(FOTOS_BUCKET).getPublicUrl(path);
-    _fotos.push(pub.data.publicUrl);
+    if (msg) msg.textContent = 'Procesando…';
+    // Comprimimos en el navegador y guardamos la foto DENTRO del producto (data URI).
+    // Sin bucket, sin Supabase Storage, sin SQL: todo se maneja desde el admin.
+    const blob = await resizeImage(file, 1000, 0.7);
+    const dataUri = await blobToDataURL(blob);
+    _fotos.push(dataUri);
     renderFotosGrid();
     if (msg) msg.textContent = '';
   } catch (e) {
     console.error('subirFoto', e);
-    if (msg) msg.textContent = 'No se pudo subir (revisá que exista el bucket "productos" y sea público).';
+    if (msg) msg.textContent = 'No se pudo procesar la foto. Probá con otra imagen.';
   }
 }
 function initFotosUploader(p) {
