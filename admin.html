@@ -88,6 +88,29 @@
     color: var(--ink);
     box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
   }
+  /* Pestañas de nivel 1: Tienda / Control Ventas */
+  .toptab {
+    flex: 1;
+    padding: 10px 4px;
+    background: transparent;
+    border: none;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #6a6a72;
+    transition: all 0.18s;
+    min-height: 44px;
+    line-height: 1.15;
+  }
+  .toptab:hover { color: var(--ink); }
+  .toptab.active {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+  }
+  .tabs-sub { margin-top: 6px; }
+  .tabs-sub[hidden] { display: none; }
   main { padding: 10px 12px; max-width: 1200px; margin: 0 auto; }
   .module { display: none; position: relative; }
   .module.active { display: block; animation: fadeIn 0.2s; }
@@ -1322,12 +1345,18 @@
       <img src="logo.jpg" alt="MV Leather Studio" class="header-logo">
       <span class="socia-chip" id="sociaChip" style="display:none;"></span>
     </div>
-    <button class="logout-btn" onclick="logout()" style="font-size:12px; width:auto; padding:4px 6px; min-height:auto;">Salir</button>
+    <div style="display:flex; align-items:center; gap:6px;">
+      <a class="logout-btn" href="index.html" style="font-size:12px; width:auto; padding:4px 8px; min-height:auto; text-decoration:none; display:inline-flex; align-items:center; gap:4px;" title="Ir a la tienda pública">🏪 Ver tienda</a>
+      <button class="logout-btn" onclick="logout()" style="font-size:12px; width:auto; padding:4px 6px; min-height:auto;">Salir</button>
+    </div>
   </div>
-  <div class="tabs" role="tablist">
+  <div class="tabs tabs-top" role="tablist">
+    <button class="toptab active" data-top="tienda">Tienda</button>
+    <button class="toptab" data-top="ventas">Control Ventas</button>
+  </div>
+  <div class="tabs tabs-sub" id="subTabs" role="tablist" hidden>
     <button class="tab active" data-tab="cargar">Cargar</button>
     <button class="tab" data-tab="registro">Seguimiento<br>Pedidos</button>
-    <button class="tab" data-tab="tienda">Tienda</button>
     <button class="tab" data-tab="caja">Caja</button>
     <button class="tab" data-tab="stock">Stock</button>
     <button class="tab" data-tab="stats">Estadística<br>de Venta</button>
@@ -1337,7 +1366,7 @@
 <main>
 
   <!-- ============ CARGAR ============ -->
-  <section id="cargar" class="module active">
+  <section id="cargar" class="module">
     <div class="watermark" aria-hidden="true"></div>
     <div class="notif-banner hidden" id="notifBanner">
       <span>🔔 Activá las notificaciones para avisar a las otras socias</span>
@@ -1436,7 +1465,7 @@
   </section>
 
   <!-- ============ TIENDA (catálogo público) ============ -->
-  <section id="tienda" class="module">
+  <section id="tienda" class="module active">
     <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
       <div>
         <h3 style="margin:0 0 2px;">Catálogo de la tienda</h3>
@@ -1764,7 +1793,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v4.1';
+const APP_VERSION = 'v4.2';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -2044,6 +2073,29 @@ document.querySelectorAll('.tab').forEach(btn => {
     if (btn.dataset.tab === 'caja') refreshCaja();
     if (btn.dataset.tab === 'stock') renderStock();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+// Navegación de dos niveles: Tienda (directo) vs Control Ventas (despliega los 5 sub-tabs)
+document.querySelectorAll('.toptab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.toptab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const subTabs = document.getElementById('subTabs');
+    if (btn.dataset.top === 'tienda') {
+      subTabs.hidden = true;
+      document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+      document.getElementById('tienda').classList.add('active');
+      renderTienda();
+      if (!_cupones.length) loadCupones();
+      if (!_media.length) loadMedia();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      subTabs.hidden = false;
+      // Abrir el sub-tab marcado (o "Cargar" por defecto) reusando su lógica
+      const sub = subTabs.querySelector('.tab.active') || subTabs.querySelector('.tab');
+      if (sub) sub.click();
+    }
   });
 });
 
@@ -3284,7 +3336,7 @@ async function bootApp() {
       .select('*')
       .order('orden', { ascending: true })
       .order('created_at', { ascending: false });
-    if (!error && data) { state.productos = data; renderTienda(); }
+    if (!error && data) { state.productos = data; renderTienda(); if (!_cupones.length) loadCupones(); if (!_media.length) loadMedia(); }
   } catch (e) {
     console.warn('Tienda: tabla productos no disponible aún (correr el SQL 0007).');
   }
@@ -4846,8 +4898,6 @@ document.getElementById('mediaList')?.addEventListener('click', async (e) => {
   } catch { showToast('Error al borrar', '#ff3b30'); }
 });
 
-// Refrescar catálogo al abrir la pestaña
-document.querySelector('[data-tab="tienda"]')?.addEventListener('click', () => { renderTienda(); if (!_cupones.length) loadCupones(); if (!_media.length) loadMedia(); });
 </script>
 
 </body>
