@@ -1213,7 +1213,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.9';
+const STORE_VERSION = 'v6.10';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1609,7 +1609,7 @@ function railCard(p) {
       ${off ? `<span class="tag off">-${off}%</span>` : ''}
     </div>
     <div class="rail-body">
-      <div class="rail-cat">${esc(p.categoria || p.material || 'Cuero')}</div>
+      <div class="rail-cat">${esc(catNorm(p.categoria) || p.material || 'Cuero')}</div>
       <div class="rail-name">${esc(p.nombre)}</div>
       <div class="rail-price">${money(p.precio, p.moneda)}${off ? ` <s>${money(p.precio_anterior, p.moneda)}</s>` : ''}</div>
     </div>
@@ -1667,9 +1667,16 @@ function renderDestacadas() {
 }
 
 // ---------- filtros + grid ----------
+// Normaliza categorías para mostrar y filtrar en plural (unifica el singular viejo
+// —Campera/Tapado— con el plural nuevo, sin tener que reescribir los productos).
+const CAT_ALIAS = { campera: 'Camperas', camperas: 'Camperas', tapado: 'Tapados', tapados: 'Tapados' };
+function catNorm(c) {
+  const s = (c || '').toString().trim();
+  return CAT_ALIAS[s.toLowerCase()] || s;
+}
 function categorias() {
   const set = new Set();
-  store.productos.forEach(p => { if (p.categoria) set.add(p.categoria); });
+  store.productos.forEach(p => { if (p.categoria) set.add(catNorm(p.categoria)); });
   return ['all', ...set];
 }
 // ---------- colecciones (Shop) ----------
@@ -1830,7 +1837,7 @@ function filtered() {
     if (store.coleccion && colProd(p) !== store.coleccion) return false;
     if (store.filtro === '__ofertas__') {
       if (!((parseFloat(p.precio_anterior) || 0) > (parseFloat(p.precio) || 0))) return false;
-    } else if (store.filtro !== 'all' && p.categoria !== store.filtro) return false;
+    } else if (store.filtro !== 'all' && catNorm(p.categoria) !== store.filtro) return false;
     if (store.filtroMaterial !== 'all' && p.material !== store.filtroMaterial) return false;
     if (store.filtroTalle !== 'all' && !arr(p.talles).includes(store.filtroTalle)) return false;
     if (store.filtroColor !== 'all' && !arr(p.colores).some(c => (c || '').trim().toLowerCase() === store.filtroColor.toLowerCase())) return false;
@@ -2013,7 +2020,7 @@ function openProduct(id, pushUrl = true) {
       ${imgs.length > 1 ? `<div class="pm-thumbs">${imgs.map((im,i) => `<img src="${esc(im)}" data-thumb="${esc(im)}" class="${i===0?'active':''}" alt="">`).join('')}</div>` : ''}
     </div>
     <div class="pm-info">
-      <span class="card-cat">${esc(p.categoria || p.material || 'Cuero')}</span>
+      <span class="card-cat">${esc(catNorm(p.categoria) || p.material || 'Cuero')}</span>
       <h2>${esc(p.nombre)}</h2>
       ${rating ? `<div class="card-rating" style="margin-bottom:6px;">${starsHtml(rating.avg)} <span>${rating.avg.toFixed(1)} · ${rating.count} reseña${rating.count===1?'':'s'}</span></div>` : ''}
       <div class="pm-price">${money(p.precio, p.moneda)}${off ? ` <s>${money(p.precio_anterior, p.moneda)}</s>` : ''}</div>
@@ -2089,7 +2096,7 @@ function setupStickyBuy(p) {
 }
 
 function relatedHtml(p) {
-  const rel = store.productos.filter(x => x.id !== p.id && (x.categoria === p.categoria || x.material === p.material)).slice(0, 4);
+  const rel = store.productos.filter(x => x.id !== p.id && (catNorm(x.categoria) === catNorm(p.categoria) || x.material === p.material)).slice(0, 4);
   if (!rel.length) return '';
   return `<div class="related"><h3>También te puede gustar</h3><div class="related-grid">${rel.map(r => {
     const img = arr(r.imagenes)[0];
