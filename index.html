@@ -506,6 +506,15 @@
   .pm-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,.82); color: var(--ink); font-size: 26px; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.18); transition: background .15s; z-index: 2; }
   .pm-nav:hover { background: #fff; }
   .pm-nav.prev { left: 10px; } .pm-nav.next { right: 10px; }
+  /* ===== Datos de transferencia (checkout) ===== */
+  .tr-amount { font-family: var(--serif); font-size: 30px; color: var(--ink); margin-bottom: 14px; }
+  .tr-box { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .tr-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .tr-row:last-child { border-bottom: none; }
+  .tr-row > span { color: var(--muted); min-width: 62px; }
+  .tr-row > b { flex: 1; color: var(--ink); word-break: break-all; }
+  .tr-copy { flex: none; background: var(--ink); color: var(--bg); border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .tr-copy:hover { background: #000; }
 
   /* ===== Lightbox ===== */
   .lightbox {
@@ -1151,7 +1160,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v5.2';
+const STORE_VERSION = 'v5.3';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -2186,6 +2195,8 @@ function refreshCoHead() {
 function openCheckout() {
   if (!store.cart.length) { toast('Tu carrito está vacío'); return; }
   const mpOn = store.cfg.mp_activo === '1' || store.cfg.mp_activo === 'true';
+  const transferOn = !!(store.cfg.alias_transferencia || '').trim();
+  const dt = parseFloat(store.cfg.descuento_transferencia) || 0;
   $('#checkoutBody').innerHTML = `
     <div id="coHead">${coHeadHtml()}</div>
     <form id="coForm" autocomplete="on">
@@ -2195,10 +2206,10 @@ function openCheckout() {
       <input type="hidden" name="entrega" value="Envío a domicilio">
       <div class="field" id="dirField"><label>Dirección de envío *</label><input name="direccion" required autocomplete="street-address" placeholder="Calle, número, localidad, CP"></div>
       <div class="field"><label>Notas (opcional)</label><textarea name="notas" rows="2" placeholder="Aclaraciones, horarios, etc."></textarea></div>
-      ${mpOn ? `<button type="submit" class="btn btn-primary btn-block" data-pay="mp">Pagar con Mercado Pago</button>
-        <button type="submit" class="btn btn-dark btn-block" data-pay="wa" style="margin-top:8px;">Coordinar por WhatsApp</button>`
-      : `<button type="submit" class="btn btn-primary btn-block" data-pay="wa">Enviar pedido por WhatsApp</button>`}
-      <p class="pay-note">Al confirmar, guardamos tu pedido y te contactamos para coordinar. ${mpOn ? 'Con Mercado Pago pagás online de forma segura.' : ''}</p>
+      ${mpOn ? `<button type="submit" class="btn btn-primary btn-block" data-pay="mp">Pagar con tarjeta / Mercado Pago</button>` : ''}
+      ${transferOn ? `<button type="submit" class="btn ${mpOn ? 'btn-outline' : 'btn-primary'} btn-block" data-pay="transfer" style="margin-top:${mpOn ? '8px' : '0'};">Pagar por transferencia${dt > 0 ? ` (−${dt}%)` : ''}</button>` : ''}
+      <button type="submit" class="btn btn-dark btn-block" data-pay="wa" style="margin-top:${(mpOn || transferOn) ? '8px' : '0'};">${(mpOn || transferOn) ? 'Coordinar por WhatsApp' : 'Enviar pedido por WhatsApp'}</button>
+      <p class="pay-note">Al confirmar, guardamos tu pedido y te contactamos para coordinar. ${mpOn ? 'Con Mercado Pago pagás online de forma segura.' : ''}${transferOn ? ' Por transferencia te mostramos el alias y confirmás enviando el comprobante.' : ''}</p>
     </form>`;
   wireCoHead();
   // toggle dirección
@@ -2237,6 +2248,8 @@ async function finalizarPedido(form, metodo) {
   const subtotal = cartTotal();
   const descuento = discountAmount(subtotal);
   const total = subtotal - descuento;
+  const dt = parseFloat(store.cfg.descuento_transferencia) || 0;
+  const totalTransfer = (metodo === 'transfer' && dt > 0) ? Math.round(total * (1 - dt / 100)) : total;
   const moneda = store.cart[0]?.moneda || 'ARS';
   const resumen = store.cart.map(i => `${i.nombre}${i.color||i.talle?` (${[i.color,i.talle].filter(Boolean).join('/')})`:''} ×${i.qty}`).join(' + ');
 
@@ -2250,9 +2263,9 @@ async function finalizarPedido(form, metodo) {
     cupon: store.cupon?.codigo || null,
     descuento: descuento || null,
     prenda: resumen.slice(0, 500),
-    importe: total,
+    importe: metodo === 'transfer' ? totalTransfer : total,
     moneda,
-    forma_pago: metodo === 'mp' ? 'Mercado Pago' : 'WhatsApp',
+    forma_pago: metodo === 'mp' ? 'Mercado Pago' : metodo === 'transfer' ? 'Transferencia' : 'WhatsApp',
     estado: 'Recepcionado',
     origen: 'web',
     pago_estado: 'pendiente',
@@ -2281,6 +2294,14 @@ async function finalizarPedido(form, metodo) {
     const ok = await pagarConMP(ventaId, mpItems, { nombre, email, telefono });
     if (ok) return; // redirige a MP
     toast('Mercado Pago no disponible — coordinamos por WhatsApp');
+  }
+  if (metodo === 'transfer') {
+    const snap = store.cart.map(i => ({ ...i }));       // copia para el mensaje de WhatsApp
+    store.cart = []; saveCart();
+    closeAll();
+    showTransferencia({ nombre, telefono, email, entrega, direccion, notas, total: totalTransfer, moneda, descuento, cupon: store.cupon?.codigo, dt, items: snap }, ventaId);
+    btns.forEach(b => b.disabled = false);
+    return;
   }
   // WhatsApp (o fallback)
   abrirWhatsappPedido({ nombre, telefono, email, entrega, direccion, notas, resumen, total, moneda, descuento, cupon: store.cupon?.codigo }, ventaId);
@@ -2324,10 +2345,12 @@ function abrirWhatsappPedido(o, ventaId) {
   if (o.email) L.push(`*Email:* ${o.email}`);
   L.push('');
   L.push('*Pedido:*');
-  store.cart.forEach(i => L.push(`• ${i.nombre}${i.color||i.talle?` (${[i.color,i.talle].filter(Boolean).join(' / ')})`:''} ×${i.qty} — ${money(i.precio*i.qty, i.moneda)}`));
+  const lineas = (o.items && o.items.length) ? o.items : store.cart;
+  lineas.forEach(i => L.push(`• ${i.nombre}${i.color||i.talle?` (${[i.color,i.talle].filter(Boolean).join(' / ')})`:''} ×${i.qty} — ${money(i.precio*i.qty, i.moneda)}`));
   L.push('');
   if (o.descuento > 0) L.push(`*Cupón ${o.cupon || ''}:* −${money(o.descuento, o.moneda)}`);
   L.push(`*Total:* ${money(o.total, o.moneda)}`);
+  if (o.pagoNota) L.push(`*Pago:* ${o.pagoNota}`);
   L.push(`*Entrega:* ${o.entrega}`);
   if (o.entrega === 'Envío a domicilio' && o.direccion) L.push(`*Dirección:* ${o.direccion}`);
   if (o.notas) L.push(`*Notas:* ${o.notas}`);
@@ -2352,6 +2375,37 @@ function showThanks(title, sub) {
       <button class="btn btn-primary" data-close-info style="margin-top:20px;">Seguir viendo</button>
     </div>`;
   $('#infoModal').classList.add('show'); $('#overlay').classList.add('show'); document.body.style.overflow = 'hidden';
+}
+
+// Pantalla con los datos para pagar por transferencia (a Brubank)
+function showTransferencia(o, ventaId) {
+  const c = store.cfg;
+  const alias = (c.alias_transferencia || '').trim();
+  const titular = (c.titular_transferencia || '').trim();
+  const cbu = (c.cbu_transferencia || '').trim();
+  const rows = [];
+  if (alias) rows.push(`<div class="tr-row"><span>Alias</span><b>${esc(alias)}</b><button type="button" class="tr-copy" data-copy="${esc(alias)}">Copiar</button></div>`);
+  if (titular) rows.push(`<div class="tr-row"><span>Titular</span><b>${esc(titular)}</b></div>`);
+  if (cbu) rows.push(`<div class="tr-row"><span>CBU/CVU</span><b>${esc(cbu)}</b><button type="button" class="tr-copy" data-copy="${esc(cbu)}">Copiar</button></div>`);
+  $('#infoInner').innerHTML = `
+    <button class="close-x" data-close-info style="color:var(--muted); text-shadow:none;">&times;</button>
+    <div style="padding:34px 28px;">
+      <h2 style="font-size:26px; margin:0 0 4px;">Datos para transferir</h2>
+      <p style="color:var(--muted); margin:0 0 16px; font-size:14px;">Transferí este importe y mandanos el comprobante por WhatsApp para confirmar tu pedido.</p>
+      <div class="tr-amount">${money(o.total, o.moneda)}${o.dt > 0 ? ` <span style="font-size:13px; color:var(--ok); font-family:var(--sans);">(−${o.dt}% por transferencia)</span>` : ''}</div>
+      <div class="tr-box">${rows.join('')}</div>
+      <button class="btn btn-primary btn-block" id="trWa" style="margin-top:18px;">Ya transferí — enviar comprobante</button>
+      <button class="btn btn-outline btn-block" data-close-info style="margin-top:10px;">Cerrar</button>
+    </div>`;
+  $('#infoModal').classList.add('show'); $('#overlay').classList.add('show'); document.body.style.overflow = 'hidden';
+  $$('#infoInner .tr-copy').forEach(b => b.addEventListener('click', () => {
+    const t = b.dataset.copy || '';
+    const done = () => { const prev = b.textContent; b.textContent = '¡Copiado!'; setTimeout(() => { b.textContent = prev; }, 1500); };
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(t).then(done, () => toast('No se pudo copiar'));
+    else toast('Copiá manualmente: ' + t);
+  }));
+  const waBtn = $('#trWa');
+  if (waBtn) waBtn.addEventListener('click', () => abrirWhatsappPedido({ ...o, pagoNota: 'Transferencia (envío el comprobante)' }, ventaId));
 }
 
 function handlePaymentReturn() {

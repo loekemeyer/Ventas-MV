@@ -1476,6 +1476,14 @@
             <input type="number" id="cfgEnvioGratis" inputmode="numeric" placeholder="0"></label>
           <label><span>Demora estimada a pedido (días desde el pago)</span>
             <input type="number" id="cfgDemoraDias" inputmode="numeric" placeholder="15"></label>
+          <label><span>Alias para transferencias (Brubank) — si lo cargás, aparece la opción "Pagar por transferencia"</span>
+            <input type="text" id="cfgAliasTransfer" autocapitalize="none" placeholder="mvleather.brubank"></label>
+          <label><span>Titular de la cuenta (nombre completo)</span>
+            <input type="text" id="cfgTitularTransfer" placeholder="Nombre y apellido"></label>
+          <label><span>CBU/CVU (opcional)</span>
+            <input type="text" id="cfgCbuTransfer" inputmode="numeric" placeholder="0000000000000000000000"></label>
+          <label><span>Descuento por pagar con transferencia (%) — 0 = sin descuento</span>
+            <input type="number" id="cfgDescTransfer" inputmode="numeric" placeholder="10"></label>
           <label class="chk-row" style="flex-direction:row; align-items:center; gap:8px;">
             <input type="checkbox" id="cfgMpActivo" style="width:auto;">
             <span style="margin:0;">Cobrar con Mercado Pago (requiere token en Supabase)</span></label>
@@ -4640,6 +4648,10 @@ function fillTiendaCfgForm() {
   set('cfgEnvio', c.envio_texto);
   set('cfgEnvioGratis', c.envio_gratis_desde);
   set('cfgDemoraDias', c.demora_dias);
+  set('cfgAliasTransfer', c.alias_transferencia);
+  set('cfgTitularTransfer', c.titular_transferencia);
+  set('cfgCbuTransfer', c.cbu_transferencia);
+  set('cfgDescTransfer', c.descuento_transferencia);
   const mp = document.getElementById('cfgMpActivo');
   if (mp) mp.checked = c.mp_activo === '1' || c.mp_activo === 'true';
   const gl = document.getElementById('cfgGoogleLogin');
@@ -4655,6 +4667,10 @@ async function guardarTiendaCfg() {
     { clave: 'envio_texto', valor: document.getElementById('cfgEnvio').value.trim() },
     { clave: 'envio_gratis_desde', valor: (document.getElementById('cfgEnvioGratis').value || '0').replace(/[^\d.]/g, '') || '0' },
     { clave: 'demora_dias', valor: (document.getElementById('cfgDemoraDias').value || '15').replace(/[^\d]/g, '') || '15' },
+    { clave: 'alias_transferencia', valor: (document.getElementById('cfgAliasTransfer').value || '').trim() },
+    { clave: 'titular_transferencia', valor: (document.getElementById('cfgTitularTransfer').value || '').trim() },
+    { clave: 'cbu_transferencia', valor: (document.getElementById('cfgCbuTransfer').value || '').replace(/[^\d]/g, '') },
+    { clave: 'descuento_transferencia', valor: (document.getElementById('cfgDescTransfer').value || '0').replace(/[^\d.]/g, '') || '0' },
     { clave: 'mp_activo', valor: document.getElementById('cfgMpActivo').checked ? '1' : '0' },
     { clave: 'google_login', valor: document.getElementById('cfgGoogleLogin').checked ? '1' : '0' },
   ].map(r => ({ ...r, updated_at: new Date().toISOString() }));
