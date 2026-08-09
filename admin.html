@@ -1815,7 +1815,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.18';
+const APP_VERSION = 'v6.19';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4720,11 +4720,8 @@ function openDescripcionesModal() {
   const sheet = document.getElementById('productoSheet');
   const prods = (state.productos || []).slice().sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
   if (!prods.length) { showToast('No hay productos cargados todavía.', '#ff9500'); return; }
-  const optionsHtml = (selIdx) => `<option value="">— elegir descripción —</option>` +
-    DESCRIPCIONES_SUGERIDAS.map((s, idx) => `<option value="${idx}" ${idx === selIdx ? 'selected' : ''}>${escapeHtml(s.t)}</option>`).join('');
   const rows = prods.map((p) => {
     const m = _matchDescripcion(p.nombre);
-    const mi = m ? DESCRIPCIONES_SUGERIDAS.indexOf(m) : -1;
     const sugerida = m ? m.d : '';
     const yaTiene = (p.descripcion || '').trim();
     const preSel = !!sugerida;
@@ -4734,7 +4731,7 @@ function openDescripcionesModal() {
         <span style="margin:0; font-weight:600;">${escapeHtml(p.nombre || '(sin nombre)')}</span>
         ${yaTiene ? '<span style="font-size:11px; color:#8e8e93;">· ya tiene texto (se reemplaza)</span>' : ''}
       </label>
-      <select class="desc-pick" style="width:100%; margin-bottom:6px; font-size:12px; padding:6px;">${optionsHtml(mi)}</select>
+      ${sugerida ? '' : '<div style="font-size:11px; color:#c0392b; margin-bottom:6px;">Sin sugerencia automática — escribila o dejala sin tildar.</div>'}
       <textarea class="desc-text" rows="3" style="resize:vertical; width:100%; font-size:13px;">${escapeHtml(sugerida)}</textarea>
     </div>`;
   }).join('');
@@ -4750,15 +4747,6 @@ function openDescripcionesModal() {
     <div id="descMsg" style="font-size:12px; color:#8e8e93; margin-top:8px;"></div>`;
   modal.classList.add('show');
   document.getElementById('descCancel').onclick = () => modal.classList.remove('show');
-  sheet.querySelectorAll('.desc-pick').forEach(sel => {
-    sel.addEventListener('change', () => {
-      const row = sel.closest('.desc-row');
-      const ta = row.querySelector('.desc-text');
-      const chk = row.querySelector('.desc-chk');
-      const idx = sel.value === '' ? -1 : parseInt(sel.value, 10);
-      if (idx >= 0) { ta.value = DESCRIPCIONES_SUGERIDAS[idx].d; chk.checked = true; }
-    });
-  });
   document.getElementById('descSaveAll').onclick = async (e) => {
     const btn = e.currentTarget;
     const msg = document.getElementById('descMsg');
