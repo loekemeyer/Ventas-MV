@@ -1,4 +1,4 @@
-const CACHE = 'ventas-mv-v32';
+const CACHE = 'ventas-mv-v33';
 const CORE = ['./manifest.json', './icon-192.png', './icon-512.png', './logo.jpg',
   './assets/hero-1.jpg', './assets/hero-2.jpg', './assets/hero-3.jpg'];
 
@@ -19,6 +19,10 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
+  // No interceptar peticiones a otros orígenes (Supabase, CDNs): van siempre a la
+  // red y NO las cachea el SW. Antes se cacheaban cache-first y servían datos
+  // viejos (nombres/precios desactualizados respecto al admin).
+  if (url.origin !== self.location.origin) return;
   // Network-first para las páginas HTML (tienda y admin): evita quedar pegado
   // a una versión vieja tras un deploy.
   const isPage = url.pathname.endsWith('/') || url.pathname.endsWith('.html');
