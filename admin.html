@@ -1816,7 +1816,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.27';
+const APP_VERSION = 'v6.28';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4840,6 +4840,7 @@ function openMigrarFotosModal() {
     if (!targets.length) { msg.textContent = 'No tildaste ninguno.'; return; }
     btn.disabled = true;
     let okProd = 0, failImgs = 0;
+    const problemas = [];
     for (let i = 0; i < targets.length; i++) {
       const id = targets[i];
       const p = state.productos.find(x => x.id === id);
@@ -4851,21 +4852,30 @@ function openMigrarFotosModal() {
       for (const im of orig) {
         if (esUrlFoto(im)) {
           try { nuevas.push(await urlToDataUri(im)); cambio = true; }
-          catch (_) { nuevas.push(im); failImgs++; }  // conserva la URL si falla: no se pierde
+          catch (err) { nuevas.push(im); failImgs++; console.error('bajar foto', im, err); }  // conserva la URL si falla
         } else {
           nuevas.push(im);
         }
       }
-      if (cambio) {
-        try {
-          const { error } = await sb.from('productos').update({ imagenes: nuevas, updated_at: new Date().toISOString() }).eq('id', id);
-          if (!error) { p.imagenes = nuevas; okProd++; }
-        } catch (_) { /* deja el producto como estaba */ }
-      }
+      if (!cambio) { problemas.push(`${p.nombre}: no se pudo bajar ninguna foto`); continue; }
+      // Guardamos y VERIFICAMOS contra la base (leemos la fila devuelta).
+      try {
+        const { data, error } = await sb.from('productos')
+          .update({ imagenes: nuevas, updated_at: new Date().toISOString() })
+          .eq('id', id).select('id, imagenes').single();
+        if (error) { problemas.push(`${p.nombre}: ${error.message || error.code || 'error al guardar'}`); console.error('guardar', p.nombre, error); }
+        else if (!data) { problemas.push(`${p.nombre}: no se guardó (permisos de la base)`); }
+        else if (arr(data.imagenes).some(esUrlFoto)) { problemas.push(`${p.nombre}: la base no aceptó el cambio (siguió con URL)`); }
+        else { p.imagenes = data.imagenes; okProd++; }
+      } catch (err) { problemas.push(`${p.nombre}: ${err.message || 'excepción al guardar'}`); console.error('guardar exc', p.nombre, err); }
     }
     btn.disabled = false;
-    msg.textContent = `Listo: ${okProd} producto${okProd === 1 ? '' : 's'} migrado${okProd === 1 ? '' : 's'}${failImgs ? ` · ${failImgs} foto(s) no se pudieron bajar (quedaron como estaban)` : ''}.`;
-    showToast(`✓ ${okProd} migrado${okProd === 1 ? '' : 's'}`, failImgs ? '#ff9500' : '#34c759');
+    let resumen = `Listo: ${okProd}/${targets.length} migrado${okProd === 1 ? '' : 's'}.`;
+    if (failImgs) resumen += ` ${failImgs} foto(s) no se pudieron bajar.`;
+    if (problemas.length) resumen += ` Problemas: ${problemas.slice(0, 3).join(' · ')}${problemas.length > 3 ? ` (+${problemas.length - 3} más)` : ''}`;
+    msg.textContent = resumen;
+    console.log('Migración fotos — resultado:', { okProd, total: targets.length, failImgs, problemas });
+    showToast(`${okProd} migrado${okProd === 1 ? '' : 's'}`, problemas.length ? '#ff9500' : '#34c759');
     renderTienda();
   };
 }
