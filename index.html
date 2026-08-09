@@ -289,7 +289,7 @@
   .esencial-col { position: relative; text-align: center; padding: 0 clamp(16px, 4vw, 48px); }
   .esencial-col + .esencial-col::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 44px; background: var(--line); }
   .esencial-label { display: block; font-family: var(--serif); font-size: clamp(20px, 2.3vw, 29px); line-height: 1.15; letter-spacing: 0; color: var(--ink); margin-bottom: 8px; }
-  .esencial-concept { font-family: var(--sans); font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .esencial-concept { font-family: var(--sans); font-size: 13px; letter-spacing: .2px; color: var(--muted); margin: 0; line-height: 1.5; }
   @media (max-width: 720px) {
     .esencial .wrap { padding: clamp(38px, 9vw, 60px) 24px; }
     .esencial-grid { grid-template-columns: 1fr; }
@@ -974,18 +974,17 @@
     <p class="esencial-eyebrow">Lo esencial</p>
     <div class="esencial-grid">
       <div class="esencial-col">
-        <span class="esencial-label">Material</span>
-        <p class="esencial-concept">Cuero genuino argentino</p>
+        <span class="esencial-label">Hecho a mano</span>
+        <p class="esencial-concept">Cada pieza, una por una</p>
       </div>
       <div class="esencial-col">
-        <span class="esencial-label">Oficio</span>
-        <p class="esencial-concept">Confección artesanal</p>
+        <span class="esencial-label">Cuero noble</span>
+        <p class="esencial-concept">Genuino, argentino, elegido a mano</p>
       </div>
       <div class="esencial-col">
-        <span class="esencial-label">Desde Argentina</span>
-        <p class="esencial-concept" id="trustEnvio">Envíos a todo el país</p>
+        <span class="esencial-label">Para siempre</span>
+        <p class="esencial-concept">Pensadas para durar una vida</p>
       </div>
-      <!-- jerarquía invertida: categoría grande (serif), concepto chico (sans, uppercase) -->
     </div>
   </div>
 </section>
@@ -1214,7 +1213,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.12';
+const STORE_VERSION = 'v6.13';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1429,11 +1428,14 @@ function applyConfig() {
   if (c.envio_texto && /taller/i.test(c.envio_texto)) {
     c.envio_texto = c.envio_texto.replace(/\s*[·.,;–—-]*\s*retiro[^.·|]*taller[^.·|]*\.?/gi, '').replace(/[·.,;\s]+$/, '').trim();
   }
-  // Trust-strip de envíos: texto base + (si hay umbral) la promesa de envío gratis.
-  const baseEnvio = c.envio_texto || 'Envíos a todo el país';
-  $('#trustEnvio').textContent = umbralEnvio > 0
-    ? `${baseEnvio} · Envío gratis desde ${money(umbralEnvio, 'ARS')}`
-    : baseEnvio;
+  // Trust-strip de envíos (opcional; el bloque "Lo esencial" ya no lo usa).
+  const teEl = $('#trustEnvio');
+  if (teEl) {
+    const baseEnvio = c.envio_texto || 'Envíos a todo el país';
+    teEl.textContent = umbralEnvio > 0
+      ? `${baseEnvio} · Envío gratis desde ${money(umbralEnvio, 'ARS')}`
+      : baseEnvio;
+  }
   // Línea sobria arriba de la grilla, para anunciar el envío gratis antes del carrito.
   const strip = $('#freeShipStrip');
   if (strip) {
