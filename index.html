@@ -496,12 +496,16 @@
     background: var(--surface); max-width: 940px; width: 100%; border-radius: 4px; overflow: hidden;
     display: grid; grid-template-columns: 1fr 1fr; box-shadow: var(--shadow); position: relative;
   }
-  .pmodal .close-x { position: absolute; top: 8px; right: 10px; z-index: 3; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
+  .pmodal .close-x { position: absolute; top: 10px; right: 12px; z-index: 4; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(19,19,19,.6); color: #fff; font-size: 24px; line-height: 1; text-shadow: none; backdrop-filter: blur(4px); transition: background .15s; }
+  .pmodal .close-x:hover { background: rgba(19,19,19,.85); }
   .pm-gallery { background: var(--surface); }
-  .pm-main { aspect-ratio: 4/5; }
+  .pm-main { aspect-ratio: 4/5; position: relative; }
   .pm-main img { width: 100%; height: 100%; object-fit: cover; }
   .pm-main.zoomable { cursor: zoom-in; }
   .pm-zoom-hint { position: absolute; bottom: 10px; right: 10px; background: rgba(28,20,14,0.6); color: #fff; font-size: 11px; padding: 4px 9px; border-radius: 20px; pointer-events: none; }
+  .pm-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,.82); color: var(--ink); font-size: 26px; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.18); transition: background .15s; z-index: 2; }
+  .pm-nav:hover { background: #fff; }
+  .pm-nav.prev { left: 10px; } .pm-nav.next { right: 10px; }
 
   /* ===== Lightbox ===== */
   .lightbox {
@@ -1147,7 +1151,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v5.1';
+const STORE_VERSION = 'v5.2';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1934,7 +1938,7 @@ function openProduct(id, pushUrl = true) {
   $('#pmodalInner').innerHTML = `
     <button class="close-x" data-close-pmodal>&times;</button>
     <div class="pm-gallery">
-      <div class="pm-main ${pmState.img ? 'zoomable' : ''}" id="pmMain">${pmState.img ? `<img src="${esc(pmState.img)}" alt="${esc(p.nombre)}" decoding="async"><span class="pm-zoom-hint">Ampliar</span>` : `<div class="ph">MV LEATHER</div>`}</div>
+      <div class="pm-main ${pmState.img ? 'zoomable' : ''}" id="pmMain">${pmState.img ? `<img src="${esc(pmState.img)}" alt="${esc(p.nombre)}" decoding="async"><span class="pm-zoom-hint">Ampliar</span>${imgs.length > 1 ? `<button class="pm-nav prev" data-pm-nav="-1" type="button" aria-label="Foto anterior">&lsaquo;</button><button class="pm-nav next" data-pm-nav="1" type="button" aria-label="Foto siguiente">&rsaquo;</button>` : ''}` : `<div class="ph">MV LEATHER</div>`}</div>
       ${imgs.length > 1 ? `<div class="pm-thumbs">${imgs.map((im,i) => `<img src="${esc(im)}" data-thumb="${esc(im)}" class="${i===0?'active':''}" alt="">`).join('')}</div>` : ''}
     </div>
     <div class="pm-info">
@@ -2554,14 +2558,32 @@ $('#gridInfo').addEventListener('click', (e) => {
   renderGrid();
 });
 
+// Cambia la foto principal del modal sin re-renderizar (mantiene flechas y hint)
+function pmSetMainImg(src) {
+  pmState.img = src;
+  const main = $('#pmMain'); if (!main) return;
+  const img = main.querySelector('img');
+  if (img) img.src = src;
+  else main.innerHTML = `<img src="${esc(src)}" alt=""><span class="pm-zoom-hint">Ampliar</span>`;
+  $$('.pm-thumbs img').forEach(t => t.classList.toggle('active', t.dataset.thumb === src));
+}
+
 // Product modal interactions
 $('#pmodalInner').addEventListener('click', (e) => {
   if (e.target.closest('[data-close-pmodal]')) { closeAll(); return; }
   const thumb = e.target.closest('[data-thumb]');
   if (thumb) {
-    pmState.img = thumb.dataset.thumb;
-    $('#pmMain').innerHTML = `<img src="${esc(pmState.img)}" alt=""><span class="pm-zoom-hint">Ampliar</span>`;
-    $$('.pm-thumbs img').forEach(t => t.classList.toggle('active', t === thumb));
+    pmSetMainImg(thumb.dataset.thumb);
+    return;
+  }
+  const nav = e.target.closest('[data-pm-nav]');
+  if (nav) {
+    const imgs = arr(pmState.p.imagenes);
+    if (imgs.length > 1) {
+      let i = imgs.indexOf(pmState.img); if (i < 0) i = 0;
+      i = (i + Number(nav.dataset.pmNav) + imgs.length) % imgs.length;
+      pmSetMainImg(imgs[i]);
+    }
     return;
   }
   if (e.target.closest('#pmMain') && pmState.img) {
