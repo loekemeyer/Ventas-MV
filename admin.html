@@ -1803,7 +1803,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v5.6';
+const APP_VERSION = 'v5.7';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -3829,18 +3829,29 @@ listEl.addEventListener('click', async (e) => {
   }
 });
 
-// Marcar un pedido como pagado / pago pendiente (sobre todo para transferencias)
+// Marcar un pedido como pagado / pago pendiente (sobre todo para transferencias).
+// Al marcarlo pagado también registra el cobro (pagado = importe) para que ese
+// monto entre en la Caja; al deshacer, lo saca.
 async function marcarPago(ventaId) {
   const v = state.ventas.find(x => x.id === ventaId);
   if (!v) return;
-  const nuevo = (v.pagoEstado === 'pagado') ? 'pendiente' : 'pagado';
+  const pagar = (v.pagoEstado !== 'pagado');   // true = marcar pagado, false = deshacer
+  const importe = parseFloat(v.importe) || 0;
+  const patch = {
+    pago_estado: pagar ? 'pagado' : 'pendiente',
+    pagado: pagar ? importe : 0,
+    pagado_completo: pagar,
+  };
   try {
-    const { error } = await sb.from('ventas').update({ pago_estado: nuevo }).eq('id', ventaId);
+    const { error } = await sb.from('ventas').update(patch).eq('id', ventaId);
     if (error) throw error;
-    v.pagoEstado = nuevo;
+    v.pagoEstado = patch.pago_estado;
+    v.pagado = String(patch.pagado);
+    v.pagadoCompleto = pagar;
     saveCache();
     render();
-    showToast(nuevo === 'pagado' ? '✓ Marcado como pagado' : 'Marcado como pago pendiente', '#34c759');
+    try { renderCaja(); } catch (e) {}   // refrescar el saldo de caja si está a la vista
+    showToast(pagar ? `✓ Pagado · +${fmtMoney(importe, v.moneda)} a caja` : 'Pago pendiente · quitado de caja', '#34c759');
   } catch (e) {
     showToast('Error al actualizar el pago', '#ff3b30');
   }
