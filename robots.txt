@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 
-Sitemap: https://loekemeyer.github.io/Ventas-MV/sitemap.xml
+Sitemap: https://mvleatherstudio.com/sitemap.xml
