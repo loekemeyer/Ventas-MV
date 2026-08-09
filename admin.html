@@ -1815,7 +1815,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.24';
+const APP_VERSION = 'v6.25';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4554,6 +4554,9 @@ function renderTienda() {
 // Las fotos se comprimen en el navegador y se guardan DENTRO del producto
 // (data URI, campo imagenes). Sin bucket de Storage, sin Supabase, sin SQL.
 let _fotos = [];
+// Candado anti-borrado: solo se escriben las fotos si el usuario realmente
+// tocó una (subir/borrar/reordenar). Editar texto nunca sobrescribe imagenes.
+let _fotosDirty = false;
 function slugify(s) {
   return (s || 'producto').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'producto';
@@ -4583,7 +4586,7 @@ function renderFotosGrid(skipText) {
       <button type="button" class="foto-del" data-del="${i}" title="Quitar">×</button>
     </div>`).join('') : '<span class="fotos-empty">Todavía no hay fotos. Tocá "Subir fotos".</span>';
   if (txt && !skipText) txt.value = _fotos.join('\n');
-  grid.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { _fotos.splice(parseInt(b.dataset.del, 10), 1); renderFotosGrid(); });
+  grid.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { _fotos.splice(parseInt(b.dataset.del, 10), 1); _fotosDirty = true; renderFotosGrid(); });
   let dragI = null;
   grid.querySelectorAll('.foto-item').forEach(it => {
     it.addEventListener('dragstart', () => { dragI = parseInt(it.dataset.i, 10); it.classList.add('dragging'); });
@@ -4594,6 +4597,7 @@ function renderFotosGrid(skipText) {
       const dropI = parseInt(it.dataset.i, 10);
       if (dragI === null || dragI === dropI) return;
       const [moved] = _fotos.splice(dragI, 1); _fotos.splice(dropI, 0, moved); dragI = null;
+      _fotosDirty = true;
       renderFotosGrid();
     });
   });
@@ -4615,6 +4619,7 @@ async function subirFoto(file, p) {
     const blob = await resizeImage(file, 1000, 0.7);
     const dataUri = await blobToDataURL(blob);
     _fotos.push(dataUri);
+    _fotosDirty = true;
     renderFotosGrid();
     if (msg) msg.textContent = '';
   } catch (e) {
@@ -4624,6 +4629,7 @@ async function subirFoto(file, p) {
 }
 function initFotosUploader(p) {
   _fotos = arr(p.imagenes).slice();
+  _fotosDirty = false;
   renderFotosGrid();
   const fileInput = document.getElementById('fotosFile');
   const btn = document.getElementById('fotosBtn');
@@ -4638,6 +4644,7 @@ function initFotosUploader(p) {
   }
   if (txt) txt.addEventListener('input', () => {
     _fotos = txt.value.split('\n').map(s => s.trim()).filter(Boolean);
+    _fotosDirty = true;
     renderFotosGrid(true);
   });
 }
@@ -4872,11 +4879,11 @@ function openProductoModal(id) {
       updated_at: new Date().toISOString(),
     };
     if (!row.nombre) { showToast('Poné un nombre', '#ff9500'); return; }
-    // Protección anti-borrado de fotos: al editar, si el form quedó sin imágenes
-    // pero el producto ya tenía, NO tocamos esa columna (evita perder las fotos
-    // por un guardado con la grilla vacía). Para dejar un producto sin fotos,
-    // borralas una por una y volvé a guardar cuando la grilla cargó bien.
-    if (editing && row.imagenes.length === 0 && arr(editing.imagenes).length > 0) {
+    // Candado anti-borrado de fotos: al editar, NUNCA sobrescribimos las fotos
+    // salvo que el usuario haya tocado una (subir/borrar/reordenar). Así, editar
+    // texto (nombre, categoría, precio, descripción) no puede borrar las fotos,
+    // ni siquiera si la grilla se vio vacía por caché.
+    if (editing && !_fotosDirty) {
       delete row.imagenes;
     }
     try {

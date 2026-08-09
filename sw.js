@@ -1,4 +1,4 @@
-const CACHE = 'ventas-mv-v33';
+const CACHE = 'ventas-mv-v34';
 const CORE = ['./manifest.json', './icon-192.png', './icon-512.png', './logo.jpg',
   './assets/hero-1.jpg', './assets/hero-2.jpg', './assets/hero-3.jpg'];
 
