@@ -1815,7 +1815,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.17';
+const APP_VERSION = 'v6.18';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4675,6 +4675,32 @@ const DESCRIPCIONES_SUGERIDAS = [
     d: 'Pantalón de pierna ancha con cintura cómoda y caída fluida. Elegancia sin esfuerzo, de día o de noche.\nEn la imagen la modelo lleva el pantalón en color negro.' },
   { t: 'Conjunto print reptil', kw: ['reptil', 'conjunto'],
     d: 'Conjunto de campera + pantalón wide-leg con textura print reptil. Se usan juntos para un look total o por separado como piezas statement.\nEn la imagen la modelo lleva el conjunto en print reptil.' },
+  { t: 'Sobrecamisa oversize', kw: ['cher'],
+    d: 'Sobrecamisa de cuero oversize, de caída amplia y puños con vuelta. Liviana y versátil: se lleva abierta sobre una remera o cerrada como camisa.\nEn la imagen la modelo lleva la sobrecamisa en color crema.' },
+  { t: 'Camisa de cuero (clásica)', kw: ['oveja'],
+    d: 'Camisa de cuero de línea clásica, con cuello camisero, bolsillos de pecho y botones metálicos. Perfecta como camisa o como sobrecamisa liviana.\nEn la imagen la modelo lleva la camisa en color caramelo.' },
+  { t: 'Sobrecamisa boxy', kw: ['rapsodia'],
+    d: 'Sobrecamisa de cuero de calce boxy, con botones a presión y mangas holgadas. Suma textura y actitud a cualquier base.\nEn la imagen la modelo lleva la sobrecamisa en color negro.' },
+  { t: 'Campera con flecos', kw: ['campera flecos', 'campera con flecos', 'campera de flecos'],
+    d: 'Campera corta de cuero con flecos móviles que acompañan el movimiento. Corte estructurado con espíritu boho-rocker para llevar de día o de noche.\nEn la imagen la modelo lleva la campera en color negro.' },
+  { t: 'Capa / blusa capa', kw: ['capa', 'myriam'],
+    d: 'Blusa capa de cuero con mangas amplias y lazo que marca la cintura. Una pieza dramática y elegante que se roba todas las miradas.\nEn la imagen la modelo lleva la capa en color rojo.' },
+  { t: 'Conjunto con flecos', kw: ['conjunto flecos', 'conjunto con flecos', 'conjunto de flecos'],
+    d: 'Conjunto de cuero con flecos: campera + minifalda a juego. Se usan juntos para un look total con movimiento o por separado como piezas statement.\nEn la imagen la modelo lleva el conjunto en color negro.' },
+  { t: 'Minifalda de cuero', kw: ['estefy'],
+    d: 'Minifalda de cuero con cintura de tachas y ruedo con volado. Corta y con onda, ideal con botas altas para un look con carácter.\nEn la imagen la modelo lleva la falda en color negro.' },
+  { t: 'Campera Napalán corderito', kw: ['napalan corderito', 'napalan cognac', 'napalan caramelo', 'aviador corderito'],
+    d: 'Campera aviadora corta de napa con corderito a tono en cuello, solapas y puños. Máximo abrigo con una silueta moderna y envolvente.\nEn la imagen la modelo lleva la campera en color caramelo.' },
+  { t: 'Campera rockera roja (biker)', kw: ['rockerita roja', 'rocker roja', 'biker roja'],
+    d: 'Campera biker corta con cierres metálicos y actitud rockera. El clásico infaltable, en una versión que no pasa desapercibida.\nEn la imagen la modelo lleva la campera en color rojo.' },
+  { t: 'Top de cuero con cierre', kw: ['zipper', 'top zipper', 'top con cierre'],
+    d: 'Top de cuero sin mangas con cierre metálico al frente y calce entallado. Corto y estructurado, se luce solo o como capa sobre una camisa.\nEn la imagen la modelo lleva el top en color chocolate.' },
+  { t: 'Trench largo (marrón)', kw: ['trench marron', 'trench marrón', 'trench chocolate'],
+    d: 'Trench largo de cuero con solapa de muesca y cinto que marca la cintura. Silueta fluida y elegante para el entretiempo y el frío.\nEn la imagen la modelo lleva el trench en color chocolate.' },
+  { t: 'Trench largo oversize', kw: ['trench sol', 'trench bordo', 'trench bordó', 'trench vino'],
+    d: 'Trench largo de cuero de calce oversize, con solapas amplias y caída envolvente. Una pieza statement que abriga con estilo.\nEn la imagen la modelo lleva el trench en color bordó.' },
+  { t: 'Bomber con capucha', kw: ['tucci', 'naranja'],
+    d: 'Bomber corto de cuero con capucha y puños elastizados. Silueta relajada y espíritu urbano para darle color a los básicos.\nEn la imagen la modelo lleva el bomber en color naranja.' },
 ];
 function _normTxt(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
 function _matchDescripcion(nombre) {
@@ -4694,8 +4720,11 @@ function openDescripcionesModal() {
   const sheet = document.getElementById('productoSheet');
   const prods = (state.productos || []).slice().sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
   if (!prods.length) { showToast('No hay productos cargados todavía.', '#ff9500'); return; }
-  const rows = prods.map((p, i) => {
+  const optionsHtml = (selIdx) => `<option value="">— elegir descripción —</option>` +
+    DESCRIPCIONES_SUGERIDAS.map((s, idx) => `<option value="${idx}" ${idx === selIdx ? 'selected' : ''}>${escapeHtml(s.t)}</option>`).join('');
+  const rows = prods.map((p) => {
     const m = _matchDescripcion(p.nombre);
+    const mi = m ? DESCRIPCIONES_SUGERIDAS.indexOf(m) : -1;
     const sugerida = m ? m.d : '';
     const yaTiene = (p.descripcion || '').trim();
     const preSel = !!sugerida;
@@ -4705,7 +4734,7 @@ function openDescripcionesModal() {
         <span style="margin:0; font-weight:600;">${escapeHtml(p.nombre || '(sin nombre)')}</span>
         ${yaTiene ? '<span style="font-size:11px; color:#8e8e93;">· ya tiene texto (se reemplaza)</span>' : ''}
       </label>
-      ${sugerida ? '' : '<div style="font-size:11px; color:#c0392b; margin-bottom:6px;">Sin sugerencia automática — escribila o dejala sin tildar.</div>'}
+      <select class="desc-pick" style="width:100%; margin-bottom:6px; font-size:12px; padding:6px;">${optionsHtml(mi)}</select>
       <textarea class="desc-text" rows="3" style="resize:vertical; width:100%; font-size:13px;">${escapeHtml(sugerida)}</textarea>
     </div>`;
   }).join('');
@@ -4721,6 +4750,15 @@ function openDescripcionesModal() {
     <div id="descMsg" style="font-size:12px; color:#8e8e93; margin-top:8px;"></div>`;
   modal.classList.add('show');
   document.getElementById('descCancel').onclick = () => modal.classList.remove('show');
+  sheet.querySelectorAll('.desc-pick').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const row = sel.closest('.desc-row');
+      const ta = row.querySelector('.desc-text');
+      const chk = row.querySelector('.desc-chk');
+      const idx = sel.value === '' ? -1 : parseInt(sel.value, 10);
+      if (idx >= 0) { ta.value = DESCRIPCIONES_SUGERIDAS[idx].d; chk.checked = true; }
+    });
+  });
   document.getElementById('descSaveAll').onclick = async (e) => {
     const btn = e.currentTarget;
     const msg = document.getElementById('descMsg');

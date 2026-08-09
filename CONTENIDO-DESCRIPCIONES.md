@@ -127,3 +127,85 @@ En la imagen la modelo lleva el pantalón en color negro.
 Conjunto de campera + pantalón wide-leg con textura print reptil. Se usan juntos para un look total o por separado como piezas statement.
 En la imagen la modelo lleva el conjunto en print reptil. ⚠️
 ```
+
+---
+
+## Segunda tanda (resto del catálogo)
+
+**Sobrecamisa oversize (camisa-cher)** — Camisas
+```
+Sobrecamisa de cuero oversize, de caída amplia y puños con vuelta. Liviana y versátil: se lleva abierta sobre una remera o cerrada como camisa.
+En la imagen la modelo lleva la sobrecamisa en color crema. ⚠️
+```
+
+**Camisa de cuero clásica (camisa-oveja)** — Camisas
+```
+Camisa de cuero de línea clásica, con cuello camisero, bolsillos de pecho y botones metálicos. Perfecta como camisa o como sobrecamisa liviana.
+En la imagen la modelo lleva la camisa en color caramelo. ⚠️
+```
+
+**Sobrecamisa boxy (camisa-rapsodia)** — Camisas
+```
+Sobrecamisa de cuero de calce boxy, con botones a presión y mangas holgadas. Suma textura y actitud a cualquier base.
+En la imagen la modelo lleva la sobrecamisa en color negro.
+```
+
+**Campera con flecos (campera-flecos)** — Camperas
+```
+Campera corta de cuero con flecos móviles que acompañan el movimiento. Corte estructurado con espíritu boho-rocker para llevar de día o de noche.
+En la imagen la modelo lleva la campera en color negro.
+```
+
+**Capa / blusa capa (capa-myriam)** — Camisas
+```
+Blusa capa de cuero con mangas amplias y lazo que marca la cintura. Una pieza dramática y elegante que se roba todas las miradas.
+En la imagen la modelo lleva la capa en color rojo. ⚠️
+```
+
+**Conjunto con flecos (conjunto-flecos)** — Conjuntos
+```
+Conjunto de cuero con flecos: campera + minifalda a juego. Se usan juntos para un look total con movimiento o por separado como piezas statement.
+En la imagen la modelo lleva el conjunto en color negro.
+```
+
+**Minifalda de cuero (falda-estefy)** — Faldas
+```
+Minifalda de cuero con cintura de tachas y ruedo con volado. Corta y con onda, ideal con botas altas para un look con carácter.
+En la imagen la modelo lleva la falda en color negro.
+```
+
+**Campera Napalán corderito (napalan)** — Camperas
+```
+Campera aviadora corta de napa con corderito a tono en cuello, solapas y puños. Máximo abrigo con una silueta moderna y envolvente.
+En la imagen la modelo lleva la campera en color caramelo. ⚠️
+```
+
+**Campera rockera roja / biker (rockerita-roja)** — Camperas
+```
+Campera biker corta con cierres metálicos y actitud rockera. El clásico infaltable, en una versión que no pasa desapercibida.
+En la imagen la modelo lleva la campera en color rojo. ⚠️
+```
+
+**Top de cuero con cierre (top-zipper)** — Tops
+```
+Top de cuero sin mangas con cierre metálico al frente y calce entallado. Corto y estructurado, se luce solo o como capa sobre una camisa.
+En la imagen la modelo lleva el top en color chocolate.
+```
+
+**Trench largo marrón (trench-marron)** — Tapados
+```
+Trench largo de cuero con solapa de muesca y cinto que marca la cintura. Silueta fluida y elegante para el entretiempo y el frío.
+En la imagen la modelo lleva el trench en color chocolate.
+```
+
+**Trench largo oversize (trench-sol)** — Tapados
+```
+Trench largo de cuero de calce oversize, con solapas amplias y caída envolvente. Una pieza statement que abriga con estilo.
+En la imagen la modelo lleva el trench en color bordó. ⚠️
+```
+
+**Bomber con capucha (tucci-naranja)** — Camperas
+```
+Bomber corto de cuero con capucha y puños elastizados. Silueta relajada y espíritu urbano para darle color a los básicos.
+En la imagen la modelo lleva el bomber en color naranja. ⚠️
+```
