@@ -44,7 +44,7 @@ insert into productos
 select
   a.nombre,
   'Pieza de cuero de nuestra colección, confeccionada a mano. (Producto de ejemplo: editá la foto, la descripción y el precio desde el panel.)',
-  'Campera',
+  'Camperas',
   a.material,
   a.colores,
   case when cardinality(a.talles) > 0 then a.talles else array['S','M','L','XL'] end,

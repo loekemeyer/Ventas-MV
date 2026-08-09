@@ -33,7 +33,7 @@ select * from (values
   (
     'Napalán',
     'Campera aviador de napa con detalles de corderito. Cuello, puños y ruedo en shearling, cierre metálico y hebillas de ajuste. Abriga de verdad, con una impronta atemporal.',
-    'Campera',
+    'Camperas',
     'Oveja',
     array['Camel']::text[],
     array['S','M','L','XL']::text[],
@@ -51,7 +51,7 @@ select * from (values
   (
     'Camisa Oveja',
     'Camisa-campera (overshirt) de cuero suave. Cuello camisero, botones a presión y bolsillos al pecho. Se lleva abierta sobre una remera o cerrada como campera liviana. Versátil todo el año.',
-    'Campera',
+    'Camperas',
     'Vaca',
     array['Camel']::text[],
     array['S','M','L','XL']::text[],

@@ -19,14 +19,14 @@ select * from (values
   (
     'Tucci Naranja',
     'Bomber de cuero de corte cropped, en un naranja cálido que se roba la escena. Cuello alto con broches, bolsillos con tapa y puños elastizados. Una pieza statement para animarse al color.',
-    'Campera','Vaca',array['Naranja']::text[],array['S','M','L','XL']::text[],0::numeric(12,2),'ARS',
+    'Camperas','Vaca',array['Naranja']::text[],array['S','M','L','XL']::text[],0::numeric(12,2),'ARS',
     array['https://loekemeyer.github.io/Ventas-MV/assets/productos/tucci-naranja/tucci-naranja-1.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/tucci-naranja/tucci-naranja-2.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/tucci-naranja/tucci-naranja-3.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/tucci-naranja/tucci-naranja-4.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/tucci-naranja/tucci-naranja-5.jpg']::text[],
     'all-year', true, false, 14
   ),
   (
     'Camisa Rapsodia',
     'Camisa de cuero de silueta oversize y caída relajada. Se lleva abierta sobre una remera o cerrada como campera liviana. Negro absoluto, versátil todo el año.',
-    'Campera','Vaca',array['Negro']::text[],array['S','M','L','XL']::text[],0::numeric(12,2),'ARS',
+    'Camperas','Vaca',array['Negro']::text[],array['S','M','L','XL']::text[],0::numeric(12,2),'ARS',
     array['https://loekemeyer.github.io/Ventas-MV/assets/productos/camisa-rapsodia/camisa-rapsodia-1.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/camisa-rapsodia/camisa-rapsodia-2.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/camisa-rapsodia/camisa-rapsodia-3.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/camisa-rapsodia/camisa-rapsodia-4.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/camisa-rapsodia/camisa-rapsodia-5.jpg']::text[],
     'all-year', true, false, 15
   ),
@@ -40,7 +40,7 @@ select * from (values
   (
     'Capa Myriam',
     'Capa corta de cuero tipo wrap, con mangas amplias y cinto para atar a la cintura. Color bordó. Envolvente y con movimiento, aporta drama a cualquier base.',
-    'Campera','Vaca',array['Bordó']::text[],array['S','M','L','XL']::text[],0::numeric(12,2),'ARS',
+    'Camperas','Vaca',array['Bordó']::text[],array['S','M','L','XL']::text[],0::numeric(12,2),'ARS',
     array['https://loekemeyer.github.io/Ventas-MV/assets/productos/capa-myriam/capa-myriam-1.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/capa-myriam/capa-myriam-2.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/capa-myriam/capa-myriam-3.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/capa-myriam/capa-myriam-4.jpg','https://loekemeyer.github.io/Ventas-MV/assets/productos/capa-myriam/capa-myriam-5.jpg']::text[],
     'all-year', true, false, 17
   )
