@@ -1488,6 +1488,7 @@
       <div style="display:flex; gap:6px;">
         <a class="btn-secondary" href="index.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; white-space:nowrap; flex:none;">Ver tienda ↗</a>
         <button type="button" id="btnCargarDesc" class="btn-secondary" style="width:auto; flex:none; white-space:nowrap;">✍️ Descripciones</button>
+        <button type="button" id="btnMigrarFotos" class="btn-secondary" style="width:auto; flex:none; white-space:nowrap;">📥 Fotos a Supabase</button>
         <button type="button" id="btnAddProducto" class="btn-primary" style="width:auto; flex:none; white-space:nowrap;">＋ Producto</button>
       </div>
     </div>
@@ -1815,7 +1816,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.26';
+const APP_VERSION = 'v6.27';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4787,6 +4788,87 @@ function openDescripcionesModal() {
     if (!fail) setTimeout(() => modal.classList.remove('show'), 900);
   };
 }
+// ====== Migrar fotos "de GitHub" (URL) a Supabase (data URI) ======
+function esUrlFoto(x) { return /^https?:\/\//i.test((x || '').trim()); }
+async function urlToDataUri(url) {
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const blob = await res.blob();
+  const resized = await resizeImage(blob, 1000, 0.7);
+  return await blobToDataURL(resized);
+}
+function openMigrarFotosModal() {
+  const modal = document.getElementById('productoModal');
+  const sheet = document.getElementById('productoSheet');
+  const prods = (state.productos || [])
+    .map(p => ({ p, urls: arr(p.imagenes).filter(esUrlFoto).length, total: arr(p.imagenes).length }))
+    .filter(x => x.urls > 0)
+    .sort((a, b) => (a.p.nombre || '').localeCompare(b.p.nombre || ''));
+  if (!prods.length) { showToast('No hay fotos de GitHub para migrar 🎉', '#34c759'); return; }
+  const rows = prods.map(({ p, urls, total }) => `
+    <div class="desc-row" data-pid="${escapeHtml(p.id)}" style="border:1px solid var(--line,#e5e5ea); border-radius:10px; padding:12px; margin-bottom:10px; display:flex; align-items:center; gap:10px;">
+      <input type="checkbox" class="mig-chk" style="width:auto;">
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight:600;">${escapeHtml(p.nombre || '(sin nombre)')}</div>
+        <div style="font-size:11px; color:#8e8e93;">${urls} de ${total} foto${total === 1 ? '' : 's'} son de GitHub</div>
+      </div>
+    </div>`).join('');
+  sheet.innerHTML = `
+    <h3>Pasar fotos a Supabase</h3>
+    <p style="font-size:12.5px; color:#8e8e93; margin:0 0 12px;">Estos productos tienen fotos alojadas en GitHub. Al migrarlas, la foto queda guardada <b>dentro de Supabase</b> y deja de depender del repo. Tildá los que quieras (probá con <b>1</b> primero) y migrá. Si alguna foto no se puede bajar, se deja como estaba (no se pierde nada).</p>
+    <div style="margin-bottom:10px; display:flex; gap:8px;">
+      <button type="button" class="btn-secondary" id="migSelAll" style="width:auto;">Tildar todos</button>
+      <button type="button" class="btn-secondary" id="migSelNone" style="width:auto;">Destildar</button>
+    </div>
+    <div style="max-height:46vh; overflow-y:auto; padding-right:4px;">${rows}</div>
+    <div class="actions" style="margin-top:14px;">
+      <button type="button" class="btn-primary" id="migRun">Migrar tildados</button>
+      <button type="button" class="btn-secondary" id="migCancel">Cerrar</button>
+    </div>
+    <div id="migMsg" style="font-size:12px; color:#8e8e93; margin-top:8px;"></div>`;
+  modal.classList.add('show');
+  document.getElementById('migCancel').onclick = () => modal.classList.remove('show');
+  document.getElementById('migSelAll').onclick = () => sheet.querySelectorAll('.mig-chk').forEach(c => c.checked = true);
+  document.getElementById('migSelNone').onclick = () => sheet.querySelectorAll('.mig-chk').forEach(c => c.checked = false);
+  document.getElementById('migRun').onclick = async (e) => {
+    const btn = e.currentTarget;
+    const msg = document.getElementById('migMsg');
+    const targets = [];
+    sheet.querySelectorAll('.desc-row').forEach(row => {
+      if (row.querySelector('.mig-chk').checked) targets.push(row.dataset.pid);
+    });
+    if (!targets.length) { msg.textContent = 'No tildaste ninguno.'; return; }
+    btn.disabled = true;
+    let okProd = 0, failImgs = 0;
+    for (let i = 0; i < targets.length; i++) {
+      const id = targets[i];
+      const p = state.productos.find(x => x.id === id);
+      if (!p) continue;
+      const orig = arr(p.imagenes);
+      msg.textContent = `Migrando ${i + 1}/${targets.length}… (${p.nombre || ''})`;
+      const nuevas = [];
+      let cambio = false;
+      for (const im of orig) {
+        if (esUrlFoto(im)) {
+          try { nuevas.push(await urlToDataUri(im)); cambio = true; }
+          catch (_) { nuevas.push(im); failImgs++; }  // conserva la URL si falla: no se pierde
+        } else {
+          nuevas.push(im);
+        }
+      }
+      if (cambio) {
+        try {
+          const { error } = await sb.from('productos').update({ imagenes: nuevas, updated_at: new Date().toISOString() }).eq('id', id);
+          if (!error) { p.imagenes = nuevas; okProd++; }
+        } catch (_) { /* deja el producto como estaba */ }
+      }
+    }
+    btn.disabled = false;
+    msg.textContent = `Listo: ${okProd} producto${okProd === 1 ? '' : 's'} migrado${okProd === 1 ? '' : 's'}${failImgs ? ` · ${failImgs} foto(s) no se pudieron bajar (quedaron como estaban)` : ''}.`;
+    showToast(`✓ ${okProd} migrado${okProd === 1 ? '' : 's'}`, failImgs ? '#ff9500' : '#34c759');
+    renderTienda();
+  };
+}
 function openProductoModal(id) {
   const modal = document.getElementById('productoModal');
   const sheet = document.getElementById('productoSheet');
@@ -4984,6 +5066,7 @@ async function guardarTiendaCfg() {
 // Wiring de la pestaña Tienda
 document.getElementById('btnAddProducto')?.addEventListener('click', () => openProductoModal(null));
 document.getElementById('btnCargarDesc')?.addEventListener('click', () => openDescripcionesModal());
+document.getElementById('btnMigrarFotos')?.addEventListener('click', () => openMigrarFotosModal());
 document.getElementById('prodSearch')?.addEventListener('input', () => renderTienda());
 document.getElementById('prodCatChips')?.addEventListener('click', (e) => {
   const b = e.target.closest('.prod-cat-chip'); if (!b) return;
