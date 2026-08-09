@@ -522,7 +522,12 @@
   .dir-check { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
   .btn-verificar { background: var(--ink); color: var(--bg); border: none; border-radius: 8px; padding: 9px 14px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
   .btn-verificar:disabled { opacity: .6; cursor: default; }
-  .dir-hint { font-size: 12px; color: var(--muted); }
+  .dir-hint { font-size: 12px; color: var(--muted); display: block; margin-top: 6px; }
+  .dir-wrap { position: relative; }
+  .dir-sug { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 6; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); max-height: 264px; overflow-y: auto; }
+  .dir-sug-item { display: block; width: 100%; text-align: left; padding: 11px 12px; border: none; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; font-size: 13px; line-height: 1.35; cursor: pointer; }
+  .dir-sug-item:last-child { border-bottom: none; }
+  .dir-sug-item:hover, .dir-sug-item:focus { background: var(--beige); }
   .dir-resultado { margin-top: 10px; padding: 12px; border-radius: 8px; font-size: 13px; border: 1px solid var(--line); }
   .dir-resultado.ok { background: #f2f8f4; border-color: #bfe3cd; }
   .dir-resultado.warn { background: #fdf6ec; border-color: #f0d9a8; color: #7a5b12; }
@@ -568,8 +573,10 @@
   .opt-label { font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink); font-weight: 600; margin: 22px 0 10px; }
   .opt-val { text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 500; margin-left: 4px; }
   .opt-row { display: flex; flex-wrap: wrap; gap: 8px; }
-  .opt { min-width: 48px; text-align: center; padding: 10px 15px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 500; border-radius: 2px; transition: all .15s; }
+  .opt { min-width: 48px; text-align: center; padding: 10px 15px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 500; border-radius: 2px; transition: all .15s; }
   .opt.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .pm-talle-med { margin-top: 10px; font-size: 12.5px; color: var(--muted); letter-spacing: .2px; }
+  .pm-talle-med b { color: var(--ink); font-weight: 600; }
   /* Swatches de color: solo círculos */
   .swatches { gap: 16px; margin-top: 2px; }
   .sw { padding: 0; border: none; background: none; cursor: pointer; line-height: 0; border-radius: 50%; }
@@ -715,7 +722,7 @@
 
   /* ===== Quantity in modal ===== */
   .pm-qty { display: inline-flex; align-items: center; gap: 14px; border: 1px solid var(--line); border-radius: 2px; padding: 6px 10px; }
-  .pm-qty button { width: 28px; height: 28px; border: none; background: none; font-size: 20px; line-height: 1; }
+  .pm-qty button { width: 28px; height: 28px; border: none; background: none; color: var(--ink); font-size: 20px; line-height: 1; }
 
   /* ===== Related ===== */
   .related { grid-column: 1 / -1; border-top: 1px solid var(--line); margin-top: 8px; padding: 24px 30px 30px; }
@@ -1175,7 +1182,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v5.8';
+const STORE_VERSION = 'v5.9';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1187,7 +1194,7 @@ const CART_KEY      = 'mv_cart_v1';
 let sb = null;
 try {
   if (window.supabase && window.supabase.createClient) {
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: false } });
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: false }, global: { fetch: (u, o = {}) => fetch(u, { ...o, cache: 'no-store' }) } });
   }
 } catch (e) { console.warn('Supabase no disponible:', e); }
 
@@ -1275,6 +1282,12 @@ const COLORES_CUSTOM = [
   { name: 'Nude', hex: '#d9c3aa' },
 ];
 const TALLES_STD = ['S', 'M', 'L', 'XL'];
+// Medidas de referencia (cm) por talle — Busto · Cintura · Cadera
+const TALLES_MEDIDAS = { S: ['85-89','67-71','91-95'], M: ['90-94','72-76','96-100'], L: ['95-100','77-82','101-106'], XL: ['101-107','83-89','107-113'] };
+function talleMedidaHtml(t) {
+  const m = TALLES_MEDIDAS[t]; if (!m) return '';
+  return `Talle <b>${esc(t)}</b> · Busto ${m[0]} · Cintura ${m[1]} · Cadera ${m[2]} cm`;
+}
 function colorDot(name) {
   const map = { negro:'#1c1712', marron:'#5a3620', 'marrón':'#5a3620', camel:'#c19a6b', cognac:'#7c4a28', suela:'#a9834b', bordo:'#5e1f28', bordó:'#5e1f28', verde:'#3d4a2f', azul:'#243b53', blanco:'#f4efe6', beige:'#d8c5a8', gris:'#8a8a8a', rojo:'#9c2b23', gamuza:'#b08558' };
   const k = (name||'').toLowerCase().trim();
@@ -1981,7 +1994,8 @@ function openProduct(id, pushUrl = true) {
       <div class="opt-label">Color <span class="opt-val" id="pmColorLbl">${pmState.color ? esc(pmState.color) : ''}</span></div>
         <div class="opt-row swatches" id="pmColors" role="radiogroup" aria-label="Color">${COLORES_CUSTOM.map(c => `<button class="sw ${pmState.color===c.name?'active':''}" data-color="${esc(c.name)}" role="radio" aria-checked="${pmState.color===c.name}" title="${esc(c.name)}" aria-label="${esc(c.name)}"><span class="sw-dot" style="background:${c.hex}"></span></button>`).join('')}</div>
       ${talles.length ? `<div class="opt-label">Talle · <span class="link-u" id="pmTalleGuide">guía</span></div>
-        <div class="opt-row" id="pmTalles" role="radiogroup" aria-label="Talle">${talles.map(t => `<button class="opt ${pmState.talle===t?'active':''}" data-talle="${esc(t)}" role="radio" aria-checked="${pmState.talle===t}">${esc(t)}</button>`).join('')}</div>` : ''}
+        <div class="opt-row" id="pmTalles" role="radiogroup" aria-label="Talle">${talles.map(t => `<button class="opt ${pmState.talle===t?'active':''}" data-talle="${esc(t)}" role="radio" aria-checked="${pmState.talle===t}">${esc(t)}</button>`).join('')}</div>
+        <div id="pmTalleMed" class="pm-talle-med"${pmState.talle && talleMedidaHtml(pmState.talle) ? '' : ' hidden'}>${pmState.talle ? talleMedidaHtml(pmState.talle) : ''}</div>` : ''}
       <div class="opt-label">Cantidad</div>
       <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
         <div class="pm-qty"><button data-qminus>−</button><span id="pmQty">1</span><button data-qplus>+</button></div>
@@ -2234,6 +2248,18 @@ async function geocodeDireccion(q) {
   return Array.isArray(arr) && arr[0] ? arr[0] : null;
 }
 
+// Autocompletado de direcciones (varias sugerencias), cancelando el pedido anterior.
+let _dirAbort = null;
+async function buscarSugerencias(q) {
+  if (_dirAbort) { try { _dirAbort.abort(); } catch (e) {} }
+  _dirAbort = new AbortController();
+  const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=ar&accept-language=es&q=' + encodeURIComponent(q);
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: _dirAbort.signal });
+  if (!res.ok) throw new Error('geo_http_' + res.status);
+  const arr = await res.json();
+  return Array.isArray(arr) ? arr : [];
+}
+
 // Clasifica un resultado de Nominatim en 'caba' | 'amba' | 'interior'.
 function clasificarZona(geo) {
   if (!geo) return null;
@@ -2315,11 +2341,11 @@ function openCheckout() {
       <div id="envioSection">
         <div class="field">
           <label>Dirección de envío *</label>
-          <input name="direccion" id="direccionInput" autocomplete="off" placeholder="Calle y número, localidad">
-          <div class="dir-check">
-            <button type="button" class="btn-verificar" id="btnVerificarDir">📍 Verificar en el mapa</button>
-            <span class="dir-hint">Verificá para calcular el costo de envío</span>
+          <div class="dir-wrap">
+            <input name="direccion" id="direccionInput" autocomplete="off" placeholder="Empezá a escribir tu dirección…">
+            <div id="dirSug" class="dir-sug" hidden></div>
           </div>
+          <span class="dir-hint">Elegí tu dirección de la lista para calcular el envío.</span>
           <div id="dirResultado" class="dir-resultado" hidden></div>
         </div>
       </div>
@@ -2359,11 +2385,41 @@ function openCheckout() {
     envioState.pickup = b.dataset.pickup;
   }));
 
-  // Verificar dirección con OpenStreetMap
-  const dirInput = $('#direccionInput'), dirRes = $('#dirResultado');
-  const resetGeo = () => { envioState.geo = null; envioState.zona = null; dirRes.hidden = true; dirRes.innerHTML = ''; refreshCoHead(); };
-  dirInput.addEventListener('input', () => { envioState.direccion = dirInput.value; if (envioState.zona) resetGeo(); });
-  $('#btnVerificarDir').addEventListener('click', () => verificarDireccion());
+  // Autocompletado de dirección (tipo Google Maps) con OpenStreetMap
+  const dirInput = $('#direccionInput'), dirSug = $('#dirSug'), dirRes = $('#dirResultado');
+  let dirTimer = null, dirData = [];
+  const cerrarSug = () => { dirSug.hidden = true; dirSug.innerHTML = ''; };
+  const elegirSug = (g) => {
+    if (!g) return;
+    envioState.geo = g; envioState.zona = clasificarZona(g); envioState.direccion = g.display_name;
+    dirInput.value = g.display_name;
+    cerrarSug();
+    const r = envioResumen();
+    const mapUrl = `https://www.openstreetmap.org/?mlat=${encodeURIComponent(g.lat)}&mlon=${encodeURIComponent(g.lon)}#map=17/${g.lat}/${g.lon}`;
+    dirRes.hidden = false; dirRes.className = 'dir-resultado ok';
+    dirRes.innerHTML = `<div class="dr-cost"><span>Costo de envío</span><b>${esc(r.texto)}</b></div><a href="${mapUrl}" target="_blank" rel="noopener" class="dr-map">Ver en el mapa ↗</a>`;
+    refreshCoHead();
+  };
+  dirInput.addEventListener('input', () => {
+    envioState.direccion = dirInput.value;
+    if (envioState.zona) { envioState.geo = null; envioState.zona = null; dirRes.hidden = true; refreshCoHead(); }
+    clearTimeout(dirTimer);
+    const q = dirInput.value.trim();
+    if (q.length < 4) { cerrarSug(); return; }
+    dirTimer = setTimeout(async () => {
+      try {
+        dirData = await buscarSugerencias(q);
+        if (!dirData.length) { cerrarSug(); return; }
+        dirSug.hidden = false;
+        dirSug.innerHTML = dirData.map((g, i) => `<button type="button" class="dir-sug-item" data-i="${i}">📍 ${esc(g.display_name)}</button>`).join('');
+      } catch (e) { /* red/cancelado: ignorar */ }
+    }, 400);
+  });
+  dirSug.addEventListener('click', (e) => {
+    const it = e.target.closest('.dir-sug-item'); if (!it) return;
+    elegirSug(dirData[+it.dataset.i]);
+  });
+  dirInput.addEventListener('blur', () => setTimeout(cerrarSug, 180));
 
   let payMethod = 'wa';
   form.querySelectorAll('button[type=submit]').forEach(b => b.addEventListener('click', () => { payMethod = b.dataset.pay; }));
@@ -2820,6 +2876,8 @@ $('#pmodalInner').addEventListener('click', (e) => {
   if (tal) {
     pmState.talle = tal.dataset.talle;
     $$('#pmTalles .opt').forEach(o => { const on = o === tal; o.classList.toggle('active', on); o.setAttribute('aria-checked', on); });
+    const med = $('#pmTalleMed');
+    if (med) { const html = talleMedidaHtml(pmState.talle); med.innerHTML = html; med.hidden = !html; }
     return;
   }
   if (e.target.id === 'pmTalleGuide') { openInfo('talles'); return; }
