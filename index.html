@@ -283,17 +283,17 @@
 
   /* ===== Trust strip ===== */
   .esencial { background: var(--beige); }
-  .esencial .wrap { padding: clamp(64px, 10vw, 120px) 24px; }
-  .esencial-eyebrow { text-align: center; font-size: 10.5px; letter-spacing: 3.6px; text-transform: uppercase; color: var(--muted); font-weight: 500; font-family: var(--sans); margin: 0 0 clamp(40px, 6vw, 76px); }
+  .esencial .wrap { padding: clamp(42px, 6vw, 72px) 24px; }
+  .esencial-eyebrow { text-align: center; font-size: 10px; letter-spacing: 3.4px; text-transform: uppercase; color: var(--muted); font-weight: 500; font-family: var(--sans); margin: 0 0 clamp(26px, 4vw, 44px); }
   .esencial-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
   .esencial-col { position: relative; text-align: center; padding: 0 clamp(16px, 4vw, 48px); }
-  .esencial-col + .esencial-col::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 62px; background: var(--line); }
-  .esencial-label { display: block; font-family: var(--sans); font-size: 10px; letter-spacing: 2.6px; text-transform: uppercase; color: var(--muted); margin-bottom: 15px; }
-  .esencial-concept { font-family: var(--serif); font-size: clamp(17px, 2vw, 22px); line-height: 1.36; color: var(--ink); margin: 0; }
+  .esencial-col + .esencial-col::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 44px; background: var(--line); }
+  .esencial-label { display: block; font-family: var(--serif); font-size: clamp(20px, 2.3vw, 29px); line-height: 1.15; letter-spacing: 0; color: var(--ink); margin-bottom: 8px; }
+  .esencial-concept { font-family: var(--sans); font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); margin: 0; }
   @media (max-width: 720px) {
-    .esencial .wrap { padding: clamp(48px, 12vw, 72px) 24px; }
+    .esencial .wrap { padding: clamp(38px, 9vw, 60px) 24px; }
     .esencial-grid { grid-template-columns: 1fr; }
-    .esencial-col { padding: 26px 16px; }
+    .esencial-col { padding: 22px 16px; }
     .esencial-col + .esencial-col { border-top: 1px solid var(--line); }
     .esencial-col + .esencial-col::before { display: none; }
   }
@@ -977,6 +977,7 @@
         <span class="esencial-label">Desde Argentina</span>
         <p class="esencial-concept" id="trustEnvio">Envíos a todo el país</p>
       </div>
+      <!-- jerarquía invertida: categoría grande (serif), concepto chico (sans, uppercase) -->
     </div>
   </div>
 </section>
@@ -1206,7 +1207,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.2';
+const STORE_VERSION = 'v6.3';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
