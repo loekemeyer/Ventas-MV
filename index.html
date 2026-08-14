@@ -1424,6 +1424,10 @@ async function init() {
     }
     if (prodRes.status === 'fulfilled' && prodRes.value.data) {
       store.productos = prodRes.value.data;
+    } else if (prodRes.status === 'fulfilled') {
+      console.error('❌ Productos query: sin data', prodRes.value);
+    } else if (prodRes.status === 'rejected') {
+      console.error('❌ Productos query rechazado:', prodRes.reason);
     }
     if (sociaRes.status === 'fulfilled' && sociaRes.value.data) {
       store.sociaId = sociaRes.value.data.id;
