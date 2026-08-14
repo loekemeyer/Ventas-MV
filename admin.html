@@ -3388,7 +3388,7 @@ async function bootApp() {
   // 2d. Catálogo de la tienda + ajustes
   try {
     const { data, error } = await sb.from('productos')
-      .select('*')
+      .select('id,nombre,descripcion,categoria,material,coleccion,precio,precio_anterior,moneda,stock,destacado,activo,orden,colores,talles,created_at,updated_at')
       .order('orden', { ascending: true })
       .order('created_at', { ascending: false });
     if (!error && data) { state.productos = data; renderTienda(); if (!_cupones.length) loadCupones(); if (!_media.length) loadMedia(); }
@@ -4910,10 +4910,19 @@ function openMigrarFotosModal() {
     renderTienda();
   };
 }
-function openProductoModal(id) {
+async function openProductoModal(id) {
   const modal = document.getElementById('productoModal');
   const sheet = document.getElementById('productoSheet');
-  const editing = id ? state.productos.find(p => p.id === id) : null;
+  let editing = id ? state.productos.find(p => p.id === id) : null;
+
+  // Si es edición, cargar las imágenes (no se cargaron en el listado inicial para optimizar)
+  if (editing && !editing.imagenes) {
+    try {
+      const { data } = await sb.from('productos').select('imagenes').eq('id', id).single();
+      if (data) editing.imagenes = data.imagenes;
+    } catch (e) { console.warn('No se pudieron cargar las fotos', e); }
+  }
+
   const p = editing || { nombre: '', descripcion: '', categoria: '', material: '', colores: [], talles: [], precio: '', precio_anterior: '', moneda: 'ARS', imagenes: [], stock: '', destacado: false, activo: true, orden: 0 };
 
   const opt = (val, sel) => `<option value="${escapeHtml(val)}" ${val === sel ? 'selected' : ''}>${escapeHtml(val)}</option>`;
