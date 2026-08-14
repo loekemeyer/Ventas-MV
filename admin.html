@@ -4914,59 +4914,101 @@ function openProductoModal(id) {
   const talleChk = TIENDA_TALLES.map(t => `<label class="chip-check"><input type="checkbox" name="talle" value="${t}" ${arr(p.talles).includes(t) ? 'checked' : ''}><span>${t}</span></label>`).join('');
 
   sheet.innerHTML = `
-    <h3>${editing ? 'Editar producto' : 'Nuevo producto'}</h3>
-    <form id="prodForm" autocomplete="off">
-      <div class="grid" style="grid-template-columns:1fr;">
-        <label><span>Nombre *</span>
-          <input type="text" name="nombre" value="${escapeHtml(p.nombre)}" required autocapitalize="words"></label>
-        <label><span>Descripción</span>
-          <textarea name="descripcion" rows="3" style="resize:vertical;">${escapeHtml(p.descripcion)}</textarea></label>
-      </div>
-      <div class="grid">
-        <label><span>Categoría</span>
-          <select name="categoria"><option value="">Elegir</option>${TIENDA_CATEGORIAS.map(c => opt(c, p.categoria)).join('')}</select></label>
-        <label><span>Material</span>
-          <select name="material"><option value="">Elegir</option>${TIENDA_MATERIALES.map(m => opt(m, p.material)).join('')}</select></label>
-        <label><span>Colección — dónde aparece en Shop All</span>
-          <select name="coleccion">${TIENDA_COLECCIONES.map(c => `<option value="${escapeHtml(c.slug)}" ${c.slug === (p.coleccion || TIENDA_COLECCION_DEFAULT) ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('')}</select></label>
-        <label><span>Precio *</span>
-          <div class="precio-row">
-            <select name="moneda">${opt('ARS', p.moneda)}${opt('USD', p.moneda)}</select>
-            <input type="number" step="0.01" name="precio" inputmode="decimal" value="${p.precio}" required></div></label>
-        <label><span>Precio anterior (opcional)</span>
-          <input type="number" step="0.01" name="precio_anterior" inputmode="decimal" value="${p.precio_anterior ?? ''}" placeholder="para mostrar % off"></label>
-        <label><span>Stock listo (opcional) — con stock = "Entrega rápida"</span>
-          <input type="number" step="1" name="stock" inputmode="numeric" value="${p.stock ?? ''}" placeholder="vacío = a pedido (~demora)"></label>
-        <label><span>Orden (menor = primero)</span>
-          <input type="number" step="1" name="orden" inputmode="numeric" value="${p.orden ?? 0}"></label>
-      </div>
-      <label style="margin-top:6px;"><span>Colores (separados por coma)</span>
-        <input type="text" name="colores" value="${escapeHtml(arr(p.colores).join(', '))}" placeholder="Negro, Marrón, Camel" autocapitalize="words"></label>
-      <div style="margin-top:8px;">
-        <span style="font-size:11px; font-weight:600; color:#3c3c43;">Talles disponibles</span>
-        <div class="chip-check-row">${talleChk}</div>
-      </div>
-      <div style="margin-top:8px;">
-        <span style="font-size:11px; font-weight:600; color:#3c3c43;">Fotos — arrastrá para ordenar (la primera es la portada)</span>
-        <div class="fotos-grid" id="fotosGrid"></div>
-        <input type="file" id="fotosFile" accept="image/*" multiple style="display:none;">
-        <button type="button" class="btn-secondary" id="fotosBtn" style="margin-top:6px;">＋ Subir fotos</button>
-        <span id="fotosMsg" style="font-size:12px; color:#8e8e93; margin-left:8px;"></span>
-        <details style="margin-top:8px;"><summary style="font-size:12px; color:#8e8e93; cursor:pointer;">Pegar URLs (avanzado)</summary>
-          <textarea id="imagenesText" name="imagenes" rows="3" style="resize:vertical; margin-top:6px; width:100%;" placeholder="https://...jpg"></textarea>
-        </details>
-      </div>
-      <div style="display:flex; gap:16px; margin-top:10px;">
-        <label class="chk-row" style="flex-direction:row; align-items:center; gap:6px;">
-          <input type="checkbox" name="destacado" ${p.destacado ? 'checked' : ''} style="width:auto;"><span style="margin:0;">Destacado</span></label>
-        <label class="chk-row" style="flex-direction:row; align-items:center; gap:6px;">
-          <input type="checkbox" name="activo" ${p.activo ? 'checked' : ''} style="width:auto;"><span style="margin:0;">Visible en la tienda</span></label>
-      </div>
-      <div class="actions" style="margin-top:14px;">
-        <button type="submit" class="btn-primary">${editing ? 'Guardar cambios' : 'Crear producto'}</button>
-        <button type="button" class="btn-secondary" id="prodCancel">Cancelar</button>
-      </div>
-    </form>`;
+    <div style="padding:0 0 20px 0;">
+      <h3 style="margin:0 0 20px 0; font-size:24px; font-weight:700;">${editing ? 'Editar producto' : '➕ Nuevo producto'}</h3>
+      <form id="prodForm" autocomplete="off" style="display:flex; flex-direction:column; gap:24px;">
+
+        <!-- SECCIÓN: INFORMACIÓN BÁSICA -->
+        <div style="border-bottom:1px solid #e5e5ea; padding-bottom:20px;">
+          <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#8e8e93; margin:0 0 12px 0;">Información básica</h4>
+          <label style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+            <span style="font-size:13px; font-weight:600; color:#000;">Nombre *</span>
+            <input type="text" name="nombre" value="${escapeHtml(p.nombre)}" required autocapitalize="words" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit;"></label>
+          <label style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-size:13px; font-weight:600; color:#000;">Descripción</span>
+            <textarea name="descripcion" rows="4" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit; resize:vertical;">${escapeHtml(p.descripcion)}</textarea></label>
+        </div>
+
+        <!-- SECCIÓN: CATEGORIZACIÓN -->
+        <div style="border-bottom:1px solid #e5e5ea; padding-bottom:20px;">
+          <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#8e8e93; margin:0 0 12px 0;">Categorización</h4>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+            <label style="display:flex; flex-direction:column; gap:6px;">
+              <span style="font-size:13px; font-weight:600; color:#000;">Categoría</span>
+              <select name="categoria" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit; background:white; cursor:pointer;"><option value="">Elegir</option>${TIENDA_CATEGORIAS.map(c => opt(c, p.categoria)).join('')}</select></label>
+            <label style="display:flex; flex-direction:column; gap:6px;">
+              <span style="font-size:13px; font-weight:600; color:#000;">Material</span>
+              <select name="material" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit; background:white; cursor:pointer;"><option value="">Elegir</option>${TIENDA_MATERIALES.map(m => opt(m, p.material)).join('')}</select></label>
+          </div>
+          <label style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-size:13px; font-weight:600; color:#000;">Colección — dónde aparece en Shop All</span>
+            <select name="coleccion" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit; background:white; cursor:pointer;">${TIENDA_COLECCIONES.map(c => `<option value="${escapeHtml(c.slug)}" ${c.slug === (p.coleccion || TIENDA_COLECCION_DEFAULT) ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('')}</select></label>
+        </div>
+
+        <!-- SECCIÓN: PRECIOS Y STOCK -->
+        <div style="border-bottom:1px solid #e5e5ea; padding-bottom:20px;">
+          <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#8e8e93; margin:0 0 12px 0;">Precios y stock</h4>
+          <label style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+            <span style="font-size:13px; font-weight:600; color:#000;">Precio *</span>
+            <div style="display:grid; grid-template-columns:100px 1fr; gap:8px;">
+              <select name="moneda" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit; background:white; cursor:pointer;">${opt('ARS', p.moneda)}${opt('USD', p.moneda)}</select>
+              <input type="number" step="0.01" name="precio" inputmode="decimal" value="${p.precio}" required style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit;"></div></label>
+          <label style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+            <span style="font-size:13px; font-weight:600; color:#000;">Precio anterior <span style="color:#8e8e93; font-weight:400;">(para mostrar % off)</span></span>
+            <input type="number" step="0.01" name="precio_anterior" inputmode="decimal" value="${p.precio_anterior ?? ''}" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit;"></label>
+          <label style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-size:13px; font-weight:600; color:#000;">Stock <span style="color:#8e8e93; font-weight:400;">(vacío = a pedido)</span></span>
+            <input type="number" step="1" name="stock" inputmode="numeric" value="${p.stock ?? ''}" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit;"></label>
+        </div>
+
+        <!-- SECCIÓN: TALLES Y COLORES -->
+        <div style="border-bottom:1px solid #e5e5ea; padding-bottom:20px;">
+          <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#8e8e93; margin:0 0 12px 0;">Variantes</h4>
+          <label style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+            <span style="font-size:13px; font-weight:600; color:#000;">Colores <span style="color:#8e8e93; font-weight:400;">(separados por coma)</span></span>
+            <input type="text" name="colores" value="${escapeHtml(arr(p.colores).join(', '))}" placeholder="Negro, Marrón, Camel" autocapitalize="words" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit;"></label>
+          <div>
+            <span style="font-size:13px; font-weight:600; color:#000; display:block; margin-bottom:8px;">Talles disponibles</span>
+            <div class="chip-check-row" style="display:flex; flex-wrap:wrap; gap:8px;">${talleChk}</div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN: FOTOS -->
+        <div style="border-bottom:1px solid #e5e5ea; padding-bottom:20px;">
+          <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#8e8e93; margin:0 0 12px 0;">📸 Fotos</h4>
+          <p style="font-size:13px; color:#3c3c43; margin:0 0 12px 0;">Arrastrá para ordenar — la primera es la portada</p>
+          <div class="fotos-grid" id="fotosGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:8px; margin-bottom:12px;"></div>
+          <input type="file" id="fotosFile" accept="image/*" multiple style="display:none;">
+          <button type="button" class="btn-secondary" id="fotosBtn" style="margin-bottom:8px;">＋ Subir fotos</button>
+          <span id="fotosMsg" style="font-size:12px; color:#8e8e93; margin-left:8px;"></span>
+          <details style="margin-top:8px;"><summary style="font-size:12px; color:#8e8e93; cursor:pointer; font-weight:600;">🔗 Pegar URLs (avanzado)</summary>
+            <textarea id="imagenesText" name="imagenes" rows="3" style="resize:vertical; margin-top:8px; width:100%; padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-family:monospace; font-size:13px;" placeholder="https://...jpg"></textarea>
+          </details>
+        </div>
+
+        <!-- SECCIÓN: ORDENAMIENTO Y VISIBILIDAD -->
+        <div style="border-bottom:1px solid #e5e5ea; padding-bottom:20px;">
+          <h4 style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#8e8e93; margin:0 0 12px 0;">Ordenamiento</h4>
+          <label style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-size:13px; font-weight:600; color:#000;">Orden <span style="color:#8e8e93; font-weight:400;">(menor = primero)</span></span>
+            <input type="number" step="1" name="orden" inputmode="numeric" value="${p.orden ?? 0}" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit;"></label>
+        </div>
+
+        <!-- SECCIÓN: ESTADO -->
+        <div style="display:flex; gap:16px; padding:12px; background:#f2f2f7; border-radius:8px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
+            <input type="checkbox" name="destacado" ${p.destacado ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;"><span style="font-size:13px; font-weight:600; color:#000;">⭐ Destacado</span></label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
+            <input type="checkbox" name="activo" ${p.activo ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;"><span style="font-size:13px; font-weight:600; color:#000;">👁 Visible</span></label>
+        </div>
+
+        <!-- BOTONES -->
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button type="submit" class="btn-primary" style="flex:1;">${editing ? '💾 Guardar cambios' : '➕ Crear producto'}</button>
+          <button type="button" class="btn-secondary" id="prodCancel">Cancelar</button>
+        </div>
+      </form>
+    </div>`;
 
   modal.classList.add('show');
   document.getElementById('prodCancel').onclick = () => modal.classList.remove('show');
