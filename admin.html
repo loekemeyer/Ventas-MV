@@ -3388,7 +3388,7 @@ async function bootApp() {
   // 2d. Catálogo de la tienda + ajustes
   try {
     const { data, error } = await sb.from('productos')
-      .select('id,nombre,descripcion,categoria,material,coleccion,precio,precio_anterior,moneda,stock,destacado,activo,orden,colores,talles,created_at,updated_at')
+      .select('*')
       .order('orden', { ascending: true })
       .order('created_at', { ascending: false });
     if (!error && data) { state.productos = data; renderTienda(); if (!_cupones.length) loadCupones(); if (!_media.length) loadMedia(); }
