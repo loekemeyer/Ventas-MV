@@ -38,7 +38,7 @@ Todo lo que antes era "Ventas MV", más una pestaña nueva:
 1. **Base de datos:** correr las migraciones de `supabase/migrations/` en orden. Las nuevas:
    - `0007_tienda.sql`: `productos`, `tienda_config`, socia *Tienda Online*, columnas de pedido web en `ventas`.
    - `0008_tienda_pro.sql`: `cupones`, `resenas`, `newsletter`, columnas de cliente/descuento en `ventas`, config de envío.
-2. **Login con Gmail (Supabase Auth):** en el dashboard de Supabase → *Authentication → Providers → Google*, habilitar Google y cargar el Client ID/Secret (Google Cloud Console). En *Authentication → URL Configuration* agregar la URL del sitio como redirect (p. ej. `https://loekemeyer.github.io/Ventas-MV/`). Sin esto, el botón "Continuar con Google" no inicia sesión (el resto de la tienda funciona igual, como invitada).
+2. **Login con Gmail (Supabase Auth):** en el dashboard de Supabase → *Authentication → Providers → Google*, habilitar Google y cargar el Client ID/Secret (Google Cloud Console). En *Authentication → URL Configuration* agregar la URL del sitio como redirect (p. ej. `https://mvleatherstudio.com/`). Sin esto, el botón "Continuar con Google" no inicia sesión (el resto de la tienda funciona igual, como invitada).
 3. **Mercado Pago (opcional):** deployar la Edge Function y cargar el token:
    ```
    supabase functions deploy crear-preferencia-mp --no-verify-jwt

@@ -10,13 +10,13 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="MV Leather Studio">
 <meta property="og:locale" content="es_AR">
-<meta property="og:url" content="https://loekemeyer.github.io/Ventas-MV/">
-<meta property="og:image" content="https://loekemeyer.github.io/Ventas-MV/logo.jpg">
+<meta property="og:url" content="https://mvleatherstudio.com/">
+<meta property="og:image" content="https://mvleatherstudio.com/logo.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="MV Leather Studio">
 <meta name="twitter:description" content="Camperas de cuero genuino argentino, hechas a mano.">
-<meta name="twitter:image" content="https://loekemeyer.github.io/Ventas-MV/logo.jpg">
-<link rel="canonical" href="https://loekemeyer.github.io/Ventas-MV/">
+<meta name="twitter:image" content="https://mvleatherstudio.com/logo.jpg">
+<link rel="canonical" href="https://mvleatherstudio.com/">
 <link rel="preload" as="image" href="assets/productos/campera-jeans/campera-jeans-1.jpg" fetchpriority="high">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/favicon-mv-180.png?v=42">
@@ -89,6 +89,7 @@
   .announce:empty { display: none; }
   .announce-ver { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; letter-spacing: 1px; opacity: .5; }
   .header-ver { align-self: center; margin-left: 6px; font-size: 10px; letter-spacing: .5px; color: var(--muted); opacity: .7; white-space: nowrap; }
+  .foot-bottom .header-ver { margin-left: auto; margin-right: 0; opacity: .5; }
 
   /* ===== Cartel de cookies ===== */
   .cookie-banner {
@@ -915,7 +916,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1.4"/><circle cx="19" cy="21" r="1.4"/><path d="M2.5 3h2.2l2.2 12.2a1.6 1.6 0 0 0 1.6 1.3h9.1a1.6 1.6 0 0 0 1.6-1.2L22 7.5H6.2"/></svg>
         <span class="cart-count" id="cartCount">0</span>
       </button>
-      <span class="header-ver" id="storeVer" title="Versión de la tienda"></span>
     </div>
    </div>
    <nav class="nav-links">
@@ -1142,7 +1142,7 @@
     </div>
     <div class="foot-bottom">
       <span>© <span id="year"></span> MV Leather Studio. Todos los derechos reservados.</span>
-      <a class="admin-link" href="admin.html">Admin</a>
+      <span class="header-ver" id="storeVer" title="Versión de la tienda"></span>
     </div>
   </div>
 </footer>
@@ -1237,7 +1237,7 @@ const CART_KEY      = 'mv_cart_v1';
 let sb = null;
 try {
   if (window.supabase && window.supabase.createClient) {
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: false }, global: { fetch: (u, o = {}) => fetch(u, { ...o, cache: 'no-store' }) } });
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }, global: { fetch: (u, o = {}) => fetch(u, { ...o, cache: 'no-store' }) } });
   }
 } catch (e) { console.warn('Supabase no disponible:', e); }
 
@@ -1980,7 +1980,7 @@ let pmState = null;
 // Meta tags dinámicos: por defecto reflejan la tienda; al abrir una ficha pasan a
 // describir el producto (título, descripción, imagen, canonical) para mejor SEO de los
 // deep-links ?producto= y previa más rica al compartir. Se restauran al cerrar la ficha.
-const SITE_BASE = 'https://loekemeyer.github.io/Ventas-MV/';
+const SITE_BASE = 'https://mvleatherstudio.com/';
 const TITULO_DEFAULT = document.title;
 function _metaGet(sel, attr) { const el = document.querySelector(sel); return el ? el.getAttribute(attr) : null; }
 function _metaSet(sel, attr, val) { const el = document.querySelector(sel); if (el && val != null) el.setAttribute(attr, val); }
