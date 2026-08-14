@@ -908,10 +908,6 @@
       <span class="brand-wordmark">Leather Studio</span>
     </a>
     <div class="nav-actions">
-      <button class="icon-btn" id="openAccount" aria-label="Mi cuenta">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <img id="accountAvatar" alt="" style="display:none; width:26px; height:26px; border-radius:50%; object-fit:cover;">
-      </button>
       <button class="icon-btn" id="openCart" aria-label="Carrito">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1.4"/><circle cx="19" cy="21" r="1.4"/><path d="M2.5 3h2.2l2.2 12.2a1.6 1.6 0 0 0 1.6 1.3h9.1a1.6 1.6 0 0 0 1.6-1.2L22 7.5H6.2"/></svg>
         <span class="cart-count" id="cartCount">0</span>
@@ -3024,7 +3020,7 @@ $('#goCheckout').addEventListener('click', openCheckout);
 // Los botones de la página Guía de talles se reemplazaron por secciones inline.
 // openInfo() sigue disponible para el link "guía de talles" del modal de producto.
 { const w = $('#openWish'); if (w) w.addEventListener('click', openWish); }
-$('#openAccount').addEventListener('click', openAccount);
+// Botón de perfil removido — openAccount() sigue disponible pero no se llama desde botón
 $('#wishBody').addEventListener('click', (e) => {
   const wb = e.target.closest('[data-wish]');
   if (wb) { toggleWish(wb.dataset.wish); renderWish(); return; }
@@ -3090,6 +3086,7 @@ function setUserFromSession(session) {
 function updateAccountBadge() {
   const img = $('#accountAvatar');
   const btn = $('#openAccount');
+  if (!img || !btn) return; // Botón de perfil removido
   if (store.user?.avatar) {
     img.src = store.user.avatar; img.style.display = 'block';
     btn.querySelector('svg').style.display = 'none';
