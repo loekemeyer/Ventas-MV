@@ -1243,7 +1243,7 @@ try {
 
 const store = {
   productos: [],
-  cfg: { whatsapp: '', instagram: '', instagram_posts: '', anuncio: '', envio_texto: '', mp_activo: '0', nombre_tienda: 'MV Leather Studio', envio_gratis_desde: '0', cuotas_sin_interes: '3', cuotas_max: '12', descuento_transferencia: '0', stock_bajo_umbral: '3', google_login: '0', demora_dias: '15', envio_caba: '0', envio_amba: '10000', envio_interior: 'a convenir' },
+  cfg: { whatsapp: '', instagram: '', instagram_posts: '', anuncio: '', envio_texto: '', mp_activo: '0', nombre_tienda: 'MV Leather Studio', envio_gratis_desde: '0', cuotas_sin_interes: '3', cuotas_max: '12', descuento_transferencia: '0', stock_bajo_umbral: '3', google_login: '0', email_login: '0', demora_dias: '15', envio_caba: '0', envio_amba: '10000', envio_interior: 'a convenir' },
   cart: [],
   wish: [],
   media: [],              // slides de portada (fotos/videos)
@@ -3112,6 +3112,45 @@ async function signInGoogle() {
   const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
   if (error) { console.error(error); toast('No se pudo iniciar sesión con Google'); }
 }
+async function signInEmail() {
+  const email = $('#accEmail')?.value?.trim();
+  const password = $('#accPass')?.value;
+  if (!email || !password) { toast('Completá email y contraseña'); return; }
+  if (!sb?.auth) { toast('Login no disponible ahora'); return; }
+  const btn = $('#btnEmailLogin'); if (btn) btn.disabled = true;
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    store.user = data.user ? { email: data.user.email, name: data.user.user_metadata?.name || data.user.email.split('@')[0], avatar: data.user.user_metadata?.picture } : null;
+    updateAccountBadge();
+    renderAccount();
+    toast('¡Bienvenida! 👋');
+  } catch (e) {
+    console.error(e);
+    toast(e.message?.includes('Invalid login') ? 'Email o contraseña incorrectos' : 'No se pudo iniciar sesión');
+  } finally { if (btn) btn.disabled = false; }
+}
+async function signUpEmail() {
+  const email = $('#accEmailNew')?.value?.trim();
+  const password = $('#accPassNew')?.value;
+  const passConfirm = $('#accPassNewConfirm')?.value;
+  if (!email || !password || !passConfirm) { toast('Completá todos los campos'); return; }
+  if (password.length < 6) { toast('La contraseña debe tener al menos 6 caracteres'); return; }
+  if (password !== passConfirm) { toast('Las contraseñas no coinciden'); return; }
+  if (!sb?.auth) { toast('Signup no disponible ahora'); return; }
+  const btn = $('#btnEmailSignup'); if (btn) btn.disabled = true;
+  try {
+    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name: email.split('@')[0] } } });
+    if (error) throw error;
+    store.user = data.user ? { email: data.user.email, name: data.user.user_metadata?.name || data.user.email.split('@')[0], avatar: null } : null;
+    updateAccountBadge();
+    renderAccount();
+    toast('¡Cuenta creada! 🎉');
+  } catch (e) {
+    console.error(e);
+    toast(e.message?.includes('already registered') ? 'Este email ya está registrado' : 'No se pudo crear la cuenta');
+  } finally { if (btn) btn.disabled = false; }
+}
 async function signOut() {
   try { await sb.auth.signOut(); } catch {}
   store.user = null; updateAccountBadge(); renderAccount();
@@ -3122,19 +3161,48 @@ async function renderAccount() {
   const body = $('#accountBody');
   if (!store.user) {
     const googleOn = store.cfg.google_login === '1' || store.cfg.google_login === 'true';
+    const emailOn = store.cfg.email_login === '1' || store.cfg.email_login === 'true';
+    const hasLogin = googleOn || emailOn;
     body.innerHTML = `
       <div class="acc-hero">
-        
         <div class="nm">Tu cuenta</div>
-        <div class="em">${googleOn ? 'Entrá con tu Gmail para ver tus pedidos y comprar más rápido.' : 'Comprá tranquila como invitada. Muy pronto vas a poder crear tu cuenta.'}</div>
+        <div class="em">${hasLogin ? 'Entrá para ver tus pedidos y comprar más rápido.' : 'Comprá tranquila como invitada. Muy pronto vas a poder crear tu cuenta.'}</div>
       </div>
-      ${googleOn ? `<button class="google-btn" id="btnGoogle">
+      ${emailOn ? `
+        <div id="emailAuthForm">
+          <input type="email" id="accEmail" placeholder="Tu email" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:4px; font-family:inherit; font-size:14px; margin-bottom:10px;">
+          <input type="password" id="accPass" placeholder="Contraseña" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:4px; font-family:inherit; font-size:14px; margin-bottom:10px;">
+          <button id="btnEmailLogin" style="width:100%; padding:10px; background:var(--ink); color:var(--paper); border:none; border-radius:4px; font-weight:600; cursor:pointer; font-family:inherit;">Entrar</button>
+          <p style="color:var(--muted); font-size:12px; text-align:center; margin-top:10px; margin-bottom:0;">¿Primera vez? <span id="toggleSignup" style="color:var(--ink); cursor:pointer; text-decoration:underline;">Crear cuenta</span></p>
+        </div>
+        <div id="emailSignupForm" style="display:none;">
+          <input type="email" id="accEmailNew" placeholder="Tu email" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:4px; font-family:inherit; font-size:14px; margin-bottom:10px;">
+          <input type="password" id="accPassNew" placeholder="Contraseña (mín. 6 caracteres)" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:4px; font-family:inherit; font-size:14px; margin-bottom:10px;">
+          <input type="password" id="accPassNewConfirm" placeholder="Confirmá tu contraseña" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:4px; font-family:inherit; font-size:14px; margin-bottom:10px;">
+          <button id="btnEmailSignup" style="width:100%; padding:10px; background:var(--ink); color:var(--paper); border:none; border-radius:4px; font-weight:600; cursor:pointer; font-family:inherit;">Crear cuenta</button>
+          <p style="color:var(--muted); font-size:12px; text-align:center; margin-top:10px; margin-bottom:0;"><span id="toggleLogin" style="color:var(--ink); cursor:pointer; text-decoration:underline;">Volver a entrar</span></p>
+        </div>
+      ` : ''}
+      ${googleOn ? `<button class="google-btn" id="btnGoogle" style="margin-top:${emailOn ? '10px' : '0'};">
         <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.5 13.2l7.8 6.1C12.2 13.3 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.1 5.4-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16z"/><path fill="#FBBC05" d="M10.3 28.3c-.5-1.4-.8-2.9-.8-4.3s.3-3 .8-4.3l-7.8-6.1C.9 16.7 0 20.2 0 24s.9 7.3 2.5 10.4l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.5-2 15.3-5.5l-7.1-5.5c-2 1.3-4.6 2.1-8.2 2.1-6.4 0-11.8-3.8-13.7-9.3l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
         Continuar con Google
-      </button>
-      <p style="color:var(--muted); font-size:12px; text-align:center; margin-top:14px;">También podés comprar como invitada, sin cuenta.</p>`
-      : `<a class="btn btn-dark btn-block" data-close-account href="#tienda">Ver la colección</a>
+      </button>` : ''}
+      ${hasLogin ? `<p style="color:var(--muted); font-size:12px; text-align:center; margin-top:14px;">También podés comprar como invitada, sin cuenta.</p>` : `<a class="btn btn-dark btn-block" data-close-account href="#tienda">Ver la colección</a>
          <p style="color:var(--muted); font-size:12px; text-align:center; margin-top:14px;">No necesitás cuenta para comprar: completás tus datos en el checkout y listo.</p>`}`;
+
+    // Setup event listeners
+    if (emailOn) {
+      $('#toggleSignup')?.addEventListener('click', () => {
+        $('#emailAuthForm').style.display = 'none';
+        $('#emailSignupForm').style.display = 'block';
+      });
+      $('#toggleLogin')?.addEventListener('click', () => {
+        $('#emailAuthForm').style.display = 'block';
+        $('#emailSignupForm').style.display = 'none';
+      });
+      $('#btnEmailLogin')?.addEventListener('click', signInEmail);
+      $('#btnEmailSignup')?.addEventListener('click', signUpEmail);
+    }
     return;
   }
   body.innerHTML = `
