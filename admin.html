@@ -985,23 +985,19 @@
   /* Modal flujo */
   .estado-modal {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.7);
     display: none;
-    align-items: center;
-    justify-content: center;
     z-index: 150;
-    padding: 12px;
+    padding: 0;
     overflow: hidden;
   }
-  .estado-modal.show { display: flex; }
+  .estado-modal.show { display: block; }
   .estado-sheet {
     background: #fff;
-    width: 100%;
-    max-width: 900px;
-    height: 90vh;
-    max-height: 90vh;
-    border-radius: 12px;
-    padding: 24px;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    padding: 20px;
     overflow-y: auto;
     overflow-x: hidden;
     animation: fadeIn 0.2s ease-out;
