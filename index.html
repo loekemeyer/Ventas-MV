@@ -1234,6 +1234,9 @@ let sb = null;
 try {
   if (window.supabase && window.supabase.createClient) {
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }, global: { fetch: (u, o = {}) => fetch(u, { ...o, cache: 'no-store' }) } });
+    console.log('✓ Supabase inicializado correctamente');
+  } else {
+    console.warn('⚠️ window.supabase no está disponible. CDN no cargó?', { supabase: !!window.supabase, createClient: window.supabase?.createClient });
   }
 } catch (e) { console.warn('Supabase no disponible:', e); }
 
