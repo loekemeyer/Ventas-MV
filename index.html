@@ -1427,6 +1427,7 @@ async function init() {
     }
     if (prodRes.status === 'fulfilled' && prodRes.value.data) {
       store.productos = prodRes.value.data;
+      console.log('📦 Productos cargados:', prodRes.value.data.length, prodRes.value.error ? ('| error: ' + JSON.stringify(prodRes.value.error)) : '');
     } else if (prodRes.status === 'fulfilled') {
       console.error('❌ Productos query: sin data', prodRes.value);
     } else if (prodRes.status === 'rejected') {
