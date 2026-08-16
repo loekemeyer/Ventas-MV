@@ -1495,6 +1495,7 @@
         <a class="btn-secondary" href="index.html" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; white-space:nowrap; flex:none;">Ver tienda ↗</a>
         <button type="button" id="btnCargarDesc" class="btn-secondary" style="width:auto; flex:none; white-space:nowrap;">✍️ Descripciones</button>
         <button type="button" id="btnMigrarFotos" class="btn-secondary" style="width:auto; flex:none; white-space:nowrap;">📥 Fotos a Supabase</button>
+        <button type="button" id="btnMigrarStorage" class="btn-secondary" style="width:auto; flex:none; white-space:nowrap;">☁️ Optimizar fotos</button>
         <button type="button" id="btnAddProducto" class="btn-primary" style="width:auto; flex:none; white-space:nowrap;">＋ Producto</button>
       </div>
     </div>
@@ -1847,7 +1848,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.30';
+const APP_VERSION = 'v6.31';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4707,18 +4708,56 @@ function blobToDataURL(blob) {
     r.readAsDataURL(blob);
   });
 }
+
+// ====== Subida de fotos a Supabase Storage (con respaldo seguro) ======
+// Las fotos nuevas se suben como ARCHIVOS al bucket 'productos' y en la tabla se
+// guarda solo la URL (link corto). Esto mantiene la base liviana y la tienda
+// rápida aunque el catálogo crezca. Si Storage no estuviera disponible (bucket
+// sin crear, sin permisos o sin red), se cae de forma segura al método viejo
+// (data URI dentro de la tabla) para que NUNCA se rompa la carga de fotos.
+const STORAGE_BUCKET = 'productos';
+function _extDeMime(mime) {
+  mime = (mime || '').toLowerCase();
+  if (mime.includes('png')) return 'png';
+  if (mime.includes('webp')) return 'webp';
+  return 'jpg';
+}
+async function subirBlobAStorage(blob, carpeta) {
+  if (!sb || !sb.storage) throw new Error('Storage no inicializado');
+  const ext = _extDeMime(blob.type);
+  const rnd = Math.random().toString(36).slice(2, 8);
+  const path = (carpeta || 'productos').replace(/\/+$/,'') + '/' + Date.now() + '-' + rnd + '.' + ext;
+  const { error } = await sb.storage.from(STORAGE_BUCKET).upload(path, blob, {
+    contentType: blob.type || 'image/jpeg',
+    cacheControl: '31536000',  // 1 año: las fotos no cambian, que el navegador las cachee
+    upsert: false,
+  });
+  if (error) throw error;
+  const { data } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+  if (!data || !data.publicUrl) throw new Error('sin publicUrl');
+  return data.publicUrl;
+}
+// Achica/comprime y sube. Devuelve { url, enStorage }. Si Storage falla, url es un
+// data URI (respaldo) y enStorage=false, así el producto se guarda igual.
+async function procesarYSubirFoto(file, maxSide, quality, carpeta) {
+  const blob = await resizeImage(file, maxSide, quality);
+  try {
+    return { url: await subirBlobAStorage(blob, carpeta), enStorage: true };
+  } catch (e) {
+    console.warn('Storage no disponible, uso data URI de respaldo:', e && (e.message || e));
+    return { url: await blobToDataURL(blob), enStorage: false };
+  }
+}
 async function subirFoto(file, p) {
   const msg = document.getElementById('fotosMsg');
   try {
-    if (msg) msg.textContent = 'Procesando…';
-    // Comprimimos en el navegador y guardamos la foto DENTRO del producto (data URI).
-    // Sin bucket, sin Supabase Storage, sin SQL: todo se maneja desde el admin.
-    const blob = await resizeImage(file, 1000, 0.7);
-    const dataUri = await blobToDataURL(blob);
-    _fotos.push(dataUri);
+    if (msg) msg.textContent = 'Subiendo foto…';
+    const carpeta = (p && p.id) ? ('productos/' + p.id) : 'productos/nuevos';
+    const { url, enStorage } = await procesarYSubirFoto(file, 1000, 0.7, carpeta);
+    _fotos.push(url);
     _fotosDirty = true;
     renderFotosGrid();
-    if (msg) msg.textContent = '';
+    if (msg) msg.textContent = enStorage ? '' : '⚠️ Foto guardada dentro de la base (Storage no disponible). Revisá que el bucket "productos" exista.';
   } catch (e) {
     console.error('subirFoto', e);
     if (msg) msg.textContent = 'No se pudo procesar la foto. Probá con otra imagen.';
@@ -4908,6 +4947,88 @@ async function ensureImagenesCargadas() {
       });
     }
   } catch (e) { console.warn('No se pudieron cargar las fotos del catálogo', e); }
+}
+// Migra las fotos que hoy están como data URI DENTRO de la tabla hacia Storage
+// (archivos), dejando en la tabla solo el link corto. Seguro: si una foto falla
+// al subir, se conserva como estaba y no se pierde nada.
+async function openMigrarStorageModal() {
+  const modal = document.getElementById('productoModal');
+  const sheet = document.getElementById('productoSheet');
+  sheet.innerHTML = '<h3>Optimizar fotos (pasar a Storage)</h3><p style="color:#8e8e93;font-size:13px;">Cargando catálogo…</p>';
+  modal.classList.add('show');
+  await ensureImagenesCargadas();
+  const esData = (x) => /^data:/i.test((x || '').trim());
+  const pendientes = (state.productos || [])
+    .map(p => ({ p, data: arr(p.imagenes).filter(esData).length }))
+    .filter(x => x.data > 0)
+    .sort((a, b) => (a.p.nombre || '').localeCompare(b.p.nombre || ''));
+  const totalFotos = pendientes.reduce((n, x) => n + x.data, 0);
+  if (!pendientes.length) {
+    sheet.innerHTML = `<h3>Optimizar fotos (Storage)</h3>
+      <p style="font-size:13px;">✅ Todas las fotos ya están en Storage. No hay nada para migrar.</p>
+      <div class="actions" style="margin-top:14px;"><button type="button" class="btn-secondary" id="stgClose">Cerrar</button></div>`;
+    document.getElementById('stgClose').onclick = () => modal.classList.remove('show');
+    return;
+  }
+  sheet.innerHTML = `
+    <h3>Optimizar fotos (pasar a Storage)</h3>
+    <p style="font-size:12.5px; color:#8e8e93; margin:0 0 12px;">
+      Hay <b>${totalFotos} foto${totalFotos === 1 ? '' : 's'}</b> en <b>${pendientes.length} producto${pendientes.length === 1 ? '' : 's'}</b> que hoy están guardadas dentro de la tabla (pesadas).
+      Al optimizar, cada foto se sube como archivo a <b>Storage</b> y en la tabla queda solo el link. Esto hace la tienda y el admin mucho más rápidos.
+      Es seguro: si alguna foto falla, se deja como estaba.
+      <br><br><b>No cierres esta ventana mientras trabaja.</b>
+    </p>
+    <div class="actions" style="margin-bottom:10px;">
+      <button type="button" class="btn-primary" id="stgRun">Optimizar todo</button>
+      <button type="button" class="btn-secondary" id="stgClose">Cerrar</button>
+    </div>
+    <div style="height:10px; background:#eee; border-radius:6px; overflow:hidden; margin-bottom:6px;"><div id="stgBar" style="height:100%; width:0; background:#34c759; transition:width .2s;"></div></div>
+    <div id="stgMsg" style="font-size:12px; color:#8e8e93;"></div>`;
+  document.getElementById('stgClose').onclick = () => modal.classList.remove('show');
+  document.getElementById('stgRun').onclick = async (e) => {
+    const btn = e.currentTarget;
+    const msg = document.getElementById('stgMsg');
+    const bar = document.getElementById('stgBar');
+    // Chequeo previo: si el bucket no existe, avisamos claro y no seguimos.
+    try {
+      const test = await sb.storage.from(STORAGE_BUCKET).list('', { limit: 1 });
+      if (test.error) throw test.error;
+    } catch (err) {
+      msg.textContent = '⚠️ No se pudo acceder al bucket "productos". Creá el bucket público en Supabase → Storage y volvé a intentar.';
+      showToast('Falta crear el bucket "productos"', '#ff3b30', 5000);
+      return;
+    }
+    btn.disabled = true;
+    let hechas = 0, okProds = 0, fail = 0;
+    for (let i = 0; i < pendientes.length; i++) {
+      const p = pendientes[i].p;
+      const orig = arr(p.imagenes);
+      const nuevas = [];
+      let cambio = false;
+      for (const im of orig) {
+        if (!esData(im)) { nuevas.push(im); continue; }
+        try {
+          const blob = await (await fetch(im)).blob();
+          const url = await subirBlobAStorage(blob, 'productos/' + p.id);
+          nuevas.push(url); cambio = true; hechas++;
+        } catch (err) {
+          nuevas.push(im); fail++; console.error('migrar a storage', p.id, err);
+        }
+        bar.style.width = Math.round((hechas + fail) / totalFotos * 100) + '%';
+        msg.textContent = `Subiendo ${hechas + fail}/${totalFotos} foto(s)… (${p.nombre || ''})`;
+      }
+      if (cambio) {
+        const { error } = await sb.from('productos').update({ imagenes: nuevas, updated_at: new Date().toISOString() }).eq('id', p.id);
+        if (!error) { p.imagenes = nuevas; _thumbCache[p.id] = nuevas; okProds++; }
+        else { fail++; console.error('update imagenes', error); }
+      }
+    }
+    btn.disabled = false;
+    bar.style.width = '100%';
+    msg.textContent = `Listo: ${okProds} producto(s) optimizado(s), ${hechas} foto(s) subida(s)${fail ? `, ${fail} con problema` : ''}.`;
+    showToast(fail ? `Optimización con ${fail} problema(s)` : '✓ Fotos optimizadas', fail ? '#ff9500' : '#34c759');
+    renderTienda();
+  };
 }
 async function openMigrarFotosModal() {
   const modal = document.getElementById('productoModal');
@@ -5251,6 +5372,7 @@ async function guardarTiendaCfg() {
 document.getElementById('btnAddProducto')?.addEventListener('click', () => openProductoModal(null));
 document.getElementById('btnCargarDesc')?.addEventListener('click', () => openDescripcionesModal());
 document.getElementById('btnMigrarFotos')?.addEventListener('click', () => openMigrarFotosModal());
+document.getElementById('btnMigrarStorage')?.addEventListener('click', () => openMigrarStorageModal());
 document.getElementById('prodSearch')?.addEventListener('input', () => renderTienda());
 document.getElementById('prodCatChips')?.addEventListener('click', (e) => {
   const b = e.target.closest('.prod-cat-chip'); if (!b) return;
@@ -5410,12 +5532,11 @@ document.getElementById('medFile')?.addEventListener('change', async (e) => {
   if (!file) return;
   const msg = document.getElementById('medUploadMsg');
   try {
-    if (msg) msg.textContent = 'Procesando…';
-    const blob = await resizeImage(file, 1400, 0.72);
-    const dataUri = await blobToDataURL(blob);
-    document.getElementById('medUrl').value = dataUri;
+    if (msg) msg.textContent = 'Subiendo…';
+    const { url, enStorage } = await procesarYSubirFoto(file, 1400, 0.72, 'portada');
+    document.getElementById('medUrl').value = url;
     document.getElementById('medTipo').value = 'imagen';
-    if (msg) msg.textContent = '✓ Foto lista. Ahora tocá "Agregar a la portada".';
+    if (msg) msg.textContent = enStorage ? '✓ Foto lista. Ahora tocá "Agregar a la portada".' : '✓ Foto lista (guardada en la base). Ahora tocá "Agregar a la portada".';
   } catch (err) { console.error(err); if (msg) msg.textContent = 'No se pudo procesar la foto.'; }
 });
 // ===== Foto de "Nuestra historia" (guardada en Supabase, tienda_config) =====
@@ -5433,13 +5554,12 @@ document.getElementById('histFile')?.addEventListener('change', async (e) => {
   if (!file) return;
   const msg = document.getElementById('histMsg');
   try {
-    if (msg) msg.textContent = 'Procesando y guardando…';
-    const blob = await resizeImage(file, 1200, 0.72);
-    const dataUri = await blobToDataURL(blob);
-    const { error } = await sb.from('tienda_config').upsert({ clave: 'img_historia', valor: dataUri }, { onConflict: 'clave' });
+    if (msg) msg.textContent = 'Subiendo y guardando…';
+    const { url } = await procesarYSubirFoto(file, 1200, 0.72, 'historia');
+    const { error } = await sb.from('tienda_config').upsert({ clave: 'img_historia', valor: url }, { onConflict: 'clave' });
     if (error) throw error;
     state.tiendaCfg = state.tiendaCfg || {};
-    state.tiendaCfg.img_historia = dataUri;
+    state.tiendaCfg.img_historia = url;
     setHistPreview();
     if (msg) msg.textContent = '✓ Foto guardada. Se ve en la tienda al recargar.';
     showToast('✓ Foto de Nuestra historia guardada', '#34c759');
