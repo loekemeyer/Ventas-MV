@@ -1847,7 +1847,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.29';
+const APP_VERSION = 'v6.30';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -3386,11 +3386,25 @@ async function bootApp() {
     console.warn('Stock: tabla no disponible aún (correr el SQL).');
   }
   // 2d. Catálogo de la tienda + ajustes
+  // Cargamos la lista SIN la columna `imagenes` (data URIs pesados). Antes, con
+  // `select('*')`, traer las fotos de todos los productos hacía que la pantalla
+  // tardara muchísimo y quedara sin responder. Las fotos se cargan aparte: la
+  // miniatura de cada tarjeta al hacerse visible (lazy) y las fotos completas al
+  // abrir a editar. Si por algún motivo la query liviana falla (columna renombrada,
+  // etc.), reintentamos con `select('*')` para nunca quedar sin catálogo.
   try {
-    const { data, error } = await sb.from('productos')
-      .select('*')
+    const COLS_LISTA = 'id,nombre,descripcion,categoria,material,coleccion,precio,precio_anterior,moneda,stock,orden,colores,talles,destacado,activo,created_at,updated_at';
+    let { data, error } = await sb.from('productos')
+      .select(COLS_LISTA)
       .order('orden', { ascending: true })
       .order('created_at', { ascending: false });
+    if (error) {
+      console.warn('Lista liviana falló, reintento con select(*):', error.message || error);
+      ({ data, error } = await sb.from('productos')
+        .select('*')
+        .order('orden', { ascending: true })
+        .order('created_at', { ascending: false }));
+    }
     if (!error && data) { state.productos = data; renderTienda(); if (!_cupones.length) loadCupones(); if (!_media.length) loadMedia(); }
   } catch (e) {
     console.warn('Tienda: tabla productos no disponible aún (correr el SQL 0007).');
@@ -4551,8 +4565,12 @@ function renderTienda() {
     return;
   }
   prods.forEach(p => {
-    const img = arr(p.imagenes)[0];
-    const nFotos = arr(p.imagenes).length;
+    // La lista se carga sin la columna `imagenes` (pesada). La miniatura se trae
+    // aparte cuando la tarjeta entra en pantalla (ver lazyLoadThumbs). Si ya la
+    // tenemos (cache o producto recién editado), la usamos directo.
+    const cachedImgs = p.imagenes || _thumbCache[p.id];
+    const img = cachedImgs ? arr(cachedImgs)[0] : null;
+    const nFotos = cachedImgs ? arr(cachedImgs).length : null;
     const off = (p.precio_anterior && p.precio_anterior > p.precio)
       ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
     const catMat = [escapeHtml(catNorm(p.categoria)), escapeHtml(p.material)].filter(Boolean).join(' · ') || 'Sin categoría';
@@ -4565,7 +4583,7 @@ function renderTienda() {
     const card = document.createElement('div');
     card.className = 'prod-card';
     card.innerHTML = `
-      <div class="prod-thumb${img ? '' : ' noimg'}">${img ? `<img src="${escapeHtml(img)}" alt="" loading="lazy" onerror="this.style.display='none'; this.parentNode.classList.add('noimg')">` : ''}</div>
+      <div class="prod-thumb${img ? '' : ' noimg'}" data-thumb-id="${escapeHtml(String(p.id))}">${img ? `<img src="${escapeHtml(img)}" alt="" loading="lazy" onerror="this.style.display='none'; this.parentNode.classList.add('noimg')">` : ''}</div>
       <div class="prod-info">
         <div class="prod-name">${escapeHtml(p.nombre) || '(sin nombre)'}${p.destacado ? '<span class="star" title="Destacado">★</span>' : ''}</div>
         <div class="prod-tags"><span>${catMat}</span>${chips.join('')}</div>
@@ -4580,6 +4598,53 @@ function renderTienda() {
       </div>`;
     listEl.appendChild(card);
   });
+  lazyLoadThumbs(listEl);
+}
+
+// Cache de miniaturas ya traídas (por id) para no volver a pedirlas al filtrar.
+let _thumbCache = {};
+let _thumbObserver = null;
+// Carga la miniatura de cada tarjeta SOLO cuando entra en pantalla. Así el admin
+// abre al instante aunque haya muchos productos con fotos pesadas, y solo se
+// descargan las fotos de lo que realmente estás mirando.
+function lazyLoadThumbs(container) {
+  if (!container || !('IntersectionObserver' in window)) return; // sin soporte: lista sin miniaturas (igual funciona)
+  if (_thumbObserver) { _thumbObserver.disconnect(); }
+  const pendientes = container.querySelectorAll('.prod-thumb.noimg[data-thumb-id]');
+  if (!pendientes.length) return;
+  _thumbObserver = new IntersectionObserver((entries, obs) => {
+    entries.forEach(async (entry) => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      obs.unobserve(el);
+      if (el.dataset.loaded) return;
+      el.dataset.loaded = '1';
+      const id = el.getAttribute('data-thumb-id');
+      if (!id) return;
+      let imgs = _thumbCache[id];
+      if (imgs === undefined) {
+        const prod = (state.productos || []).find(x => String(x.id) === id);
+        if (prod && prod.imagenes) imgs = prod.imagenes;
+      }
+      if (imgs === undefined) {
+        try {
+          const { data } = await sb.from('productos').select('imagenes').eq('id', id).single();
+          imgs = data ? data.imagenes : [];
+        } catch (e) { el.dataset.loaded = ''; return; }
+      }
+      _thumbCache[id] = imgs || [];
+      const first = arr(imgs)[0];
+      if (!first) return;
+      const im = document.createElement('img');
+      im.loading = 'lazy'; im.alt = '';
+      im.onerror = () => { im.remove(); el.classList.add('noimg'); };
+      im.onload = () => { el.classList.remove('noimg'); };
+      el.innerHTML = '';
+      el.appendChild(im);
+      im.src = first;
+    });
+  }, { rootMargin: '300px' });
+  pendientes.forEach(el => _thumbObserver.observe(el));
 }
 
 // ====== Fotos del producto: subir a Storage + ordenar (arrastrar) ======
@@ -4828,9 +4893,26 @@ async function urlToDataUri(url) {
   const resized = await resizeImage(blob, 1000, 0.7);
   return await blobToDataURL(resized);
 }
-function openMigrarFotosModal() {
+// Trae la columna `imagenes` de todos los productos que aún no la tengan (la lista
+// principal se carga sin ella para ir rápido). Se usa en herramientas que sí
+// necesitan las fotos de todo el catálogo, como la migración de fotos.
+async function ensureImagenesCargadas() {
+  const faltan = (state.productos || []).some(p => p.imagenes === undefined);
+  if (!faltan) return;
+  try {
+    const { data } = await sb.from('productos').select('id,imagenes');
+    if (data) {
+      const byId = Object.fromEntries(data.map(r => [r.id, r.imagenes || []]));
+      (state.productos || []).forEach(p => {
+        if (p.imagenes === undefined && byId[p.id] !== undefined) { p.imagenes = byId[p.id]; _thumbCache[p.id] = byId[p.id]; }
+      });
+    }
+  } catch (e) { console.warn('No se pudieron cargar las fotos del catálogo', e); }
+}
+async function openMigrarFotosModal() {
   const modal = document.getElementById('productoModal');
   const sheet = document.getElementById('productoSheet');
+  await ensureImagenesCargadas();   // la lista no trae fotos; para migrar las necesitamos
   const prods = (state.productos || [])
     .map(p => ({ p, urls: arr(p.imagenes).filter(esUrlFoto).length, total: arr(p.imagenes).length }))
     .filter(x => x.urls > 0)
@@ -4915,12 +4997,17 @@ async function openProductoModal(id) {
   const sheet = document.getElementById('productoSheet');
   let editing = id ? state.productos.find(p => p.id === id) : null;
 
-  // Si es edición, cargar las imágenes (no se cargaron en el listado inicial para optimizar)
+  // Si es edición, cargar las imágenes (no se cargaron en el listado inicial para optimizar).
+  // Si ya las trajimos para la miniatura (cache), las reutilizamos y evitamos pedirlas de nuevo.
   if (editing && !editing.imagenes) {
-    try {
-      const { data } = await sb.from('productos').select('imagenes').eq('id', id).single();
-      if (data) editing.imagenes = data.imagenes;
-    } catch (e) { console.warn('No se pudieron cargar las fotos', e); }
+    if (_thumbCache[id] !== undefined) {
+      editing.imagenes = _thumbCache[id];
+    } else {
+      try {
+        const { data } = await sb.from('productos').select('imagenes').eq('id', id).single();
+        if (data) { editing.imagenes = data.imagenes; _thumbCache[id] = data.imagenes || []; }
+      } catch (e) { console.warn('No se pudieron cargar las fotos', e); }
+    }
   }
 
   const p = editing || { nombre: '', descripcion: '', categoria: '', material: '', colores: [], talles: [], precio: '', precio_anterior: '', moneda: 'ARS', imagenes: [], stock: '', destacado: false, activo: true, orden: 0 };
@@ -5089,6 +5176,8 @@ async function openProductoModal(id) {
         state.productos.push(data);
         showToast('✓ Producto creado', '#34c759');
       }
+      // Mantener la caché de miniaturas al día con la foto recién guardada.
+      if (data && data.id) _thumbCache[data.id] = data.imagenes || [];
       if (dropped.includes('coleccion')) {
         showToast('Guardado. Falta un ajuste en la base para separar por colección — avisale al desarrollador.', '#ff9500', 6000);
       }
