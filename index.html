@@ -1221,7 +1221,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.29';
+const STORE_VERSION = 'v6.30';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1234,9 +1234,6 @@ let sb = null;
 try {
   if (window.supabase && window.supabase.createClient) {
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }, global: { fetch: (u, o = {}) => fetch(u, { ...o, cache: 'no-store' }) } });
-    console.log('✓ Supabase inicializado correctamente');
-  } else {
-    console.warn('⚠️ window.supabase no está disponible. CDN no cargó?', { supabase: !!window.supabase, createClient: window.supabase?.createClient });
   }
 } catch (e) { console.warn('Supabase no disponible:', e); }
 
@@ -1408,6 +1405,27 @@ function initTracking() {
     gtag('js', new Date()); gtag('config', ga);
   }
 }
+// Fetch directo a la REST API de Supabase con la anon key, SIN la sesión de la
+// clienta. Red de seguridad para datos PÚBLICOS (catálogo, config de la tienda):
+// si el cliente Supabase consulta con una sesión guardada y RLS no tiene política
+// de lectura para 'authenticated', la tienda igual muestra todo. Sin login.
+async function fetchPublico(path) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+      headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON },
+      cache: 'no-store',
+    });
+    if (!r.ok) return [];
+    const d = await r.json();
+    return Array.isArray(d) ? d : [];
+  } catch (e) {
+    console.warn('Fetch público falló (' + path + '):', e);
+    return [];
+  }
+}
+async function fetchCatalogoPublico() {
+  return fetchPublico('productos?select=*&activo=eq.true&order=orden.asc,created_at.desc');
+}
 async function init() {
   loadCart();
   loadWish();
@@ -1422,16 +1440,21 @@ async function init() {
       sb.from('socias').select('id,nombre').eq('nombre', 'Tienda Online').maybeSingle(),
       sb.from('resenas').select('producto_id,rating').eq('aprobada', true),
     ]);
-    if (cfgRes.status === 'fulfilled' && cfgRes.value.data) {
+    if (cfgRes.status === 'fulfilled' && cfgRes.value.data && cfgRes.value.data.length) {
       cfgRes.value.data.forEach(r => { store.cfg[r.clave] = r.valor; });
+    } else {
+      // Config vacía con sesión guardada (mismo caso RLS): recargar como anónimo.
+      (await fetchPublico('tienda_config?select=*')).forEach(r => { store.cfg[r.clave] = r.valor; });
     }
-    if (prodRes.status === 'fulfilled' && prodRes.value.data) {
+    if (prodRes.status === 'fulfilled' && prodRes.value.data && prodRes.value.data.length) {
       store.productos = prodRes.value.data;
-      console.log('📦 Productos cargados:', prodRes.value.data.length, prodRes.value.error ? ('| error: ' + JSON.stringify(prodRes.value.error)) : '');
-    } else if (prodRes.status === 'fulfilled') {
-      console.error('❌ Productos query: sin data', prodRes.value);
-    } else if (prodRes.status === 'rejected') {
-      console.error('❌ Productos query rechazado:', prodRes.reason);
+    } else {
+      // El catálogo es PÚBLICO. Si la consulta con el cliente Supabase volvió
+      // vacía —por ejemplo cuando hay una sesión de clienta guardada y falta la
+      // política RLS de lectura para 'authenticated'— reintentamos el catálogo
+      // como anónimo con un fetch directo usando la anon key. Así la tienda
+      // muestra los productos siempre, esté la clienta logueada o no.
+      store.productos = await fetchCatalogoPublico();
     }
     if (sociaRes.status === 'fulfilled' && sociaRes.value.data) {
       store.sociaId = sociaRes.value.data.id;
