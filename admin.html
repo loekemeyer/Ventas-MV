@@ -1225,7 +1225,10 @@
   .prod-price { font-size: 15px; font-weight: 800; color: #1c1c1e; margin-top: 5px; }
   .prod-price s { color: #b0b0b5; font-weight: 500; font-size: 12.5px; margin-left: 6px; }
   .prod-price .off { color: #d0304a; font-weight: 800; font-size: 11px; margin-left: 6px; }
-  .prod-status { flex-shrink: 0; }
+  .prod-status { flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+  .pill-star { width: 34px; height: 30px; border-radius: 20px; cursor: pointer; border: 1px solid #e2e2e7; background: #f7f7f9; color: #c7c7cc; font-size: 16px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; padding: 0; transition: transform .1s ease; }
+  .pill-star:hover { transform: scale(1.12); }
+  .pill-star.on { background: #fff6e5; border-color: #ffd58a; color: #ff9f0a; }
   .pill { font-size: 11px; font-weight: 700; padding: 6px 13px; border-radius: 20px; cursor: pointer; border: 1px solid transparent; letter-spacing: .2px; white-space: nowrap; }
   .pill-active { background: #e4f8ec; color: #1a9c46; border-color: #b9ecca; }
   .pill-hidden { background: #f2f2f7; color: #8e8e93; border-color: #e2e2e7; }
@@ -1859,7 +1862,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.34';
+const APP_VERSION = 'v6.35';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4586,11 +4589,12 @@ function renderTienda() {
     card.innerHTML = `
       <div class="prod-thumb${img ? '' : ' noimg'}" data-thumb-id="${escapeHtml(String(p.id))}">${img ? `<img src="${escapeHtml(img)}" alt="" loading="lazy" onerror="this.style.display='none'; this.parentNode.classList.add('noimg')">` : ''}</div>
       <div class="prod-info">
-        <div class="prod-name">${escapeHtml(p.nombre) || '(sin nombre)'}${p.destacado ? '<span class="star" title="Destacado">★</span>' : ''}</div>
+        <div class="prod-name">${escapeHtml(p.nombre) || '(sin nombre)'}</div>
         <div class="prod-tags"><span>${catMat}</span>${chips.join('')}</div>
         <div class="prod-price">${fmtMoney(p.precio, p.moneda)}${p.precio_anterior && p.precio_anterior > p.precio ? ` <s>${fmtMoney(p.precio_anterior, p.moneda)}</s>` : ''}${off ? `<span class="off">-${off}%</span>` : ''}</div>
       </div>
       <div class="prod-status">
+        <button class="pill-star ${p.destacado ? 'on' : ''}" data-toggle-destacado="${p.id}" title="${p.destacado ? 'En el carrusel de favoritos — tocá para quitar' : 'Tocá para sumar al carrusel de favoritos'}" aria-label="Destacado">${p.destacado ? '★' : '☆'}</button>
         <button class="pill ${p.activo ? 'pill-active' : 'pill-hidden'}" data-toggle-activo="${p.id}" title="${p.activo ? 'Visible en la tienda — tocá para ocultar' : 'Oculto — tocá para mostrar'}">${p.activo ? '● Activo' : '○ Oculto'}</button>
       </div>
       <div class="prod-actions">
@@ -5393,7 +5397,20 @@ document.getElementById('productosList')?.addEventListener('click', async (e) =>
   const editId = e.target.closest('[data-edit-prod]')?.dataset.editProd;
   const delId = e.target.closest('[data-del-prod]')?.dataset.delProd;
   const toggleId = e.target.closest('[data-toggle-activo]')?.dataset.toggleActivo;
+  const destId = e.target.closest('[data-toggle-destacado]')?.dataset.toggleDestacado;
   if (editId) { openProductoModal(editId); return; }
+  if (destId) {
+    const p = state.productos.find(x => x.id === destId);
+    if (!p) return;
+    const nuevo = !p.destacado;
+    try {
+      const { error } = await sb.from('productos').update({ destacado: nuevo, updated_at: new Date().toISOString() }).eq('id', destId);
+      if (error) throw error;
+      p.destacado = nuevo; renderTienda();
+      showToast(nuevo ? '★ Sumado al carrusel de favoritos' : 'Quitado del carrusel', nuevo ? '#ff9f0a' : '#8e8e93');
+    } catch { showToast('Error', '#ff3b30'); }
+    return;
+  }
   if (toggleId) {
     const p = state.productos.find(x => x.id === toggleId);
     if (!p) return;
