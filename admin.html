@@ -1848,7 +1848,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.32';
+const APP_VERSION = 'v6.33';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -5004,7 +5004,7 @@ async function openMigrarStorageModal() {
       return;
     }
     btn.disabled = true;
-    let hechas = 0, okProds = 0, fail = 0;
+    let hechas = 0, okProds = 0, fail = 0, primerError = null;
     for (let i = 0; i < pendientes.length; i++) {
       const p = pendientes[i].p;
       const orig = arr(p.imagenes);
@@ -5017,7 +5017,9 @@ async function openMigrarStorageModal() {
           const url = await subirBlobAStorage(blob, 'productos/' + p.id);
           nuevas.push(url); cambio = true; hechas++;
         } catch (err) {
-          nuevas.push(im); fail++; console.error('migrar a storage', p.id, err);
+          nuevas.push(im); fail++;
+          if (!primerError) primerError = (err && (err.message || err.error || err.msg)) || JSON.stringify(err) || 'error desconocido';
+          console.error('migrar a storage', p.id, err);
         }
         bar.style.width = Math.round((hechas + fail) / totalFotos * 100) + '%';
         msg.textContent = `Subiendo ${hechas + fail}/${totalFotos} foto(s)… (${p.nombre || ''})`;
@@ -5025,12 +5027,13 @@ async function openMigrarStorageModal() {
       if (cambio) {
         const { error } = await sb.from('productos').update({ imagenes: nuevas, updated_at: new Date().toISOString() }).eq('id', p.id);
         if (!error) { p.imagenes = nuevas; _thumbCache[p.id] = nuevas; okProds++; }
-        else { fail++; console.error('update imagenes', error); }
+        else { fail++; if (!primerError) primerError = 'guardar tabla: ' + (error.message || error); console.error('update imagenes', error); }
       }
     }
     btn.disabled = false;
     bar.style.width = '100%';
-    msg.textContent = `Listo: ${okProds} producto(s) optimizado(s), ${hechas} foto(s) subida(s)${fail ? `, ${fail} con problema` : ''}.`;
+    msg.innerHTML = `Listo: ${okProds} producto(s) optimizado(s), ${hechas} foto(s) subida(s)${fail ? `, ${fail} con problema` : ''}.`
+      + (primerError ? `<br><br><b style="color:#ff3b30;">Motivo del error:</b><br><span style="color:#ff3b30; word-break:break-word;">${escapeHtml(String(primerError))}</span>` : '');
     showToast(fail ? `Optimización con ${fail} problema(s)` : '✓ Fotos optimizadas', fail ? '#ff9500' : '#34c759');
     renderTienda();
   };
