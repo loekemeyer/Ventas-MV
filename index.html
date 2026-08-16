@@ -1234,7 +1234,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.36';
+const STORE_VERSION = 'v6.37';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -2711,11 +2711,9 @@ function showThanks(title, sub) {
 function showTransferencia(o, ventaId) {
   const c = store.cfg;
   const alias = (c.alias_transferencia || '').trim();
-  const titular = (c.titular_transferencia || '').trim();
   const cbu = (c.cbu_transferencia || '').trim();
   const rows = [];
   if (alias) rows.push(`<div class="tr-row"><span>Alias</span><b>${esc(alias)}</b><button type="button" class="tr-copy" data-copy="${esc(alias)}">Copiar</button></div>`);
-  if (titular) rows.push(`<div class="tr-row"><span>Titular</span><b>${esc(titular)}</b></div>`);
   if (cbu) rows.push(`<div class="tr-row"><span>CBU/CVU</span><b>${esc(cbu)}</b><button type="button" class="tr-copy" data-copy="${esc(cbu)}">Copiar</button></div>`);
   $('#infoInner').innerHTML = `
     <button class="close-x" data-close-info style="color:var(--muted); text-shadow:none;">&times;</button>
