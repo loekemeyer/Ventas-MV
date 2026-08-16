@@ -256,6 +256,21 @@
   .feat-name { display: block; font-family: var(--sans); font-size: clamp(14px, 1.3vw, 16px); font-weight: 500; letter-spacing: .3px; }
   .feat-price { display: block; margin-top: 4px; font-size: 14px; font-weight: 600; }
   @media (max-width: 640px) { .feat-grid { gap: 10px; } .feat-name { font-size: 14px; } .feat-price { font-size: 12.5px; } }
+  /* ===== Nuestros favoritos — banda infinita (carrusel automático) ===== */
+  .feat-marquee { position: relative; overflow: hidden; width: 100%;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%); }
+  .feat-marquee .feat-track { display: flex; gap: clamp(14px, 2.4vw, 28px); width: max-content;
+    animation: featScroll 40s linear infinite; will-change: transform; }
+  .feat-marquee:hover .feat-track,
+  .feat-marquee:focus-within .feat-track { animation-play-state: paused; }
+  .feat-marquee .feat-card { flex: 0 0 auto; width: clamp(170px, 22vw, 240px); }
+  @keyframes featScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .feat-marquee { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .feat-marquee .feat-track { animation: none; }
+  }
+  @media (max-width: 640px) { .feat-marquee .feat-card { width: 62vw; max-width: 260px; } }
 
   /* ===== Banda de materiales (cuero) ===== */
   .leather-band { position: relative; min-height: 58vh; display: flex; align-items: center; overflow: hidden; }
@@ -1219,7 +1234,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.35';
+const STORE_VERSION = 'v6.36';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1708,33 +1723,38 @@ function renderColecciones() {
   el.innerHTML = railHtml('Nuevos ingresos', nuevos)
     + railHtml('Ofertas', ofertas);
 }
-// "Nuestros favoritos": 3 productos elegidos por nombre (Trench Classic, Blazer Classic, Pantalón Aurora).
+// "Nuestros favoritos": banda infinita con las prendas marcadas como Destacado (★)
+// en el admin. Si todavía no hay ninguna marcada, usa unos favoritos por nombre /
+// las primeras del catálogo como respaldo, para que la sección no quede vacía.
 const FAVORITOS = ['trench classic', 'blazer classic', 'pantalon aurora'];
 function normNombre(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); }
-function renderDestacadas() {
-  const el = $('#featGrid'), sec = $('#destacada'); if (!el || !sec) return;
-  const list = store.productos || [];
-  // Busca cada favorito por nombre (sin acentos, parcial); respeta el orden de FAVORITOS.
-  let pick = FAVORITOS.map(fav => list.find(p => normNombre(p.nombre).includes(fav))).filter(Boolean);
-  // Si algún favorito no está cargado, completa con destacados / primeros para llegar a 3.
-  if (pick.length < 3) {
-    const extra = list.filter(p => !pick.includes(p) && p.destacado)
-      .concat(list.filter(p => !pick.includes(p)));
-    pick = pick.concat(extra).slice(0, 3);
-  }
-  pick = pick.slice(0, 3);
-  if (pick.length < 3) { sec.hidden = true; el.innerHTML = ''; return; }
-  sec.hidden = false;
-  el.innerHTML = pick.map(p => {
-    const img = arr(p.imagenes)[0] || '';
-    return `<a class="feat-card" data-prod="${esc(p.id)}" href="#" tabindex="0" role="button" aria-label="Ver ${esc(p.nombre)}">
+function featCardHtml(p) {
+  const img = arr(p.imagenes)[0] || '';
+  return `<a class="feat-card" data-prod="${esc(p.id)}" href="#" tabindex="0" role="button" aria-label="Ver ${esc(p.nombre)}">
       <div class="feat-media">${img ? `<img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy">` : ''}</div>
       <div class="feat-info-b">
         <span class="feat-name">${esc(p.nombre)}</span>
         <span class="feat-price">${money(p.precio, p.moneda)}</span>
       </div>
     </a>`;
-  }).join('');
+}
+function renderDestacadas() {
+  const el = $('#featGrid'), sec = $('#destacada'); if (!el || !sec) return;
+  const list = store.productos || [];
+  // 1) Prendas con la estrella ★ (destacado) del admin. 2) respaldo por nombre. 3) primeras.
+  let pick = list.filter(p => p.destacado);
+  if (!pick.length) pick = FAVORITOS.map(fav => list.find(p => normNombre(p.nombre).includes(fav))).filter(Boolean);
+  if (!pick.length) pick = list.slice(0, 6);
+  if (!pick.length) { sec.hidden = true; el.innerHTML = ''; return; }
+  sec.hidden = false;
+  // Repetimos las prendas hasta llenar el ancho y duplicamos el set completo para
+  // que el loop no tenga cortes (la animación desplaza exactamente la mitad).
+  let half = pick.slice();
+  while (half.length < 9) half = half.concat(pick);
+  const dur = Math.max(18, half.length * 3);   // velocidad constante y suave
+  const cards = half.concat(half).map(featCardHtml).join('');
+  el.className = 'feat-marquee';
+  el.innerHTML = `<div class="feat-track" style="animation-duration:${dur}s">${cards}</div>`;
 }
 
 // ---------- filtros + grid ----------
