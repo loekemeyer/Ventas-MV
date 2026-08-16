@@ -1790,6 +1790,17 @@ async function checkGoogleSession() {
     if (ALLOWED_EMAILS.includes(email.toLowerCase())) {
       sessionStorage.setItem(AUTH_KEY, '1');
       loginScreen.classList.add('hidden');
+      // El panel accede a los datos como 'anon' (las políticas de la base son
+      // "anon all"). El login de Google sirve SOLO para verificar identidad, así
+      // que una vez validado el mail cerramos la sesión de Supabase Auth y
+      // recargamos una vez: con la sesión cerrada, las consultas van como 'anon'
+      // y se ven los productos. (Si la sesión sigue "logueada", las consultas van
+      // como 'authenticated', que no tiene permiso de lectura -> 0 productos.)
+      try { await sb.auth.signOut(); } catch (e) {}
+      if (!sessionStorage.getItem('mv_google_ok')) {
+        sessionStorage.setItem('mv_google_ok', '1');
+        location.replace(location.origin + location.pathname);
+      }
       return true;
     }
     // Logueó con un mail que no está autorizado: cerramos la sesión.
@@ -1848,7 +1859,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.33';
+const APP_VERSION = 'v6.34';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -3346,6 +3357,17 @@ async function bootApp() {
     state.ventas = cached;
     render();
   }
+  // 1b. Catálogo PRIMERO: es lo que se ve al entrar (pestaña "Tienda"). Antes se
+  // cargaba después de ventas/caja/stock, por eso los productos tardaban ~5 seg
+  // en aparecer. Ahora que las fotos viven en Storage (URLs livianas), traemos
+  // todo con select('*') sin penalización y renderizamos apenas llega.
+  try {
+    const { data, error } = await sb.from('productos')
+      .select('*')
+      .order('orden', { ascending: true })
+      .order('created_at', { ascending: false });
+    if (!error && data) { state.productos = data; renderTienda(); if (!_cupones.length) loadCupones(); if (!_media.length) loadMedia(); }
+  } catch (e) { console.warn('Tienda: productos no disponibles aún.'); }
   // 2. Fetch fresh desde Supabase
   try {
     const { data, error } = await sb.from('ventas')
@@ -3386,35 +3408,8 @@ async function bootApp() {
   } catch (e) {
     console.warn('Stock: tabla no disponible aún (correr el SQL).');
   }
-  // 2d. Catálogo de la tienda + ajustes
-  // Cargamos la lista SIN la columna `imagenes` (data URIs pesados). Antes, con
-  // `select('*')`, traer las fotos de todos los productos hacía que la pantalla
-  // tardara muchísimo y quedara sin responder. Las fotos se cargan aparte: la
-  // miniatura de cada tarjeta al hacerse visible (lazy) y las fotos completas al
-  // abrir a editar. Si por algún motivo la query liviana falla (columna renombrada,
-  // etc.), reintentamos con `select('*')` para nunca quedar sin catálogo.
-  try {
-    const COLS_LISTA = 'id,nombre,descripcion,categoria,material,coleccion,precio,precio_anterior,moneda,stock,orden,colores,talles,destacado,activo,created_at,updated_at';
-    let { data, error } = await sb.from('productos')
-      .select(COLS_LISTA)
-      .order('orden', { ascending: true })
-      .order('created_at', { ascending: false });
-    // Red de seguridad: si la consulta liviana falla O vuelve vacía (en este
-    // proyecto a veces devuelve 0 filas sin error), reintentamos con select('*')
-    // para NUNCA quedar sin catálogo. Una vez migradas las fotos a Storage, la
-    // columna `imagenes` pesa poco y select('*') vuelve a ser rápido igual.
-    if (error || !data || !data.length) {
-      console.warn('Lista liviana vacía/errónea, reintento con select(*).', error && (error.message || error));
-      const r = await sb.from('productos')
-        .select('*')
-        .order('orden', { ascending: true })
-        .order('created_at', { ascending: false });
-      if (!r.error && r.data) { data = r.data; error = null; }
-    }
-    if (!error && data) { state.productos = data; renderTienda(); if (!_cupones.length) loadCupones(); if (!_media.length) loadMedia(); }
-  } catch (e) {
-    console.warn('Tienda: tabla productos no disponible aún (correr el SQL 0007).');
-  }
+  // 2d. (El catálogo de productos ahora se carga al principio de bootApp, en el
+  // paso "1b", para que la pestaña Tienda muestre los productos enseguida.)
   try {
     const { data, error } = await sb.from('tienda_config').select('*');
     if (!error && data) {
