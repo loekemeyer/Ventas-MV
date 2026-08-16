@@ -1848,7 +1848,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.31';
+const APP_VERSION = 'v6.32';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -3399,12 +3399,17 @@ async function bootApp() {
       .select(COLS_LISTA)
       .order('orden', { ascending: true })
       .order('created_at', { ascending: false });
-    if (error) {
-      console.warn('Lista liviana falló, reintento con select(*):', error.message || error);
-      ({ data, error } = await sb.from('productos')
+    // Red de seguridad: si la consulta liviana falla O vuelve vacía (en este
+    // proyecto a veces devuelve 0 filas sin error), reintentamos con select('*')
+    // para NUNCA quedar sin catálogo. Una vez migradas las fotos a Storage, la
+    // columna `imagenes` pesa poco y select('*') vuelve a ser rápido igual.
+    if (error || !data || !data.length) {
+      console.warn('Lista liviana vacía/errónea, reintento con select(*).', error && (error.message || error));
+      const r = await sb.from('productos')
         .select('*')
         .order('orden', { ascending: true })
-        .order('created_at', { ascending: false }));
+        .order('created_at', { ascending: false });
+      if (!r.error && r.data) { data = r.data; error = null; }
     }
     if (!error && data) { state.productos = data; renderTienda(); if (!_cupones.length) loadCupones(); if (!_media.length) loadMedia(); }
   } catch (e) {
