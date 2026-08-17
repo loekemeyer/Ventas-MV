@@ -1234,7 +1234,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.41';
+const STORE_VERSION = 'v6.42';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -2100,10 +2100,6 @@ function openProduct(id, pushUrl = true) {
       ${transferHtml(p.precio, p.moneda, 'pm-transfer')}
       ${cuotasHtml(p.precio, p.moneda, 'pm-cuotas')}
       ${descripcionHtml(p.descripcion)}
-      <div class="pm-meta">
-        ${p.material ? `<span>Confeccionada en <b>${esc(materialLabel(p.material).toLowerCase())}</b></span>` : ''}
-        ${entregaFichaHtml(p)}
-      </div>
       <div class="opt-label">Color <span class="opt-val" id="pmColorLbl">${pmState.color ? esc(pmState.color) : ''}</span></div>
         <div class="opt-row swatches" id="pmColors" role="radiogroup" aria-label="Color">${COLORES_CUSTOM.map(c => `<button class="sw ${pmState.color===c.name?'active':''}" data-color="${esc(c.name)}" role="radio" aria-checked="${pmState.color===c.name}" title="${esc(c.name)}" aria-label="${esc(c.name)}"><span class="sw-dot" style="background:${c.hex}"></span></button>`).join('')}</div>
       ${talles.length ? `<div class="opt-label">Talle · <span class="link-u" id="pmTalleGuide">guía</span></div>
@@ -2120,6 +2116,10 @@ function openProduct(id, pushUrl = true) {
       <div style="margin-top:24px;">
         <button class="btn btn-primary btn-block" id="pmAdd">Agregar al carrito</button>
         <button class="btn btn-outline btn-block" id="pmBuyNow" style="margin-top:10px;">Comprar ahora</button>
+      </div>
+      <div class="pm-meta" style="margin-top:16px;">
+        ${p.material ? `<span>Confeccionada en <b>${esc(materialLabel(p.material).toLowerCase())}</b></span>` : ''}
+        ${entregaFichaHtml(p)}
       </div>
       ${(store.cfg.whatsapp || '').replace(/[^\d]/g, '') ? `<button class="pm-consulta" id="pmConsulta" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.2-5.5A8.4 8.4 0 1 1 21 11.5z"/></svg>
