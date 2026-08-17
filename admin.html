@@ -1682,8 +1682,16 @@
   <section id="stats" class="module">
     <div class="period-chips" role="tablist">
       <button type="button" class="period-chip active" data-period="all">Todo</button>
+      <button type="button" class="period-chip" data-period="nueva">📊 Nueva</button>
+      <button type="button" class="period-chip" data-period="vieja">🗄️ Vieja</button>
       <button type="button" class="period-chip" data-period="month">Este mes</button>
       <button type="button" class="period-chip" data-period="30d">Últimos 30d</button>
+    </div>
+    <div class="stats-corte" style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:0 0 16px; padding:12px 14px; background:#f2f2f7; border-radius:10px; font-size:13px;">
+      <span style="font-weight:600; color:#000;">Estadística nueva desde:</span>
+      <input type="date" id="statsCorteInput" style="padding:8px 10px; border:1px solid #d1d1d6; border-radius:8px; font-size:14px; font-family:inherit;">
+      <button type="button" class="btn-secondary" id="statsCorteSave" style="width:auto; padding:8px 16px;">Guardar corte</button>
+      <span id="statsCorteHint" style="color:#8e8e93; flex-basis:100%; font-size:12px;"></span>
     </div>
 
     <div class="stats-summary">
@@ -1862,7 +1870,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.35';
+const APP_VERSION = 'v6.36';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -3096,6 +3104,12 @@ document.getElementById('stock').addEventListener('click', (e) => {
 
 // ====== STATS ======
 let statsPeriod = 'all';
+// Fecha de corte para separar la estadística "vieja" (histórica) de la "nueva".
+// Se guarda en tienda_config (clave 'stats_corte'). Si no hay ninguna guardada,
+// usamos la fecha de hoy como referencia hasta que la fijes con "Guardar corte".
+function statsCorte() {
+  return (state.tiendaCfg && state.tiendaCfg.stats_corte) || new Date().toISOString().slice(0, 10);
+}
 document.querySelectorAll('.period-chip').forEach(c => {
   c.addEventListener('click', () => {
     document.querySelectorAll('.period-chip').forEach(x => x.classList.remove('active'));
@@ -3104,9 +3118,26 @@ document.querySelectorAll('.period-chip').forEach(c => {
     renderStats();
   });
 });
+// Selector de fecha de corte + guardado
+document.getElementById('statsCorteSave')?.addEventListener('click', async () => {
+  const inp = document.getElementById('statsCorteInput');
+  const fecha = (inp && inp.value || '').trim();
+  if (!fecha) { showToast('Elegí una fecha', '#ff9500'); return; }
+  try {
+    const { error } = await sb.from('tienda_config').upsert({ clave: 'stats_corte', valor: fecha }, { onConflict: 'clave' });
+    if (error) throw error;
+    state.tiendaCfg = state.tiendaCfg || {};
+    state.tiendaCfg.stats_corte = fecha;
+    showToast('✓ Fecha de corte guardada', '#34c759');
+    renderStats();
+  } catch (e) { console.error(e); showToast('No se pudo guardar', '#ff3b30'); }
+});
 
 function statsFiltered() {
   const all = state.ventas;
+  const corte = statsCorte();
+  if (statsPeriod === 'nueva') return all.filter(v => (v.fecha || '') >= corte);
+  if (statsPeriod === 'vieja') return all.filter(v => (v.fecha || '') && (v.fecha || '') < corte);
   if (statsPeriod === 'all') return all;
   const now = new Date();
   if (statsPeriod === 'month') {
@@ -3190,6 +3221,16 @@ function renderDemora(data) {
 }
 
 function renderStats() {
+  // Sincroniza el selector de fecha de corte y el texto de ayuda.
+  const corte = statsCorte();
+  const inp = document.getElementById('statsCorteInput');
+  if (inp && !inp.value) inp.value = corte;
+  const hint = document.getElementById('statsCorteHint');
+  if (hint) {
+    hint.textContent = (state.tiendaCfg && state.tiendaCfg.stats_corte)
+      ? `"📊 Nueva" = ventas desde ${corte}  ·  "🗄️ Vieja" = anteriores a esa fecha.`
+      : `Aún no fijaste el corte (se usa hoy por defecto). Elegí una fecha y tocá "Guardar corte" para dejarlo fijo.`;
+  }
   const data = statsFiltered();
   const totalVentas = data.length;
   const totalsRev = sumByMoneda(data);
