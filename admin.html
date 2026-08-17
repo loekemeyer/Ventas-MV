@@ -1870,7 +1870,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.36';
+const APP_VERSION = 'v6.37';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4565,7 +4565,11 @@ const TIENDA_CATEGORIAS = ['Camperas', 'Tapados', 'Camisas', 'Tops', 'Bottoms'];
 // plural nuevo, sin reescribir los productos).
 const CAT_ALIAS = { campera: 'Camperas', camperas: 'Camperas', tapado: 'Tapados', tapados: 'Tapados' };
 function catNorm(c) { const s = (c || '').toString().trim(); return CAT_ALIAS[s.toLowerCase()] || s; }
-const TIENDA_MATERIALES = ['Oveja', 'Vaca', 'Gamuza'];
+const TIENDA_MATERIALES = ['Vaca', 'Oveja', 'Gamuza'];
+// Etiquetas lindas del tipo de cuero (los valores guardados siguen siendo
+// Vaca/Oveja/Gamuza para no romper los productos ya cargados).
+const MATERIAL_LABEL = { vaca: 'Cuero vacuno', vacuno: 'Cuero vacuno', oveja: 'Cuero ovino', ovino: 'Cuero ovino', gamuza: 'Gamuza' };
+function materialLabel(v) { const k = (v || '').toString().trim().toLowerCase(); return MATERIAL_LABEL[k] || (v || '').toString().trim(); }
 const TIENDA_TALLES     = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Único'];
 // Colecciones de la tienda (deben coincidir con los slugs de index.html).
 // El drop-down "Shop All" arma sus solapas a partir de la colección de cada producto.
@@ -4618,7 +4622,7 @@ function renderTienda() {
     const nFotos = cachedImgs ? arr(cachedImgs).length : null;
     const off = (p.precio_anterior && p.precio_anterior > p.precio)
       ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
-    const catMat = [escapeHtml(catNorm(p.categoria)), escapeHtml(p.material)].filter(Boolean).join(' · ') || 'Sin categoría';
+    const catMat = [escapeHtml(catNorm(p.categoria)), escapeHtml(materialLabel(p.material))].filter(Boolean).join(' · ') || 'Sin categoría';
     const chips = [];
     const colObj = TIENDA_COLECCIONES.find(c => c.slug === (p.coleccion || TIENDA_COLECCION_DEFAULT));
     if (colObj) chips.push(`<span class="prod-chip col">${escapeHtml(colObj.label)}</span>`);
@@ -5208,8 +5212,8 @@ async function openProductoModal(id) {
               <span style="font-size:13px; font-weight:600; color:#000;">Categoría</span>
               <select name="categoria" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit; background:white; cursor:pointer;"><option value="">Elegir</option>${TIENDA_CATEGORIAS.map(c => opt(c, p.categoria)).join('')}</select></label>
             <label style="display:flex; flex-direction:column; gap:6px;">
-              <span style="font-size:13px; font-weight:600; color:#000;">Material</span>
-              <select name="material" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit; background:white; cursor:pointer;"><option value="">Elegir</option>${TIENDA_MATERIALES.map(m => opt(m, p.material)).join('')}</select></label>
+              <span style="font-size:13px; font-weight:600; color:#000;">Tipo de cuero</span>
+              <select name="material" style="padding:10px; border:1px solid #d1d1d6; border-radius:8px; font-size:16px; font-family:inherit; background:white; cursor:pointer;"><option value="">Elegir</option>${TIENDA_MATERIALES.map(m => `<option value="${escapeHtml(m)}" ${m === p.material ? 'selected' : ''}>${escapeHtml(materialLabel(m))}</option>`).join('')}</select></label>
           </div>
           <label style="display:flex; flex-direction:column; gap:6px;">
             <span style="font-size:13px; font-weight:600; color:#000;">Colección — dónde aparece en Shop All</span>
