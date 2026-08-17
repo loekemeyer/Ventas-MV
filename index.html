@@ -1234,7 +1234,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.38';
+const STORE_VERSION = 'v6.39';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -2694,15 +2694,14 @@ function abrirWhatsappPedido(o, ventaId) {
 function abrirWhatsappComprobante(o, ventaId) {
   const wa = (store.cfg.whatsapp || '').replace(/[^\d]/g, '');
   const L = [];
-  L.push('¡Hola! Realicé una compra por transferencia 🤎');
+  L.push('¡Hola! Realicé una compra por transferencia.');
   L.push('');
   const lineas = (o.items && o.items.length) ? o.items : store.cart;
-  lineas.forEach(i => L.push(`• ${i.nombre}${i.color || i.talle ? ` (${[i.color, i.talle].filter(Boolean).join(' / ')})` : ''} ×${i.qty}`));
+  lineas.forEach(i => L.push(`- ${i.nombre}${i.color || i.talle ? ` (${[i.color, i.talle].filter(Boolean).join(' / ')})` : ''} x${i.qty}`));
   L.push('');
-  L.push(`*Total:* ${money(o.total, o.moneda)}`);
-  if (ventaId) L.push(`*N° de pedido:* ${String(ventaId).slice(-8)}`);
+  L.push(`Total: ${money(o.total, o.moneda)}`);
   L.push('');
-  L.push('Te adjunto el comprobante 📎');
+  L.push('Te adjunto el comprobante.');
   const text = encodeURIComponent(L.join('\n'));
   const url = wa ? `https://wa.me/${wa}?text=${text}` : `https://wa.me/?text=${text}`;
   window.open(url, '_blank');
