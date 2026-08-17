@@ -1234,7 +1234,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.42';
+const STORE_VERSION = 'v6.43';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1417,6 +1417,12 @@ function initTracking() {
     window.gtag = function(){ dataLayer.push(arguments); };
     gtag('js', new Date()); gtag('config', ga);
   }
+}
+// Dispara un evento al Píxel de Meta (si está cargado). Sirve para que las
+// campañas puedan optimizar por ventas y hacer retargeting (ver producto,
+// agregar al carrito, iniciar compra, comprar). Si no hay píxel, no hace nada.
+function fbTrack(event, params) {
+  try { if (window.fbq) window.fbq('track', event, params || {}); } catch (e) {}
 }
 // Fetch directo a la REST API de Supabase con la anon key, SIN la sesión de la
 // clienta. Red de seguridad para datos PÚBLICOS (catálogo, config de la tienda):
@@ -2081,6 +2087,7 @@ function openProduct(id, pushUrl = true) {
   const colores = COLORES_CUSTOM.map(c => c.name);   // colores customizables (fijos)
   const talles = TALLES_STD;                          // S · M · L · XL
   pmState = { p, img: imgs[0] || null, color: colores.length === 1 ? colores[0] : null, talle: talles.length === 1 ? talles[0] : null, qty: 1 };
+  fbTrack('ViewContent', { content_ids: [p.id], content_name: p.nombre, content_type: 'product', value: parseFloat(p.precio) || 0, currency: p.moneda || 'ARS' });
   const off = p.precio_anterior && p.precio_anterior > p.precio ? Math.round((1 - p.precio / p.precio_anterior) * 100) : 0;
   const rating = store.ratings[p.id];
   const wished = isWished(p.id);
@@ -2435,6 +2442,7 @@ async function verificarDireccion() {
 
 function openCheckout() {
   if (!store.cart.length) { toast('Tu carrito está vacío'); return; }
+  fbTrack('InitiateCheckout', { content_ids: store.cart.map(i => i.id), value: cartTotal(), currency: store.cart[0]?.moneda || 'ARS', num_items: store.cart.reduce((n, i) => n + (i.qty || 1), 0) });
   envioState = { metodo: 'envio', pickup: null, direccion: '', geo: null, zona: null };
   const mpOn = store.cfg.mp_activo === '1' || store.cfg.mp_activo === 'true';
   const transferOn = !!(store.cfg.alias_transferencia || '').trim();
@@ -2613,6 +2621,8 @@ async function finalizarPedido(form, metodo) {
     console.error('No se pudo guardar el pedido:', err);
     // Aun sin guardar, dejamos que el pedido salga por WhatsApp para no perder la venta.
   }
+  // Evento de conversión para Meta Ads: el pedido se concretó (cualquier método).
+  fbTrack('Purchase', { content_ids: items.map(i => i.id), value: metodo === 'transfer' ? totalTransfer : totalFinal, currency: moneda, num_items: items.reduce((n, i) => n + (i.qty || 1), 0) });
 
   const geo = envioState.geo;
   const mapUrl = geo ? `https://www.openstreetmap.org/?mlat=${geo.lat}&mlon=${geo.lon}#map=17/${geo.lat}/${geo.lon}` : '';
@@ -3031,6 +3041,7 @@ $('#pmodalInner').addEventListener('click', (e) => {
     if (arr(p.colores).length && !pmState.color) { toast('Elegí un color'); return; }
     if (arr(p.talles).length && !pmState.talle) { toast('Elegí un talle'); return; }
     addToCart(p, pmState.color, pmState.talle, pmState.qty || 1);
+    fbTrack('AddToCart', { content_ids: [p.id], content_name: p.nombre, content_type: 'product', value: (parseFloat(p.precio) || 0) * (pmState.qty || 1), currency: p.moneda || 'ARS' });
     const comprarAhora = e.target.id === 'pmBuyNow';
     closeAll();
     if (comprarAhora) { setTimeout(openCheckout, 350); }

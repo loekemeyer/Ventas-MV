@@ -1546,6 +1546,8 @@
             <input type="number" id="cfgEnvioAmba" inputmode="numeric" placeholder="10000"></label>
           <label><span>Envío al interior (fuera de AMBA) — texto</span>
             <input type="text" id="cfgEnvioInterior" placeholder="a convenir"></label>
+          <label><span>Píxel de Meta (para publicidad en Instagram/Facebook) — pegá solo el número del ID</span>
+            <input type="text" id="cfgMetaPixel" inputmode="numeric" autocapitalize="none" placeholder="1234567890123456"></label>
           <label class="chk-row" style="flex-direction:row; align-items:center; gap:8px;">
             <input type="checkbox" id="cfgMpActivo" style="width:auto;">
             <span style="margin:0;">Cobrar con Mercado Pago (requiere token en Supabase)</span></label>
@@ -1870,7 +1872,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.38';
+const APP_VERSION = 'v6.39';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -5387,6 +5389,7 @@ function fillTiendaCfgForm() {
   set('cfgEnvioCaba', c.envio_caba);
   set('cfgEnvioAmba', c.envio_amba);
   set('cfgEnvioInterior', c.envio_interior);
+  set('cfgMetaPixel', c.meta_pixel_id);
   const mp = document.getElementById('cfgMpActivo');
   if (mp) mp.checked = c.mp_activo === '1' || c.mp_activo === 'true';
   const gl = document.getElementById('cfgGoogleLogin');
@@ -5411,6 +5414,7 @@ async function guardarTiendaCfg() {
     { clave: 'envio_caba', valor: (document.getElementById('cfgEnvioCaba').value || '0').replace(/[^\d.]/g, '') || '0' },
     { clave: 'envio_amba', valor: (document.getElementById('cfgEnvioAmba').value || '0').replace(/[^\d.]/g, '') || '0' },
     { clave: 'envio_interior', valor: (document.getElementById('cfgEnvioInterior').value || 'a convenir').trim() || 'a convenir' },
+    { clave: 'meta_pixel_id', valor: (document.getElementById('cfgMetaPixel').value || '').replace(/[^\d]/g, '') },
     { clave: 'mp_activo', valor: document.getElementById('cfgMpActivo').checked ? '1' : '0' },
     { clave: 'google_login', valor: document.getElementById('cfgGoogleLogin').checked ? '1' : '0' },
     { clave: 'email_login', valor: document.getElementById('cfgEmailLogin').checked ? '1' : '0' },
