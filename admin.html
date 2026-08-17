@@ -1870,7 +1870,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ====== SUPABASE ======
-const APP_VERSION = 'v6.37';
+const APP_VERSION = 'v6.38';
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
 const VAPID_PUBLIC_KEY = 'BLjrvDPNcrkfCSsHj2GOe57sWgAuII_0zmWfzrqdq9fyHcyCLtWAIdiJrevjA_U2K9HoHEL8Niq-TO7t1je3zoQ';
@@ -4637,6 +4637,12 @@ function renderTienda() {
         <div class="prod-name">${escapeHtml(p.nombre) || '(sin nombre)'}</div>
         <div class="prod-tags"><span>${catMat}</span>${chips.join('')}</div>
         <div class="prod-price">${fmtMoney(p.precio, p.moneda)}${p.precio_anterior && p.precio_anterior > p.precio ? ` <s>${fmtMoney(p.precio_anterior, p.moneda)}</s>` : ''}${off ? `<span class="off">-${off}%</span>` : ''}</div>
+        <label class="prod-cuero-lbl" style="display:inline-flex; align-items:center; gap:6px; margin-top:6px; font-size:12px; color:#8e8e93;">Cuero:
+          <select class="prod-cuero" data-cuero-id="${escapeHtml(String(p.id))}" style="font-size:12px; padding:3px 8px; border:1px solid #e2e2e7; border-radius:8px; background:#fff; cursor:pointer;">
+            <option value="">— sin definir —</option>
+            ${TIENDA_MATERIALES.map(m => `<option value="${escapeHtml(m)}" ${m === p.material ? 'selected' : ''}>${escapeHtml(materialLabel(m))}</option>`).join('')}
+          </select>
+        </label>
       </div>
       <div class="prod-status">
         <button class="pill-star ${p.destacado ? 'on' : ''}" data-toggle-destacado="${p.id}" title="${p.destacado ? 'En el carrusel de favoritos — tocá para quitar' : 'Tocá para sumar al carrusel de favoritos'}" aria-label="Destacado">${p.destacado ? '★' : '☆'}</button>
@@ -5437,6 +5443,22 @@ document.getElementById('tiendaCfgHead')?.addEventListener('click', () => {
 });
 document.getElementById('productoModal')?.addEventListener('click', (e) => {
   if (e.target.id === 'productoModal') e.currentTarget.classList.remove('show');
+});
+// Selector rápido de tipo de cuero en cada tarjeta (guarda al instante, sin abrir el producto)
+document.getElementById('productosList')?.addEventListener('change', async (e) => {
+  const sel = e.target.closest('.prod-cuero');
+  if (!sel) return;
+  const id = sel.dataset.cueroId;
+  const p = state.productos.find(x => x.id === id);
+  if (!p) return;
+  const nuevo = sel.value || null;
+  const previo = p.material || '';
+  try {
+    const { error } = await sb.from('productos').update({ material: nuevo, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) throw error;
+    p.material = nuevo;
+    showToast(nuevo ? ('✓ ' + materialLabel(nuevo)) : 'Tipo de cuero quitado', '#34c759');
+  } catch { showToast('No se pudo guardar', '#ff3b30'); sel.value = previo; }
 });
 document.getElementById('productosList')?.addEventListener('click', async (e) => {
   const editId = e.target.closest('[data-edit-prod]')?.dataset.editProd;

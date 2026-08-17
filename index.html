@@ -1234,7 +1234,7 @@
 // ============================================================================
 // Subir este número en cada deploy: sirve para verificar de un vistazo (en el
 // banner de arriba) si estás viendo la versión ya publicada.
-const STORE_VERSION = 'v6.40';
+const STORE_VERSION = 'v6.41';
 try { var _sv = document.getElementById('storeVer'); if (_sv) _sv.textContent = STORE_VERSION; } catch (e) {}
 const SUPABASE_URL  = 'https://hkdirqgkauenehvorweb.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_LuIuNCsxYMtUvmBQ8Ptxtw_khWmynQB';
@@ -1695,7 +1695,7 @@ function railCard(p) {
       ${off ? `<span class="tag off">-${off}%</span>` : ''}
     </div>
     <div class="rail-body">
-      <div class="rail-cat">${esc(catNorm(p.categoria) || materialLabel(p.material) || 'Cuero')}</div>
+      <div class="rail-cat">${esc(catNorm(p.categoria) || 'Cuero')}</div>
       <div class="rail-name">${esc(p.nombre)}</div>
       <div class="rail-price">${money(p.precio, p.moneda)}${off ? ` <s>${money(p.precio_anterior, p.moneda)}</s>` : ''}</div>
     </div>
@@ -2092,7 +2092,7 @@ function openProduct(id, pushUrl = true) {
       ${imgs.length > 1 ? `<div class="pm-thumbs">${imgs.map((im,i) => `<img src="${esc(im)}" data-thumb="${esc(im)}" class="${i===0?'active':''}" alt="">`).join('')}</div>` : ''}
     </div>
     <div class="pm-info">
-      <span class="card-cat">${esc(catNorm(p.categoria) || materialLabel(p.material) || 'Cuero')}</span>
+      <span class="card-cat">${esc(catNorm(p.categoria) || 'Cuero')}</span>
       <h2>${esc(p.nombre)}</h2>
       ${rating ? `<div class="card-rating" style="margin-bottom:6px;">${starsHtml(rating.avg)} <span>${rating.avg.toFixed(1)} · ${rating.count} reseña${rating.count===1?'':'s'}</span></div>` : ''}
       <div class="pm-price">${money(p.precio, p.moneda)}${off ? ` <s>${money(p.precio_anterior, p.moneda)}</s>` : ''}</div>
@@ -2101,7 +2101,7 @@ function openProduct(id, pushUrl = true) {
       ${cuotasHtml(p.precio, p.moneda, 'pm-cuotas')}
       ${descripcionHtml(p.descripcion)}
       <div class="pm-meta">
-        ${p.material ? `<span>Tipo de cuero: <b>${esc(materialLabel(p.material))}</b></span>` : ''}
+        ${p.material ? `<span>Confeccionada en <b>${esc(materialLabel(p.material).toLowerCase())}</b></span>` : ''}
         ${entregaFichaHtml(p)}
       </div>
       <div class="opt-label">Color <span class="opt-val" id="pmColorLbl">${pmState.color ? esc(pmState.color) : ''}</span></div>
